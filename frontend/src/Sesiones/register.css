@@ -1,0 +1,107 @@
+
+.overlay{
+    display: flex;
+
+}
+
+.register-title {
+    text-align: center;
+    margin-bottom: auto;
+    color: #d75078 !important;
+    font-size: 40px;
+
+}
+
+.register-subtitle{
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333 !important;
+    font-size: 15px     ;    
+}
+
+.register{
+    padding:  0px;
+    border-radius: 20px;
+    width: 370px;
+}
+
+.datos-register{
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.datos-register label{
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: black;
+}
+
+.register-input{
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: 0.3s;
+}
+
+.IN{
+    width: 100%;
+    padding: 9px;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: none;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+    background-color: #d75078;
+
+}
+
+.IN:hover{
+    background-color: #b22f56;
+    transform: scale(1.02);
+}
+
+.IN:active{
+    transform: scale(.70);
+}
+
+.datos-register input{
+    background-color: white;
+    color: black;
+    border: 1px solid #d75078;
+    padding: 1px;
+    border-radius: 7px;
+    padding: 10px;
+}
+
+.datos-register input:focus{
+    outline: none;
+    border: 1px solid #d75078;
+    box-shadow: 0 0 8px rgba(215, 80, 120, 0.4);
+    transform: scale(1.02);
+}
+.password-container{
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-container input{
+    width: 100%;
+    padding-right: 40px; /* espacio para el icono */
+}
+
+.eye-icon{
+    position: absolute;
+    right: 10px;
+    top: 8px;
+    cursor: pointer;
+    color: #d75078;
+    font-size: 18px;
+}
+
+
+

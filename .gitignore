@@ -1,0 +1,28 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+
+# Configuración local y secretos
+appsettings.*.local.json
+appsettings.Local.json
+.env
+.env.*
+!.env.example
+
+# Imágenes subidas (almacenamiento del servidor)
+backend/storage/
+
+# Node
+node_modules/
+dist/
+
+# Editor / SO
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db

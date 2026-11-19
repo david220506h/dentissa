@@ -1,0 +1,314 @@
+/* ── PACIENTES ──────────────────────────────────────────*/
+
+.pacientes-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pacientes-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  width: 100%;
+  max-width: 460px;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.pacientes-search svg { flex-shrink: 0; stroke: var(--text-label); }
+
+.pacientes-search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text-main);
+  width: 100%;
+}
+
+.pacientes-search input::placeholder { color: var(--text-label); }
+
+/* ── Grid ───────────────────────────────────────────────*/
+.pacientes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.pacientes-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-label);
+  font-size: 14px;
+  padding: 48px 0;
+}
+
+/* ── Tarjeta ────────────────────────────────────────────*/
+.paciente-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.2s;
+}
+
+.paciente-card:hover {
+  box-shadow: 0 4px 20px rgba(233, 30, 140, 0.1);
+  border-color: var(--pink-light);
+}
+
+.paciente-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.paciente-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--pink);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+
+.paciente-nombre {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--pink);
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+
+.paciente-edad {
+  font-size: 14px;
+  color: var(--text-main);
+  font-weight: 500;
+  line-height: 1.2;
+  transition: color 0.3s;
+}
+
+.paciente-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.paciente-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-main);
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.paciente-info-row svg { flex-shrink: 0; stroke: var(--pink); }
+
+/* Botones editar / eliminar en la tarjeta */
+.paciente-card__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.pac-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1.5px solid;
+  background: transparent;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.pac-btn:hover { transform: translateY(-1px); }
+
+.pac-btn--edit   { border-color: #93c5fd; color: #3b82f6; }
+.pac-btn--delete { border-color: #fca5a5; color: #ef4444; }
+
+.pac-btn--edit:hover   { background: #eff6ff; }
+.pac-btn--delete:hover { background: #fef2f2; }
+
+html.dark .pac-btn--edit:hover   { background: #1e3a5f; }
+html.dark .pac-btn--delete:hover { background: #3b0f0f; }
+
+/* ── MODAL ──────────────────────────────────────────────*/
+.pac-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(3px);
+}
+
+/* IMPORTANTE: fondo sólido, sin transparencia */
+.pac-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+}
+
+html.dark .pac-modal {
+  background: #1a1d27;
+  border-color: #2a2d3a;
+}
+
+.pac-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pac-modal-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--pink);
+}
+
+.pac-modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--bg-page);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-main);
+  transition: background 0.15s;
+}
+
+html.dark .pac-modal-close { background: #22253a; }
+.pac-modal-close:hover { background: var(--border); }
+
+.pac-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pac-modal-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.pac-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pac-modal-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-label);
+}
+
+.pac-modal-field input {
+  background: var(--bg-page);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.18s, background 0.3s;
+}
+
+html.dark .pac-modal-field input {
+  background: #13151f;
+  border-color: #2a2d3a;
+  color: #f0f0f0;
+}
+
+.pac-modal-field input:focus { border-color: var(--pink); }
+.pac-modal-field input::placeholder { color: var(--text-label); }
+
+.pac-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.btn-cancelar {
+  padding: 9px 18px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-cancelar:hover { background: var(--bg-page); }
+
+.btn-guardar {
+  padding: 9px 20px;
+  background: var(--pink);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: white;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.btn-guardar:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+/* ── Responsive ─────────────────────────────────────────*/
+@media (max-width: 900px) {
+  .pacientes-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 580px) {
+  .pacientes-grid { grid-template-columns: 1fr; }
+  .pacientes-toolbar { flex-direction: column; align-items: stretch; }
+  .pacientes-search { max-width: 100%; }
+}

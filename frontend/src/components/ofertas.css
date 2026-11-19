@@ -1,0 +1,347 @@
+/* ── OFERTAS ────────────────────────────────────────────*/
+
+.ofertas-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.ofertas-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--pink);
+  margin-bottom: 4px;
+}
+
+.ofertas-subtitle {
+  font-size: 14px;
+  color: var(--text-label);
+  font-weight: 400;
+  transition: color 0.3s;
+}
+
+/* ── Grid ───────────────────────────────────────────────*/
+.ofertas-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.ofertas-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-label);
+  font-size: 14px;
+  padding: 48px 0;
+}
+
+/* ── Tarjeta ────────────────────────────────────────────*/
+.oferta-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.2s;
+}
+
+.oferta-card:hover {
+  box-shadow: 0 4px 20px rgba(233, 30, 140, 0.08);
+}
+
+/* Top: nombre + badge */
+.oferta-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.oferta-nombre {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--pink);
+  margin-bottom: 4px;
+}
+
+.oferta-servicio {
+  font-size: 13px;
+  color: var(--text-soft);
+  transition: color 0.3s;
+}
+
+/* Badge activo / inactivo */
+.oferta-badge {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.oferta-badge--activo {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.oferta-badge--inactivo {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+html.dark .oferta-badge--activo {
+  background: #14532d;
+  color: #4ade80;
+}
+
+html.dark .oferta-badge--inactivo {
+  background: #1f2937;
+  color: #9ca3af;
+}
+
+/* Bloque de descuento */
+.oferta-descuento {
+  background: var(--pink-soft);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--pink);
+  letter-spacing: -0.5px;
+  transition: background 0.3s;
+}
+
+html.dark .oferta-descuento {
+  background: #2a0f1f;
+}
+
+/* Fechas */
+.oferta-fechas {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.oferta-fecha-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.oferta-fecha-label {
+  color: var(--text-soft);
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.oferta-fecha-value {
+  font-weight: 700;
+  color: var(--pink);
+}
+
+/* Botones editar / eliminar */
+.oferta-acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.oferta-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1.5px solid;
+  background: transparent;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.oferta-btn:hover {
+  transform: translateY(-1px);
+}
+
+.oferta-btn--edit {
+  border-color: #93c5fd;
+  color: #3b82f6;
+}
+
+.oferta-btn--edit:hover {
+  background: #eff6ff;
+}
+
+.oferta-btn--delete {
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+.oferta-btn--delete:hover {
+  background: #fef2f2;
+}
+
+html.dark .oferta-btn--edit:hover   { background: #1e3a5f; }
+html.dark .oferta-btn--delete:hover { background: #3b0f0f; }
+
+/* ── MODAL ──────────────────────────────────────────────*/
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--pink);
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--bg-page);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-main);
+  transition: background 0.15s;
+}
+
+.modal-close:hover {
+  background: var(--border);
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-label);
+}
+
+.modal-field input,
+.modal-field select {
+  background: var(--bg-page);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.18s, background 0.3s;
+  appearance: none;
+}
+
+.modal-field input:focus,
+.modal-field select:focus {
+  border-color: var(--pink);
+}
+
+.modal-field input::placeholder {
+  color: var(--text-label);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.btn-cancelar {
+  padding: 9px 18px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-cancelar:hover {
+  background: var(--bg-page);
+}
+
+.btn-guardar {
+  padding: 9px 20px;
+  background: var(--pink);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: white;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.btn-guardar:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+/* ── Responsive ─────────────────────────────────────────*/
+@media (max-width: 700px) {
+  .ofertas-grid {
+    grid-template-columns: 1fr;
+  }
+}
