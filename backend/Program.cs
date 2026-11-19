@@ -16,9 +16,10 @@ if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException(
         "Falta ConnectionStrings:DefaultConnection. Configúrala con user-secrets o con la variable de entorno ConnectionStrings__DefaultConnection.");
 
-// Conexión SQL Server
+// Conexión PostgreSQL; tablas y columnas en snake_case
 builder.Services.AddDbContext<DentissaDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString)
+           .UseSnakeCaseNamingConvention());
 
 // Inyección de dependencias
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();

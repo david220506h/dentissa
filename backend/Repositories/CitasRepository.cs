@@ -89,8 +89,8 @@ namespace backend.Repositories
             return await _context.Ofertas.FirstOrDefaultAsync(o =>
                 o.ServicioId  == servicioId &&
                 o.Activa      == true &&
-                o.FechaInicio <= DateTime.Now &&
-                o.FechaFin    >= DateTime.Now);
+                o.FechaInicio <= DateTime.UtcNow &&
+                o.FechaFin    >= DateTime.UtcNow);
         }
 
         public async Task<Servicio?> GetServicioAsync(int servicioId)

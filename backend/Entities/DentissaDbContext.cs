@@ -102,7 +102,6 @@ public partial class DentissaDbContext : DbContext
             entity.Property(e => e.Curp)
                 .HasMaxLength(18)
                 .HasColumnName("CURP");
-            entity.Property(e => e.FechaNacimiento).HasColumnType("datetime");
             entity.Property(e => e.Sexo).HasMaxLength(10);
 
             entity.HasOne(d => d.Usuario).WithMany(p => p.Clientes)
@@ -121,8 +120,7 @@ public partial class DentissaDbContext : DbContext
                 .HasMaxLength(1000)
                 .HasColumnName("Comentario");
             entity.Property(e => e.Fecha)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("now()");
             entity.Property(e => e.Visible).HasDefaultValue(false);
 
             entity.HasOne(d => d.Cliente).WithMany(p => p.Comentarios)
@@ -143,8 +141,7 @@ public partial class DentissaDbContext : DbContext
             entity.HasIndex(e => e.Id, "UQ__Consulta__3214EC0632329033").IsUnique();
 
             entity.Property(e => e.Fecha)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("now()");
             entity.Property(e => e.FotoUrl).HasMaxLength(500);
 
             entity.HasOne(d => d.ConsultaRegistro).WithMany(p => p.ConsultaFotos)
@@ -160,8 +157,7 @@ public partial class DentissaDbContext : DbContext
             entity.HasIndex(e => e.Id, "UQ__Consulta__3214EC0632583E5B").IsUnique();
 
             entity.Property(e => e.Fecha)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("now()");
             entity.Property(e => e.Observaciones).HasMaxLength(1000);
 
             entity.HasOne(d => d.Cita).WithMany(p => p.ConsultaRegistros)
@@ -181,11 +177,9 @@ public partial class DentissaDbContext : DbContext
             entity.Property(e => e.ExamenExtraoral).HasMaxLength(500);
             entity.Property(e => e.ExamenIntraoral).HasMaxLength(500);
             entity.Property(e => e.FechaActualizacion)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("now()");
             entity.Property(e => e.FechaCreacion)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("now()");
             entity.Property(e => e.Observaciones).HasMaxLength(500);
             entity.Property(e => e.Pa)
                 .HasMaxLength(20)
@@ -218,11 +212,9 @@ public partial class DentissaDbContext : DbContext
             entity.Property(e => e.EnfermedadesSanguineas).HasDefaultValue(false);
             entity.Property(e => e.EnfermedadesSanguineasDetalle).HasMaxLength(300);
             entity.Property(e => e.FechaActualizacion)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("now()");
             entity.Property(e => e.FechaCreacion)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("now()");
             entity.Property(e => e.Fuma).HasDefaultValue(false);
             entity.Property(e => e.FumaDetalle).HasMaxLength(300);
             entity.Property(e => e.Gastritis).HasDefaultValue(false);
@@ -268,7 +260,6 @@ public partial class DentissaDbContext : DbContext
             entity.HasIndex(e => e.Id, "UQ__Notifica__3214EC065D5044C1").IsUnique();
 
             entity.Property(e => e.Enviada).HasDefaultValue(false);
-            entity.Property(e => e.FechaEnvio).HasColumnType("datetime");
             entity.Property(e => e.Mensaje).HasMaxLength(500);
             entity.Property(e => e.Tipo).HasMaxLength(20);
 
@@ -291,8 +282,6 @@ public partial class DentissaDbContext : DbContext
 
             entity.Property(e => e.Activa).HasDefaultValue(true);
             entity.Property(e => e.Descuento).HasColumnType("decimal(5, 2)");
-            entity.Property(e => e.FechaFin).HasColumnType("datetime");
-            entity.Property(e => e.FechaInicio).HasColumnType("datetime");
 
             entity.HasOne(d => d.Servicio).WithMany(p => p.Oferta)
                 .HasForeignKey(d => d.ServicioId)
@@ -326,8 +315,7 @@ public partial class DentissaDbContext : DbContext
 
             entity.Property(e => e.Descripcion).HasMaxLength(1000);
             entity.Property(e => e.FechaRealizacion)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("now()");
             entity.Property(e => e.FotoAntes).HasMaxLength(500);
             entity.Property(e => e.FotoDespues).HasMaxLength(500);
             entity.Property(e => e.Titulo).HasMaxLength(200);
@@ -386,12 +374,10 @@ public partial class DentissaDbContext : DbContext
             entity.Property(e => e.Apellido).HasMaxLength(100);
             entity.Property(e => e.Email).HasMaxLength(150);
             entity.Property(e => e.FechaRegistro)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
+                .HasDefaultValueSql("now()");
             entity.Property(e => e.Nombre).HasMaxLength(100);
             entity.Property(e => e.Password).HasMaxLength(255);
             entity.Property(e => e.RefreshToken).HasMaxLength(500);
-            entity.Property(e => e.RefreshTokenExpiration).HasColumnType("datetime");
             entity.Property(e => e.Rol).HasMaxLength(20);
             entity.Property(e => e.Telefono).HasMaxLength(20);
         });

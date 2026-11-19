@@ -49,7 +49,7 @@ namespace backend.Controllers
                 Telefono     = dto.Telefono,
                 Password     = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 Rol          = dto.Rol.ToLower(),
-                FechaRegistro = DateTime.Now
+                FechaRegistro = DateTime.UtcNow
             };
 
             var creado = await _authRepository.CreateAsync(usuario);

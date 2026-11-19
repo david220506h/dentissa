@@ -42,7 +42,7 @@ namespace backend.Services
                 Telefono = registerDto.Telefono,
                 Password = BCrypt.Net.BCrypt.HashPassword(registerDto.Password), // Hash aquí
                 Rol = Roles.Cliente, // El registro público nunca acepta un rol del cliente
-                FechaRegistro = DateTime.Now
+                FechaRegistro = DateTime.UtcNow
             };
 
             var usuarioCreado = await _authRepository.CreateAsync(nuevoUsuario);

@@ -73,8 +73,10 @@ cd backend
 $b = New-Object byte[] 48; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)
 
 dotnet user-secrets set "JwtSettings:SecretKey" "<clave generada>"
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<cadena de conexión>"
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=dentissa;Username=dentissa;Password=<POSTGRES_PASSWORD>"
 ```
+
+Base de datos (desde la Fase 1, PostgreSQL): copiar `.env.example` de la raíz como `.env` (no se versiona), definir `POSTGRES_PASSWORD` y levantar el contenedor con `docker compose up -d`. La misma contraseña va en la cadena de conexión de user-secrets.
 
 Frontend: copiar `frontend/.env.example` como `frontend/.env.local` (no se versiona) y ajustar `API_PROXY_TARGET` (por ejemplo, la IP del equipo del backend) y, si se usa un túnel, `DEV_ALLOWED_HOSTS`.
 
@@ -82,7 +84,7 @@ Frontend: copiar `frontend/.env.example` como `frontend/.env.local` (no se versi
 
 | Variable | Uso |
 |---|---|
-| `ConnectionStrings__DefaultConnection` | Cadena de conexión (cuenta con permisos mínimos, no `sa`) |
+| `ConnectionStrings__DefaultConnection` | Cadena de conexión a PostgreSQL con TLS (`SSL Mode=VerifyFull`) y un rol de aplicación con permisos mínimos, distinto del dueño de las tablas |
 | `JwtSettings__SecretKey` | Clave de firma JWT, mínimo 32 bytes aleatorios |
 | `Cors__AllowedOrigins__0`, `__1`… | Orígenes permitidos del frontend |
 | `CatalogoImagenes__Ruta` | Carpeta de imágenes del catálogo (persistente y con respaldo) |
@@ -94,7 +96,7 @@ Frontend: copiar `frontend/.env.example` como `frontend/.env.local` (no se versi
 dotnet test Dentissa.sln
 ```
 
-En este equipo solo está instalado el runtime de .NET 11; para ejecutar la API o las pruebas `net9.0` hay que instalar el runtime de .NET 9 o definir `DOTNET_ROLL_FORWARD=Major` en la sesión.
+Desde la Fase 1 el proyecto es `net10.0`. Si solo está instalado un runtime más nuevo (por ejemplo, .NET 11), hay que instalar el de .NET 10 o definir `DOTNET_ROLL_FORWARD=Major` en la sesión.
 
 ---
 
