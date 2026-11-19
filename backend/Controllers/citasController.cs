@@ -1,12 +1,15 @@
+using backend.Constants;
 using backend.DTOs;
 using backend.Entities;
 using backend.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = Roles.Panel)]
     public class CitasController : ControllerBase
     {
         private readonly ICitasRepository _repo;

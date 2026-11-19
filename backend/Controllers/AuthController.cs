@@ -18,6 +18,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
             if (!ModelState.IsValid)
@@ -35,6 +36,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             if (!ModelState.IsValid)
@@ -52,6 +54,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("refresh")]
+        [AllowAnonymous]
         public async Task<IActionResult> Refresh([FromBody] RefreshTokenDto refreshTokenDto)
         {
             try

@@ -1,12 +1,15 @@
+using backend.Constants;
 using backend.DTOs;
 using backend.Entities;
 using backend.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = Roles.Admin)]
     public class UsuariosController : ControllerBase
     {
         private readonly IAuthRepository _authRepository;
@@ -43,9 +46,12 @@ namespace backend.Controllers
             if (await _authRepository.EmailExistsAsync(dto.Email))
                 return BadRequest(new { mensaje = "El correo ya está registrado" });
 
-            var rolesValidos = new[] { "admin", "secretaria", "cliente" };
-            if (!rolesValidos.Contains(dto.Rol.ToLower()))
+            if (string.IsNullOrWhiteSpace(dto.Rol) || !Roles.Todos.Contains(dto.Rol.ToLower()))
                 return BadRequest(new { mensaje = "Rol inválido" });
+
+            // Redundante con [Authorize] del controlador, pero protege si se abre a otros roles
+            if (dto.Rol.ToLower() == Roles.Admin && !User.IsInRole(Roles.Admin))
+                return Forbid();
 
             var usuario = new Usuario
             {
