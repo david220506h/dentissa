@@ -24,29 +24,7 @@ namespace backend.Controllers
         public async Task<IActionResult> GetAll()
         {
             var citas = await _repo.GetAllAsync();
-
-            var result = citas.Select(c => new
-            {
-                c.Id,
-                paciente        = c.Cliente.Usuario.Nombre + " " + c.Cliente.Usuario.Apellido,
-                servicio        = c.Servicio.Nombre,
-                trabajador      = c.Trabajador.Usuario.Nombre + " " + c.Trabajador.Usuario.Apellido,
-                fecha           = c.Fecha.ToString("dd/MM/yyyy"),
-                hora            = c.Hora.ToString("HH:mm"),
-                estado          = c.Estado,
-                c.CostoBase,
-                c.DescuentoAplicado,
-                c.CostoExtra,
-                c.MotivoExtra,
-                c.CostoTotal,
-                c.AgendadoPor,
-                c.ClienteId,
-                c.TrabajadorId,
-                c.ServicioId,
-                oferta          = c.Oferta != null ? c.Oferta.Descuento : (decimal?)null
-            });
-
-            return Ok(result);
+            return Ok(citas.Select(ToRespuestaDto));
         }
 
         // ── GET: api/Citas/5 ──────────────────────────────────
@@ -55,7 +33,7 @@ namespace backend.Controllers
         {
             var cita = await _repo.GetByIdAsync(id);
             if (cita == null) return NotFound(new { mensaje = "Cita no encontrada" });
-            return Ok(cita);
+            return Ok(ToRespuestaDto(cita));
         }
 
         // ── GET: api/Citas/horarios-disponibles?fecha=2024-11-27
@@ -74,11 +52,11 @@ namespace backend.Controllers
         public async Task<IActionResult> GetClientes()
         {
             var clientes = await _repo.GetClientesAsync();
-            var result = clientes.Select(c => new
+            var result = clientes.Select(c => new ClienteOpcionDto
             {
-                c.Id,
-                nombre   = c.Usuario.Nombre,
-                apellido = c.Usuario.Apellido,
+                Id       = c.Id,
+                Nombre   = c.Usuario.Nombre,
+                Apellido = c.Usuario.Apellido,
             });
             return Ok(result);
         }
@@ -88,13 +66,13 @@ namespace backend.Controllers
         public async Task<IActionResult> GetTrabajadores()
         {
             var trabajadores = await _repo.GetTrabajadoresAsync();
-            var result = trabajadores.Select(t => new
+            var result = trabajadores.Select(t => new TrabajadorOpcionDto
             {
-                t.Id,
-                nombre       = t.Usuario.Nombre,
-                apellido     = t.Usuario.Apellido,
-                t.Especialidad,
-                t.Titulo
+                Id           = t.Id,
+                Nombre       = t.Usuario.Nombre,
+                Apellido     = t.Usuario.Apellido,
+                Especialidad = t.Especialidad,
+                Titulo       = t.Titulo
             });
             return Ok(result);
         }
@@ -104,12 +82,12 @@ namespace backend.Controllers
         public async Task<IActionResult> GetServicios()
         {
             var servicios = await _repo.GetServiciosAsync();
-            var result = servicios.Select(s => new
+            var result = servicios.Select(s => new ServicioOpcionDto
             {
-                s.Id,
-                s.Nombre,
-                s.Precio,
-                s.Duracion
+                Id       = s.Id,
+                Nombre   = s.Nombre,
+                Precio   = s.Precio,
+                Duracion = s.Duracion
             });
             return Ok(result);
         }
@@ -206,5 +184,26 @@ namespace backend.Controllers
             await _repo.UpdateAsync(cita);
             return Ok(new { mensaje = "Cita confirmada", estado = cita.Estado });
         }
+
+        private static CitaRespuestaDto ToRespuestaDto(Cita c) => new()
+        {
+            Id                = c.Id,
+            Paciente          = c.Cliente.Usuario.Nombre + " " + c.Cliente.Usuario.Apellido,
+            Servicio          = c.Servicio.Nombre,
+            Trabajador        = c.Trabajador.Usuario.Nombre + " " + c.Trabajador.Usuario.Apellido,
+            Fecha             = c.Fecha.ToString("dd/MM/yyyy"),
+            Hora              = c.Hora.ToString("HH:mm"),
+            Estado            = c.Estado,
+            CostoBase         = c.CostoBase,
+            DescuentoAplicado = c.DescuentoAplicado,
+            CostoExtra        = c.CostoExtra,
+            MotivoExtra       = c.MotivoExtra,
+            CostoTotal        = c.CostoTotal,
+            AgendadoPor       = c.AgendadoPor,
+            ClienteId         = c.ClienteId,
+            TrabajadorId      = c.TrabajadorId,
+            ServicioId        = c.ServicioId,
+            Oferta            = c.Oferta?.Descuento
+        };
     }
 }

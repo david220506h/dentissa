@@ -24,19 +24,7 @@ namespace backend.Controllers
         public async Task<IActionResult> GetAll()
         {
             var usuarios = await _authRepository.GetAllAsync();
-            var result = usuarios.Select(u => new
-            {
-                u.Id,
-                u.Nombre,
-                u.Apellido,
-                u.Email,
-                u.Telefono,
-                u.Rol,
-                fechaRegistro = u.FechaRegistro.HasValue
-                    ? u.FechaRegistro.Value.ToString("dd/MM/yyyy")
-                    : ""
-            });
-            return Ok(result);
+            return Ok(usuarios.Select(u => ToListaDto(u, new UsuarioListaDto())));
         }
 
         // ── POST: api/Usuarios ────────────────────────────────
@@ -65,17 +53,9 @@ namespace backend.Controllers
             };
 
             var creado = await _authRepository.CreateAsync(usuario);
-            return Ok(new
-            {
-                creado.Id,
-                creado.Nombre,
-                creado.Apellido,
-                creado.Email,
-                creado.Telefono,
-                creado.Rol,
-                fechaRegistro = creado.FechaRegistro?.ToString("dd/MM/yyyy"),
-                mensaje = "Usuario creado correctamente"
-            });
+            var respuesta = ToListaDto(creado, new UsuarioCreadoDto());
+            respuesta.Mensaje = "Usuario creado correctamente";
+            return Ok(respuesta);
         }
 
         // ── DELETE: api/Usuarios/5 ────────────────────────────
@@ -88,6 +68,18 @@ namespace backend.Controllers
 
             await _authRepository.DeleteAsync(usuario);
             return Ok(new { mensaje = "Usuario eliminado correctamente" });
+        }
+
+        private static T ToListaDto<T>(Usuario u, T dto) where T : UsuarioListaDto
+        {
+            dto.Id            = u.Id;
+            dto.Nombre        = u.Nombre;
+            dto.Apellido      = u.Apellido;
+            dto.Email         = u.Email;
+            dto.Telefono      = u.Telefono;
+            dto.Rol           = u.Rol;
+            dto.FechaRegistro = u.FechaRegistro?.ToString("dd/MM/yyyy") ?? "";
+            return dto;
         }
     }
 }
