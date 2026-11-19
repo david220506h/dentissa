@@ -133,3 +133,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
+
+// Permite que las pruebas de integración usen WebApplicationFactory<Program>
+public partial class Program { }
