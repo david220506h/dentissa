@@ -8,9 +8,16 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Los secretos vienen de user-secrets (desarrollo) o variables de entorno (producción).
+// Si faltan, la aplicación no arranca.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new InvalidOperationException(
+        "Falta ConnectionStrings:DefaultConnection. Configúrala con user-secrets o con la variable de entorno ConnectionStrings__DefaultConnection.");
+
 // Conexión SQL Server
 builder.Services.AddDbContext<DentissaDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 // Inyección de dependencias
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
@@ -20,7 +27,12 @@ builder.Services.AddScoped<ICitasRepository, CitasRepository>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"]!;
+var secretKey = jwtSettings["SecretKey"];
+
+// HS256 requiere una clave de al menos 256 bits (32 bytes)
+if (string.IsNullOrWhiteSpace(secretKey) || Encoding.UTF8.GetByteCount(secretKey) < 32)
+    throw new InvalidOperationException(
+        "JwtSettings:SecretKey falta o es demasiado corta (mínimo 32 bytes). Configúrala con user-secrets o con la variable de entorno JwtSettings__SecretKey.");
 
 builder.Services.AddAuthentication(options =>
 {
