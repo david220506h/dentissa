@@ -63,19 +63,15 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
-// CORS para React
+// CORS para React: solo los orígenes de Cors:AllowedOrigins
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ReactPolicy", policy =>
     {
-        policy.WithOrigins(
-            "http://localhost:5173",
-            "http://192.168.1.17:5173",
-            "https://receiving-talented-path-stroke.trycloudflare.com"
-
-        )
+        policy.WithOrigins(allowedOrigins)
         .AllowAnyHeader()
-        .AllowAnyOrigin()
         .AllowAnyMethod();
     });
 });
