@@ -135,6 +135,16 @@ nav{
   color: #000;
 }
 
+.aviso-sesion {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #fdecef;
+  color: #a3264b;
+  font-size: 14px;
+  text-align: center;
+}
+
 .btn-login {
   padding: 5px 20px;
   background: #d75078;

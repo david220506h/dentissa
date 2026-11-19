@@ -6,12 +6,12 @@ import Nav from '../../components/nav';
 import { Star,User, Medal, HistoricShieldAlt } from 'iconoir-react';
 
 
-function Principal({ usuario, setUsuario, onVerDashboard }) {
+function Principal({ usuario, setUsuario, onVerDashboard, avisoSesion, onAvisoVisto }) {
     
 
     return (
         <div className="principal-container">
-            <Nav setUsuario={setUsuario} usuario={usuario} onVerDashboard={onVerDashboard}/>  
+            <Nav setUsuario={setUsuario} usuario={usuario} onVerDashboard={onVerDashboard} avisoSesion={avisoSesion} onAvisoVisto={onAvisoVisto}/>  
             <div className='content-principal'> 
                 <div className='textos-principal'>
                     <div className='frase-container'>

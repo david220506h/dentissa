@@ -1,10 +1,10 @@
 // Servicio centralizado para manejar autenticación y tokens
-// solo para desarrollo a distancia 
-// const API_URL = "https://receiving-talented-path-stroke.trycloudflare.com/api";
+// En desarrollo se usa "/api" a través del proxy de Vite (ver vite.config.js).
+// Para otro destino, definir VITE_API_URL en frontend/.env.local
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
-
-// desallo en local
-const API_URL = "http://192.168.1.17:5058/api";
+export const MENSAJE_SIN_PERMISO = "No tienes permiso para realizar esta acción.";
+export const MENSAJE_SESION_EXPIRADA = "Tu sesión expiró. Inicia sesión de nuevo.";
 
 // Guardar tokens tras login
 export const saveSession = (authResponse) => {
@@ -61,24 +61,13 @@ const refreshAccessToken = async () => {
   }
 };
 
-// Fetch autenticado: renueva el token automáticamente si expiró
-export const authFetch = async (url, options = {}) => {
-  // Si el token expiró, intentar renovarlo
-  if (isTokenExpired()) {
-    const renewed = await refreshAccessToken();
-    if (!renewed) {
-      // Refresh también expiró → sesión terminada
-      window.dispatchEvent(new Event("session-expired"));
-      throw new Error("Sesión expirada");
-    }
-  }
-
+const buildConfig = (options) => {
   const accessToken = localStorage.getItem("accessToken");
 
   // Con FormData el navegador pone el Content-Type (multipart con boundary)
   const esFormData = options.body instanceof FormData;
 
-  const config = {
+  return {
     ...options,
     headers: {
       ...(esFormData ? {} : { "Content-Type": "application/json" }),
@@ -86,8 +75,33 @@ export const authFetch = async (url, options = {}) => {
       ...options.headers
     }
   };
+};
 
-  return fetch(url, config);
+// Sesión terminada: App escucha "session-expired" y lleva al inicio de sesión
+const terminarSesion = (notificar) => {
+  clearSession();
+  if (notificar) window.dispatchEvent(new Event("session-expired"));
+  return new Error(MENSAJE_SESION_EXPIRADA);
+};
+
+// Fetch autenticado: renueva el token si expiró o si el servidor lo rechaza (401).
+// Un 403 se convierte en un error con mensaje claro.
+export const authFetch = async (url, options = {}, { notificar = true } = {}) => {
+  // Si el token expiró, intentar renovarlo
+  if (isTokenExpired() && !(await refreshAccessToken())) throw terminarSesion(notificar);
+
+  let response = await fetch(url, buildConfig(options));
+
+  // Token rechazado por el servidor (revocado, rol cambiado...): un intento de renovación
+  if (response.status === 401) {
+    if (!(await refreshAccessToken())) throw terminarSesion(notificar);
+    response = await fetch(url, buildConfig(options));
+    if (response.status === 401) throw terminarSesion(notificar);
+  }
+
+  if (response.status === 403) throw new Error(MENSAJE_SIN_PERMISO);
+
+  return response;
 };
 
 // Login
@@ -124,8 +138,14 @@ export const register = async (nombre, apellido, email, telefono, password) => {
 // Logout
 export const logout = async () => {
   try {
-    await authFetch(`${API_URL}/auth/logout`, { method: "POST" });
+    // Sin aviso de "sesión expirada": el usuario está cerrando sesión a propósito
+    await authFetch(`${API_URL}/auth/logout`, { method: "POST" }, { notificar: false });
+  } catch {
+    // Si el token ya no era válido, la sesión local se limpia igual
   } finally {
     clearSession();
   }
 };
+// true si el error viene de authFetch por sesión expirada o falta de permiso
+export const esErrorDeAcceso = (err) =>
+  [MENSAJE_SIN_PERMISO, MENSAJE_SESION_EXPIRADA].includes(err?.message);

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { authFetch, esErrorDeAcceso } from "../services/authService";
 import "./Citas.css";
 
 const API      = "/api/Citas";
@@ -86,13 +87,13 @@ function ModalNueva({ onClose, onGuardar }) {
     const cargar = async () => {
       try {
         const [rCli, rTrab, rServ] = await Promise.all([
-          fetch(API_CLI), fetch(API_TRAB), fetch(API_SERV),
+          authFetch(API_CLI), authFetch(API_TRAB), authFetch(API_SERV),
         ]);
         setClientes(await rCli.json());
         setTrabajadores(await rTrab.json());
         setServicios(await rServ.json());
-      } catch {
-        setError("Error al cargar datos");
+      } catch (err) {
+        setError(esErrorDeAcceso(err) ? err.message : "Error al cargar datos");
       }
     };
     cargar();
@@ -105,11 +106,11 @@ function ModalNueva({ onClose, onGuardar }) {
       setCargandoH(true);
       setForm(prev => ({ ...prev, hora: "" }));
       try {
-        const res = await fetch(`${API}/horarios-disponibles?fecha=${form.fecha}`);
+        const res = await authFetch(`${API}/horarios-disponibles?fecha=${form.fecha}`);
         const data = await res.json();
         setHorarios(data);
-      } catch {
-        setError("Error al cargar horarios");
+      } catch (err) {
+        setError(esErrorDeAcceso(err) ? err.message : "Error al cargar horarios");
       } finally {
         setCargandoH(false);
       }
@@ -129,7 +130,7 @@ function ModalNueva({ onClose, onGuardar }) {
     setGuardando(true);
     setError(null);
     try {
-      const res = await fetch(API, {
+      const res = await authFetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -295,7 +296,7 @@ function ModalEditar({ cita, onClose, onGuardar }) {
   });
 
   useEffect(() => {
-    fetch(API_TRAB).then(r => r.json()).then(setTrabajadores).catch(() => {});
+    authFetch(API_TRAB).then(r => r.json()).then(setTrabajadores).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -303,7 +304,7 @@ function ModalEditar({ cita, onClose, onGuardar }) {
     const cargarHorarios = async () => {
       setCargandoH(true);
       try {
-        const res = await fetch(`${API}/horarios-disponibles?fecha=${form.fecha}`);
+        const res = await authFetch(`${API}/horarios-disponibles?fecha=${form.fecha}`);
         const data = await res.json();
         // Incluir la hora actual de la cita aunque ya esté "ocupada"
         if (cita.hora && !data.includes(cita.hora)) data.unshift(cita.hora);
@@ -321,7 +322,7 @@ function ModalEditar({ cita, onClose, onGuardar }) {
     setGuardando(true);
     setError(null);
     try {
-      const res = await fetch(`${API}/${cita.id}`, {
+      const res = await authFetch(`${API}/${cita.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -442,7 +443,7 @@ export default function Citas() {
     setCargando(true);
     setError(null);
     try {
-      const res = await fetch(API);
+      const res = await authFetch(API);
       if (!res.ok) throw new Error("Error al cargar citas");
       setCitas(await res.json());
     } catch (err) {
@@ -455,7 +456,7 @@ export default function Citas() {
   const handleEliminar = async (id) => {
     if (!confirm("¿Seguro que deseas eliminar esta cita?")) return;
     try {
-      const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+      const res = await authFetch(`${API}/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error al eliminar");
       await cargarCitas();
     } catch (err) {
@@ -465,7 +466,7 @@ export default function Citas() {
 
   const handleConfirmar = async (id) => {
     try {
-      const res = await fetch(`${API}/${id}/confirmar`, { method: "PATCH" });
+      const res = await authFetch(`${API}/${id}/confirmar`, { method: "PATCH" });
       if (!res.ok) throw new Error("Error al confirmar");
       await cargarCitas();
     } catch (err) {

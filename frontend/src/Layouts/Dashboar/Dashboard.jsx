@@ -8,6 +8,7 @@ import Ofertas from "../../components/ofertas";
 import Usuarios from "../../components/usuarios";
 import Comentarios from "../../components/comentarios"
 import { FaUserCircle } from 'react-icons/fa';
+import { ROLES } from "../../constants/roles";
 
 // ── Íconos ───────────────────────────────────────────────
 const Icons = {
@@ -181,22 +182,28 @@ function ModalPacientes({ onClose }) {
 }
 
 // ── Nav items ────────────────────────────────────────────
+// roles: quién ve cada sección (el backend vuelve a validar en cada petición)
+const RECEPCION = [ROLES.ADMIN, ROLES.SECRETARIA];
+const SOLO_ADMIN = [ROLES.ADMIN];
+
 const NAV_ITEMS = [
-  { id: "dashboard",   label: "Dashboard",   icon: Icons.dashboard },
-  { id: "citas",       label: "Citas",        icon: Icons.citas },
-  { id: "pacientes",   label: "Pacientes",    icon: Icons.pacientes },
-  { id: "servicios",   label: "Servicios",    icon: Icons.servicios },
-  { id: "ofertas",     label: "Ofertas",      icon: Icons.ofertas },
-  { id: "comentarios", label: "Comentarios",  icon: Icons.comentarios },
-  { id: "usuarios",    label: "Usuarios",     icon: Icons.usuarios },
+  { id: "dashboard",   label: "Dashboard",   icon: Icons.dashboard,   roles: RECEPCION },
+  { id: "citas",       label: "Citas",        icon: Icons.citas,       roles: RECEPCION },
+  { id: "pacientes",   label: "Pacientes",    icon: Icons.pacientes,   roles: RECEPCION },
+  { id: "servicios",   label: "Servicios",    icon: Icons.servicios,   roles: SOLO_ADMIN },
+  { id: "ofertas",     label: "Ofertas",      icon: Icons.ofertas,     roles: SOLO_ADMIN },
+  { id: "comentarios", label: "Comentarios",  icon: Icons.comentarios, roles: SOLO_ADMIN },
+  { id: "usuarios",    label: "Usuarios",     icon: Icons.usuarios,    roles: SOLO_ADMIN },
 ];
 
+const itemsPorRol = (rol) => NAV_ITEMS.filter((item) => item.roles.includes(rol));
+
 // ── Panel nav ────────────────────────────────────────────
-function PanelNav({ active, onNavigate }) {
+function PanelNav({ items, active, onNavigate }) {
   return (
     <nav className="nav">
       <div className="panel-nav">
-        {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
+        {items.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             className={`panel-nav__item${active === id ? " panel-nav__item--active" : ""}`}
@@ -299,7 +306,20 @@ function Dashboard({ usuario, setUsuario, onVerPrincipal }) {
   const [seccion,      setSeccion]      = useState("dashboard");
   const [verPacientes, setVerPacientes] = useState(false);
 
+  const items = itemsPorRol(usuario.rol);
+  const permitida = (id) => items.some((item) => item.id === id);
+
   const renderSeccion = () => {
+    if (!permitida(seccion)) return (
+      <main className="content">
+        <div className="welcome-card">
+          <div>
+            <h2>Sin acceso</h2>
+            <p>No tienes permiso para ver esta sección.</p>
+          </div>
+        </div>
+      </main>
+    );
     switch (seccion) {
       case "dashboard":   return (
         <SectionDashboard 
@@ -327,7 +347,7 @@ function Dashboard({ usuario, setUsuario, onVerPrincipal }) {
         mostrarMenu={false}
         onVerPrincipal={onVerPrincipal}
       />
-      <PanelNav active={seccion} onNavigate={setSeccion} />
+      <PanelNav items={items} active={seccion} onNavigate={setSeccion} />
       {renderSeccion()}
 
       {verPacientes && (

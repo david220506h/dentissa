@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { authFetch } from "../services/authService";
 import "./Usuarios.css";
 
 const API = "/api/Usuarios";
@@ -51,7 +52,7 @@ function Modal({ onClose, onGuardar }) {
     setGuardando(true);
     setError(null);
     try {
-      const res = await fetch(API, {
+      const res = await authFetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -147,7 +148,7 @@ export default function Usuarios() {
     setCargando(true);
     setError(null);
     try {
-      const res = await fetch(API);
+      const res = await authFetch(API);
       if (!res.ok) throw new Error("Error al cargar usuarios");
       setUsuarios(await res.json());
     } catch (err) {
@@ -160,7 +161,7 @@ export default function Usuarios() {
   const handleEliminar = async (id) => {
     if (!confirm("¿Seguro que deseas eliminar este usuario?")) return;
     try {
-      const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+      const res = await authFetch(`${API}/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error al eliminar");
       await cargarUsuarios();
     } catch (err) {

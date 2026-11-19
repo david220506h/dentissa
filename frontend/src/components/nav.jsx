@@ -9,12 +9,19 @@ import { FaUserCircle } from 'react-icons/fa';
 
 
 
-const Nav = ({ setUsuario, usuario, mostrarMenu = true, onVerPrincipal, onVerDashboard }) => {
+const Nav = ({ setUsuario, usuario, mostrarMenu = true, onVerPrincipal, onVerDashboard, avisoSesion, onAvisoVisto }) => {
   
   // const navigate = useNavigate();
   
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+
+  // Si la sesión expiró, el inicio de sesión se abre solo con el aviso
+  const loginVisible = showLogin || !!avisoSesion;
+  const cerrarLogin = () => {
+    setShowLogin(false);
+    if (onAvisoVisto) onAvisoVisto();
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -68,14 +75,15 @@ const Nav = ({ setUsuario, usuario, mostrarMenu = true, onVerPrincipal, onVerDas
         )}
       </div>
 
-      {showLogin && (
-        <div className="modal-overlay" onClick={() => setShowLogin(false)}>
+      {loginVisible && (
+        <div className="modal-overlay" onClick={() => cerrarLogin()}>
           <div className="modal-content modal-animation" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowLogin(false)}>×</button>
-            <Login setUsuario={setUsuario} onClose={() => setShowLogin(false)}/>
+            <button className="modal-close" onClick={() => cerrarLogin()}>×</button>
+            {avisoSesion && <p className="aviso-sesion" role="alert">{avisoSesion}</p>}
+            <Login setUsuario={setUsuario} onClose={() => cerrarLogin()}/>
             <p className='register-link'>
               ¿No tienes cuenta?{" "}
-              <button className='button-register' onClick={() => { setShowLogin(false); setShowRegister(true); }}>
+              <button className='button-register' onClick={() => { cerrarLogin(); setShowRegister(true); }}>
                 Regístrate aquí
               </button>
             </p>
