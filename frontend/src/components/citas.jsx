@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { authFetch, esErrorDeAcceso } from "../services/authService";
-import "./Citas.css";
+import "./citas.css";
 
 const API      = "/api/Citas";
 const API_CLI  = "/api/Citas/clientes";

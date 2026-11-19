@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./Ofertas.css";
+import "./ofertas.css";
 
 // ── Íconos ───────────────────────────────────────────────
 const PlusIcon = () => (

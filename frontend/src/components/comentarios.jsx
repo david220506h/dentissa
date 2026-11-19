@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./Comentarios.css";
+import "./comentarios.css";
 
 const COMENTARIOS_INICIALES = [
   { id: 1, nombre: "María García",  servicio: "Limpieza Dental", comentario: "Excelente servicio, muy profesional",    fecha: "19/11/2024", estrellas: 5 },

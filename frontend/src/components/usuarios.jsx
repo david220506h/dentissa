@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { authFetch } from "../services/authService";
-import "./Usuarios.css";
+import "./usuarios.css";
 
 const API = "/api/Usuarios";
 
