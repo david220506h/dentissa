@@ -75,10 +75,13 @@ export const authFetch = async (url, options = {}) => {
 
   const accessToken = localStorage.getItem("accessToken");
 
+  // Con FormData el navegador pone el Content-Type (multipart con boundary)
+  const esFormData = options.body instanceof FormData;
+
   const config = {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(esFormData ? {} : { "Content-Type": "application/json" }),
       Authorization: `Bearer ${accessToken}`,
       ...options.headers
     }

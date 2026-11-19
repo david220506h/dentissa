@@ -1,6 +1,6 @@
 // src/components/Dashboar/agregarServicios.jsx
 import React, { useState } from "react";
-import { uploadImageToGitHub } from "../../utils/githubUpload"; // 👈 IMPORTANTE: ajusta la ruta
+import { subirImagenCatalogo, validarImagen } from "../../../services/catalogoService";
 import "./agregarServicios.css";
 
 const AgregarServicios = ({ onClose }) => { // Recibe onClose como prop para cerrar modal
@@ -16,7 +16,12 @@ const AgregarServicios = ({ onClose }) => { // Recibe onClose como prop para cer
   const handleDrop = (e) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("image/")) {
+    if (file) {
+      const error = validarImagen(file);
+      if (error) {
+        alert(error);
+        return;
+      }
       setSelectedFile(file);
       setPreview(URL.createObjectURL(file));
     }
@@ -29,6 +34,12 @@ const AgregarServicios = ({ onClose }) => { // Recibe onClose como prop para cer
   const handleChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const error = validarImagen(file);
+      if (error) {
+        alert(error);
+        e.target.value = "";
+        return;
+      }
       setSelectedFile(file);
       setPreview(URL.createObjectURL(file));
     }
@@ -50,8 +61,8 @@ const AgregarServicios = ({ onClose }) => { // Recibe onClose como prop para cer
     setUploading(true);
     
     try {
-      // Subir imagen a GitHub
-      const imageUrl = await uploadImageToGitHub(selectedFile, nombre);
+      // Subir imagen al backend (catálogo)
+      const imageUrl = await subirImagenCatalogo(selectedFile);
       
       // Aquí puedes guardar los datos del servicio
       // Por ahora solo mostramos éxito
@@ -92,7 +103,7 @@ const AgregarServicios = ({ onClose }) => { // Recibe onClose como prop para cer
           <input
             id="imagen"
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             onChange={handleChange}
           />
         </div>
