@@ -1,6 +1,6 @@
-# Modelo de datos — Fase 1 (propuesta)
+# Modelo de datos — Fase 1
 
-> **Estado:** propuesta en revisión del arquitecto. Las preguntas abiertas ya están respondidas (sección 8). Nada de esto está implementado todavía.
+> **Estado:** aprobado por el arquitecto con 9 ajustes (ya incorporados). La implementación avanza por commits (sección 5).
 > **Fecha:** 2026-11-18 · **Rama:** `fase-1-base-datos`
 > **Base de datos destino:** PostgreSQL 17 · **Backend:** .NET 10 LTS, EF Core 10 con Npgsql
 
@@ -47,7 +47,7 @@ erDiagram
 
     usuarios {
         int id PK
-        citext correo UK
+        citext correo UK "único entre no eliminados"
         text password_hash
         text rol "check: admin, asistente, dentista, paciente"
         text nombre
@@ -123,8 +123,8 @@ erDiagram
         int id PK
         int servicio_id FK
         numeric descuento "porcentaje"
-        timestamptz fecha_inicio
-        timestamptz fecha_fin
+        date fecha_inicio "fecha local, inclusiva"
+        date fecha_fin "fecha local, inclusiva"
         bool activo
         timestamptz creado_en
         timestamptz actualizado_en
@@ -183,7 +183,7 @@ erDiagram
         numeric costo_extra
         text motivo_extra
         numeric costo_total
-        timestamptz bloqueo_expira_en
+        timestamptz bloqueo_expira_en "solo web y portal"
         text confirmacion_token_hash
         timestamptz confirmacion_token_expira_en
         timestamptz confirmada_en
@@ -282,7 +282,7 @@ erDiagram
 | Fechas y horas | Todo instante es `timestamptz` y se guarda en UTC (en C#, `DateTime` con `Kind = Utc`). Las reglas de horario (apertura, cierre, descansos, cierres) son hora **local** de la clínica y se guardan como `time` y `date`, porque son reglas de reloj de pared, no instantes. |
 | Zona horaria | `America/Mexico_City`, configurable en `Clinica:ZonaHoraria` (appsettings). Las conversiones local ↔ UTC se hacen en un solo servicio del backend. No va en la base porque cambiarla con datos existentes desplazaría todas las citas. |
 | Auditoría de fila | `creado_en` y `actualizado_en` en las tablas principales; los llena el `DbContext`, no el código de cada controlador. |
-| Borrado lógico | `eliminado_en timestamptz NULL` en `usuarios`, `pacientes`, `dentistas`, `servicios` y `ofertas`, con filtro global de EF Core (`eliminado_en IS NULL`). Un `Remove()` sobre esas entidades se convierte en `UPDATE … SET eliminado_en = now()`. |
+| Borrado lógico | `eliminado_en timestamptz NULL` en `usuarios`, `pacientes`, `dentistas`, `servicios` y `ofertas`, con filtro global de EF Core (`eliminado_en IS NULL`). Un `Remove()` sobre esas entidades se convierte en `UPDATE … SET eliminado_en = now()`. Las consultas de citas (listado, historial, agenda y reportes) **ignoran** esos filtros en las relaciones a paciente, dentista y servicio (sección 3.4). |
 | Valores de catálogo | Roles, estados, orígenes y canales son `text` con `CHECK`, no enums de PostgreSQL ni tablas: son pocos, cambian con migraciones y se leen bien en consultas y en la bitácora. |
 | Dinero | `numeric(10,2)`; porcentajes `numeric(5,2)` con `CHECK` entre 0 y 100. |
 | Extensiones | `citext` (correo sin distinguir mayúsculas) y `btree_gist` (restricción de no traslape). Las crea la migración inicial. |
@@ -294,7 +294,7 @@ erDiagram
 ### 3.1 Cuentas y personas
 
 **`usuarios`** — toda persona que inicia sesión (cambia de `Usuarios`).
-- `correo citext NOT NULL UNIQUE`: el índice único sobre `citext` hace que `Ana@x.com` y `ana@x.com` choquen, y las búsquedas de login no dependen de que el código ponga minúsculas.
+- `correo citext NOT NULL` con **índice único parcial** `UNIQUE (correo) WHERE eliminado_en IS NULL`: sobre `citext`, `Ana@x.com` y `ana@x.com` chocan, y las búsquedas de login no dependen de que el código ponga minúsculas. Una cuenta eliminada lógicamente libera su correo para una cuenta nueva; la eliminada conserva el suyo para la bitácora. El login solo busca entre cuentas no eliminadas.
 - `rol text NOT NULL CHECK (rol IN ('admin','asistente','dentista','paciente'))`.
 - `password_hash`: mismo hash BCrypt de hoy; solo cambia el nombre de la columna (`Password` → `password_hash`).
 - `activo bool NOT NULL DEFAULT true`: una cuenta desactivada no puede iniciar sesión ni renovar su token. Es la acción del panel en lugar del borrado.
@@ -306,6 +306,13 @@ erDiagram
 **`pacientes`** — sustituye a `Clientes`. Un paciente **puede existir sin cuenta**.
 - `usuario_id int NULL UNIQUE`: nulo para el invitado que solicitó cita desde la web con solo correo o teléfono; único para que una cuenta tenga a lo más un paciente.
 - Datos propios del paciente (nombre, apellido, correo, teléfono) aunque tenga cuenta: el invitado no tiene `usuarios`, y la recepción puede corregir los datos del paciente sin tocar la cuenta. Cuando hay cuenta, el registro copia los datos.
+- **Dos correos, dos propósitos.** En un paciente con cuenta, `usuarios.correo` es el de **inicio de sesión** y `pacientes.correo` el de **contacto** (a él van confirmaciones, recordatorios y avisos). Reglas de consistencia, aplicadas por un solo servicio del backend (`PacientesService`), nunca por cada controlador:
+  1. Al registrarse o al crearse la cuenta, `pacientes.correo` se copia de `usuarios.correo`.
+  2. Cuando el paciente cambia su correo de inicio de sesión (flujo verificado del portal), el mismo servicio actualiza también `pacientes.correo` en la **misma transacción**.
+  3. Cuando recepción corrige el correo de contacto, solo cambia `pacientes.correo`: recepción no puede modificar credenciales. Que los dos correos difieran es entonces una decisión deliberada, no un error.
+  4. Todo cambio de `pacientes.correo` o `pacientes.telefono` pone `contacto_verificado = false` y queda en la bitácora.
+  5. Los avisos al paciente leen siempre `pacientes.correo`; el login lee siempre `usuarios.correo`. Ningún flujo usa uno en lugar del otro.
+- **`alergias` es la fuente canónica** de alergias visible para recepción (matriz de roles: la asistente ve datos generales y alergias, no el expediente). `examen_medico` también tiene `alergias` y `alergias_detalle`; la reconciliación entre ambos es un requisito de la fase del expediente (sección 9.2).
 - `CHECK (correo IS NOT NULL OR telefono IS NOT NULL)`: el invitado siempre deja al menos un medio de contacto.
 - `origen CHECK IN ('web','portal','recepcion')` y `contacto_verificado bool DEFAULT false` (la vinculación por contacto verificado se programa en la fase del portal).
 - `sexo text NULL CHECK (sexo IN ('femenino','masculino','otro','no_especifica'))`: lista cerrada (decisión confirmada); nulo mientras no se capture.
@@ -329,7 +336,9 @@ erDiagram
 - `activo` sustituye a `Disponible`. Un servicio inactivo no se asigna a citas nuevas (se valida en el backend).
 - Borrado lógico.
 
-**`ofertas`** — como hoy (`servicio_id`, `descuento`, `fecha_inicio`, `fecha_fin`), con `activo` (antes `Activa`), fechas `timestamptz`, `CHECK (fecha_fin > fecha_inicio)`, `CHECK (descuento > 0 AND descuento <= 100)` y borrado lógico. La desactivación automática de ofertas vencidas es de otra fase.
+**`ofertas`** — como hoy (`servicio_id`, `descuento`, `fecha_inicio`, `fecha_fin`), con `activo` (antes `Activa`), `CHECK (descuento > 0 AND descuento <= 100)` y borrado lógico.
+- `fecha_inicio` y `fecha_fin` son **`date`** (fecha local de la clínica), con **vigencia inclusiva**: una oferta aplica a una cita si `fecha_inicio <= fecha local de la cita <= fecha_fin`. `CHECK (fecha_fin >= fecha_inicio)`: una oferta de un solo día tiene ambas fechas iguales. Es una excepción deliberada a la regla de `timestamptz`, igual que los horarios: la vigencia es un concepto de calendario, y con `timestamptz` una oferta «hasta el 30» terminaría a medianoche UTC (18:00 en la clínica).
+- La desactivación automática de ofertas vencidas es de otra fase.
 
 ### 3.3 Configuración de agenda
 
@@ -384,7 +393,11 @@ Restricciones:
 
   Compara **rangos**, no horas de inicio, así que una cita de dos slots (9:00–11:00) choca con otra que empiece a las 10:00. El rango es semiabierto (`[)`): una cita que termina a las 10:00 no choca con la que empieza a las 10:00. Las citas canceladas, completadas o de no asistencia no bloquean. Dos dentistas distintos sí pueden tener citas a la misma hora. El backend traduce la violación (`23P01`) a un mensaje claro en español.
 
+- **`bloqueo_expira_en` solo en solicitudes del paciente:** `CHECK (origen IN ('web','portal') OR bloqueo_expira_en IS NULL)`. Una cita creada por recepción no vence: queda en `NULL` y la cancela una persona, no un proceso.
+
 Índices: `(dentista_id, inicio)`, `(paciente_id, inicio)`, `(estado, inicio)` y uno parcial sobre `bloqueo_expira_en` para estados pendientes.
+
+**Consultas de citas y borrado lógico.** Una cita nunca se borra, pero su paciente, dentista o servicio sí pueden quedar eliminados lógicamente. Con los filtros globales activos, EF Core resuelve esas relaciones obligatorias con `INNER JOIN` y la cita **desaparecería** de los resultados. Por eso el listado, el historial de citas, `mi-agenda` y los reportes usan `IgnoreQueryFilters()` sobre el filtro de borrado lógico (filtro con nombre de EF Core 10, para no apagar otros filtros que se agreguen después). El DTO marca al paciente, dentista o servicio eliminado (`eliminado: true`) en lugar de ocultar la cita. Las listas para **elegir** paciente, dentista o servicio en una cita nueva sí respetan el filtro.
 
 **`cita_historial`** — una fila por acción sobre la cita: `accion CHECK IN ('creacion','modificacion','reagenda','cambio_estado','confirmacion','cancelacion','solicitud_cambio','resolucion_solicitud')`, `usuario_id` (nulo si actuó el paciente desde el enlace del correo), `canal`, `detalle` (texto legible) y `datos jsonb` (valores antes y después). Es de solo inserción, con el mismo trigger que `auditoria`. La escribe un servicio del backend en la misma transacción que el cambio a la cita.
 
@@ -401,7 +414,12 @@ Restricciones:
 - `ocurrido_en timestamptz DEFAULT now()`, `usuario_id` (nulo para eventos anónimos, como un login fallido), `usuario_correo` (copia al momento del evento, por si la cuenta cambia de correo), `accion`, `entidad`, `entidad_id text`, `detalle jsonb`, `ip`.
 - Acciones: `crear`, `modificar`, `eliminar` (borrado lógico), `inicio_sesion`, `inicio_sesion_fallido`, `cierre_sesion`, y más adelante `lectura` (expediente).
 - **Protección en la base:** trigger `BEFORE UPDATE OR DELETE … FOR EACH ROW` y `BEFORE TRUNCATE … FOR EACH STATEMENT` que lanzan una excepción. Se aplica también a `cita_historial`.
-- **Registro automático:** un `SaveChangesInterceptor` de EF Core recorre las entidades principales (`usuarios`, `pacientes`, `dentistas`, `servicios`, `ofertas`, `citas`, `configuracion_agenda` y sus tablas hijas) y escribe una fila por cambio en la **misma transacción**, con las columnas modificadas (antes → después). Las columnas sensibles (`password_hash`, `refresh_token`, `confirmacion_token_hash`) se registran como `"[cambió]"`, nunca con su valor.
+- **Registro automático:** un `SaveChangesInterceptor` de EF Core recorre las entidades principales (`usuarios`, `pacientes`, `dentistas`, `servicios`, `ofertas`, `citas`, `configuracion_agenda` y sus tablas hijas) y escribe una fila por cambio en la **misma transacción**, con las columnas modificadas (antes → después). Las columnas sensibles se registran como `"[cambió]"`, nunca con su valor ni el anterior:
+  - credenciales: `password_hash`, `refresh_token`, `confirmacion_token_hash`;
+  - salud: `pacientes.alergias`, `pacientes.condiciones_medicas`, y todas las columnas de las tablas del expediente cuando entren en la auditoría automática;
+  - identidad: `pacientes.curp`, `pacientes.direccion`.
+
+  La bitácora registra **quién** cambió **qué campo** y **cuándo**, pero no se convierte en una segunda copia de datos de salud o de identidad, que además no se podría borrar ni corregir. La lista vive en un solo lugar del código (atributo `[DatoSensible]` en la propiedad) y una prueba verifica que ninguno de esos valores aparece en `auditoria`.
 - **Registro explícito:** `IAuditoriaService.RegistrarAsync(accion, entidad, entidadId, detalle)` para eventos que no son cambios de datos. En esta fase se usa en login correcto, login fallido y logout.
 
 ### 3.7 Tablas del expediente (se migran sin rediseño)
@@ -428,7 +446,7 @@ El rediseño del expediente (odontograma, notas versionadas, radiografías, cons
 ## 4. Decisiones de diseño y su razón
 
 1. **`dentista_id` obligatorio en la cita, incluso en una solicitud web.** La restricción de no traslape solo puede proteger un horario si la cita ya tiene dentista. Cuando la fase de agenda construya las solicitudes web, el backend asignará a un dentista libre al recibirla; el paciente sigue sin elegirlo.
-2. **Una solicitud vencida sigue bloqueando hasta que se resuelve.** La restricción de la base no puede usar `now()` (no es inmutable), así que `bloqueo_expira_en` no la desactiva por sí solo. En esta fase solo se guarda la fecha; la liberación es un requisito de la Fase 2 (sección 9).
+2. **Una solicitud vencida sigue bloqueando hasta que se resuelve.** La restricción de la base no puede usar `now()` (no es inmutable), así que `bloqueo_expira_en` no la desactiva por sí solo. En esta fase solo se guarda la fecha; la liberación es un requisito de la Fase 2 (sección 9.1).
 3. **`citext` y no `lower(correo)`.** Con `citext` la unicidad y las búsquedas de EF Core ya ignoran mayúsculas sin depender de que cada consulta recuerde normalizar.
 4. **FK compuesta para amarrar el rol** de `dentistas` y `pacientes` en la base, en lugar de un trigger. Es declarativa y la valida PostgreSQL en cada cambio.
 5. **Un solo rol por cuenta** (decisión confirmada). Un dentista que además administre la clínica usa dos cuentas.
@@ -486,7 +504,13 @@ Solo `login`, `registro`, `citas` y `usuarios` están conectados al frontend; el
 - La migración se aplica desde una base vacía (y `dotnet ef migrations has-pending-model-changes` no detecta diferencias).
 - La restricción impide dos citas activas traslapadas del mismo dentista, incluidas las de dos slots, y permite: el mismo horario con dentistas distintos, citas contiguas (`[)`), y una cita nueva sobre una cancelada.
 - Las restricciones `CHECK` de rol, estado y motivo de cancelación.
+- **Concurrencia:** dos inserciones simultáneas del mismo horario y dentista, lanzadas en paralelo con contextos y conexiones distintos (y una barrera para que lleguen juntas a la base), donde **exactamente una** se guarda y la otra falla. Se prueba dos veces: directo contra la base (la otra recibe `23P01`) y por la API (la otra recibe `409 Conflict` con el mensaje en español «El dentista ya tiene una cita en ese horario.»).
+- `bloqueo_expira_en` con origen `recepcion` es rechazado por la base.
+- El correo de usuario es único sin distinguir mayúsculas entre cuentas no eliminadas, y una cuenta eliminada libera su correo.
+- Ofertas: `fecha_fin < fecha_inicio` es rechazado; una oferta aplica el primer y el último día de su vigencia (fechas locales).
 - El borrado lógico oculta usuarios, pacientes, dentistas, servicios y ofertas, y no los borra de la tabla.
+- **Historial con relaciones eliminadas:** se elimina lógicamente un paciente, un dentista y un servicio que tienen citas; el listado de citas, el historial y `mi-agenda` siguen devolviendo esas citas con los nombres, mientras que las listas para elegir en una cita nueva ya no los incluyen.
+- Ningún valor de columna sensible (credenciales, salud, identidad) aparece en `auditoria` después de crear y modificar un paciente.
 - `auditoria` y `cita_historial` rechazan `UPDATE`, `DELETE` y `TRUNCATE`; un cambio en una cita genera filas de auditoría sin valores sensibles.
 - El servicio de arranque crea la configuración y el administrador solo una vez.
 - Autorización con los roles nuevos: matriz de acceso actualizada (incluido el dentista que solo ve sus citas) y regresión de lo probado en la Fase 0.
@@ -502,8 +526,28 @@ Solo `login`, `registro`, `citas` y `usuarios` están conectados al frontend; el
 
 ---
 
-## 9. Requisitos que este modelo deja para la Fase 2 (agenda)
+## 9. Requisitos que este modelo deja para fases posteriores
+
+### 9.1 Fase 2 (agenda)
 
 1. **Liberación de solicitudes vencidas al reservar.** Dentro de la transacción de una reserva o reagenda, antes de insertar o mover la cita, el backend cancela las solicitudes `pendiente` con `bloqueo_expira_en <= now()` que se traslapen con ese horario y dentista (motivo «solicitud no confirmada a tiempo», con su fila en `cita_historial`). Así una solicitud vencida nunca impide una reserva válida, aunque el proceso en segundo plano no haya pasado todavía.
 2. **Proceso en segundo plano.** Un servicio periódico cancela las demás solicitudes vencidas con el mismo motivo y registro, para que la agenda y los reportes no muestren pendientes caducadas.
-3. **`bloqueo_expira_en`** se calcula al crear la solicitud como el menor entre `creado_en + bloqueo_pendiente_horas` e `inicio − liberacion_antes_cita_horas`.
+3. **`bloqueo_expira_en`** se llena **solo** en citas con origen `web` o `portal` (en las de `recepcion` queda `NULL`, y la base lo exige). Se calcula al crear la solicitud como el menor entre `creado_en + bloqueo_pendiente_horas` e `inicio − liberacion_antes_cita_horas`.
+
+### 9.2 Fase del expediente clínico
+
+1. **Reconciliación de alergias.** `pacientes.alergias` es la fuente canónica que ve recepción; `examen_medico.alergias` y `alergias_detalle` son la versión del cuestionario clínico. La fase del expediente debe definir cómo se reconcilian (por ejemplo, que el dentista confirme o actualice `pacientes.alergias` al llenar el cuestionario, con registro en la bitácora) para que recepción nunca vea una lista desactualizada.
+2. Las columnas clínicas entran en la auditoría automática como `[DatoSensible]` (sección 3.6), y las lecturas del expediente se registran con `IAuditoriaService`.
+
+### 9.3 Plan de tratamiento (fase posterior)
+
+El plan de tratamiento con sesiones **no** se modela en esta fase. Cuando se construya, se agregará una tabla de planes y sesiones, y en `citas` **una columna nueva y opcional** que enlace la cita con la sesión del plan (p. ej., `plan_tratamiento_sesion_id int NULL`). Es un cambio aditivo: no rompe las citas existentes, que quedan sin plan.
+
+---
+
+## 10. Requisitos de despliegue
+
+1. **Cifrado en reposo.** La base contiene datos personales y de salud. En producción, el almacenamiento de PostgreSQL (disco o volumen), sus respaldos automáticos y los archivos subidos (`storage/`) deben estar cifrados en reposo: cifrado del volumen del servidor o un servicio administrado de PostgreSQL con cifrado activado, y respaldos cifrados con llaves fuera del servidor de la base. El `docker-compose.yml` de este repositorio es solo para desarrollo y no lo cubre.
+2. **Cifrado en tránsito.** Conexión de la aplicación a PostgreSQL con TLS (`SSL Mode=VerifyFull` en la cadena de conexión de producción).
+3. **Rol de base de datos de la aplicación** distinto del dueño de las tablas, sin permisos de `ALTER`, `DROP` ni `TRUNCATE`, para que los triggers de inmodificabilidad no se puedan desactivar desde la aplicación (decisión 7).
+4. **Migraciones explícitas** fuera de Development (decisión 9), ejecutadas con el rol dueño, no con el de la aplicación.
