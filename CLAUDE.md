@@ -16,8 +16,10 @@ No avances a una etapa posterior sin que se indique expresamente.
 
 ## 2. Estado actual del código (resultado de la auditoría)
 
-- `backend/`: ASP.NET Core (.NET 9), EF Core, **hoy usa SQL Server**. La decisión de negocio es migrar a **PostgreSQL**, pero eso se hará en la Fase 1, no antes.
+- La **Fase 0 (seguridad base)** está completada.
+- `backend/`: ASP.NET Core (.NET 9), EF Core, **hoy usa SQL Server**. Decisión confirmada: migrar a **PostgreSQL** y a **.NET 10 LTS** en la Fase 1 (el soporte de .NET 9 terminó el 10 de noviembre de 2026). No antes.
 - `frontend/`: React + Vite. Solo login, registro, citas y usuarios están conectados a la API; el resto usa datos fijos en el código.
+- **El panel se rediseña por completo; solo se conservan los colores actuales.** El diseño (sistema visual, componentes y pantallas) lo entrega el arquitecto y se guardará en `docs/design/`. No rediseñes ni reorganices la interfaz por tu cuenta; los únicos cambios de frontend permitidos hasta recibir el diseño son los que pida cada fase de manera expresa.
 - Autenticación: JWT con refresh token y BCrypt. Se conserva.
 - Patrón repositorio y servicios en `backend/`. Se conserva.
 - Roles actuales: `admin`, `secretaria`, `cliente`. Roles objetivo: `admin`, `asistente`, `dentista`, `paciente`. El renombre se hace en la Fase 1; mientras tanto, centraliza los nombres de rol en constantes.
@@ -26,7 +28,8 @@ No avances a una etapa posterior sin que se indique expresamente.
 
 - Horario: lunes a sábado, 8:00 a 16:00, descansos de 11:00 a 12:00 y de 14:00 a 15:00. Seis horarios al día. Debe ser **configurable**, no escrito en el código.
 - Cita estándar de 60 minutos; un servicio más largo ocupa 2 horarios seguidos. Tratamientos de varias sesiones: recepción programa cada sesión.
-- Capacidad: una cita por dentista activo y por horario. No hay entidad de consultorio (pendiente de confirmar).
+- Capacidad: una cita por dentista activo y por horario. **No hay entidad de consultorio** (confirmado).
+- La tabla `Comentarios` se **elimina** (confirmado); el sitio usará reseñas de Google.
 - La clínica asigna dentista; el paciente solo elige servicio, fecha y hora.
 - Estados de cita: Pendiente, Confirmada, Completada, Cancelada, No asistió.
 - Una solicitud pendiente **bloquea** el horario hasta resolverse (se libera a las 24 h o 2 h antes de la cita, lo que ocurra primero).
