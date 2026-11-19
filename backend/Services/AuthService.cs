@@ -1,3 +1,4 @@
+using backend.Constants;
 using backend.DTOs;
 using backend.Entities;
 using backend.Repositories;
@@ -40,7 +41,7 @@ namespace backend.Services
                 Email = registerDto.Email,
                 Telefono = registerDto.Telefono,
                 Password = BCrypt.Net.BCrypt.HashPassword(registerDto.Password), // Hash aquí
-                Rol = "cliente",
+                Rol = Roles.Cliente, // El registro público nunca acepta un rol del cliente
                 FechaRegistro = DateTime.Now
             };
 
