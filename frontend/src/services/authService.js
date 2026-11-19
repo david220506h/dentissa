@@ -5,6 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 export const MENSAJE_SIN_PERMISO = "No tienes permiso para realizar esta acción.";
 export const MENSAJE_SESION_EXPIRADA = "Tu sesión expiró. Inicia sesión de nuevo.";
+const MENSAJE_DEMASIADOS_INTENTOS = "Demasiados intentos. Espera un momento e inténtalo de nuevo.";
 
 // Guardar tokens tras login
 export const saveSession = (authResponse) => {
@@ -112,6 +113,7 @@ export const login = async (email, password) => {
     body: JSON.stringify({ email, password })
   });
 
+  if (response.status === 429) throw new Error(MENSAJE_DEMASIADOS_INTENTOS);
   if (!response.ok) throw new Error("Credenciales incorrectas");
 
   const data = await response.json();
@@ -127,6 +129,7 @@ export const register = async (nombre, apellido, email, telefono, password) => {
     body: JSON.stringify({ nombre, apellido, email, telefono, password })
   });
 
+  if (response.status === 429) throw new Error(MENSAJE_DEMASIADOS_INTENTOS);
   if (!response.ok) {
     const error = await response.text();
     throw new Error(error || "Error al registrar");
@@ -146,6 +149,7 @@ export const logout = async () => {
     clearSession();
   }
 };
+
 // true si el error viene de authFetch por sesión expirada o falta de permiso
 export const esErrorDeAcceso = (err) =>
   [MENSAJE_SIN_PERMISO, MENSAJE_SESION_EXPIRADA].includes(err?.message);

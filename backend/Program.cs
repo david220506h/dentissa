@@ -1,6 +1,7 @@
 using System.Text;
 using backend.Entities;
 using backend.Repositories;
+using backend.Security;
 using backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -76,6 +77,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Límites de peticiones para login y registro
+builder.Services.AddDentissaRateLimiting(builder.Configuration);
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -108,15 +112,24 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+app.UseSecurityHeaders();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    // En desarrollo el proxy de Vite habla HTTP con la API
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
 
 app.UseCors("ReactPolicy");
-app.UseHttpsRedirection();
-app.UseAuthentication(); 
+app.UseLoginCorreoParaRateLimit();
+app.UseRateLimiter();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
