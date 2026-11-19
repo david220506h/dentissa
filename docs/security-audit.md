@@ -114,6 +114,7 @@ En este equipo solo está instalado el runtime de .NET 11; para ejecutar la API 
 | P10 | Imágenes del catálogo | Se valida la firma, pero no se re-codifica la imagen (no elimina metadatos EXIF ni contenido adicional). Mitigado con `nosniff`, `Content-Type` fijo y CSP. |
 | P11 | HTTPS en desarrollo | En la red local las credenciales viajan por HTTP (Vite → API en el puerto 5058). |
 | P12 | Calidad del frontend | `lint` tiene 5 errores y 1 advertencia que ya existían. `citas.jsx`/`usuarios.jsx` importan `./Citas.css`/`./Usuarios.css` con mayúscula y los archivos son en minúscula: compila en Windows, pero fallará en Linux. El modal `agregarServicios.jsx` no está montado en ninguna pantalla y no guarda el servicio en la base. |
+| P13 | **Consentimiento para la galería de casos** (`ServiciosRealizados`) | La galería del sitio publica fotos de antes y después que son de pacientes (dato personal y, por su contexto, de salud). Antes de publicar cualquier foto se requiere el **consentimiento expreso** del paciente, registrado con fecha y alcance, y la posibilidad de revocarlo y retirar la foto. Hoy la tabla no guarda paciente ni consentimiento: se resuelve al rediseñar el módulo de medios. La interpretación legal la valida un especialista. |
 
 ---
 
@@ -137,3 +138,4 @@ En este equipo solo está instalado el runtime de .NET 11; para ejecutar la API 
 - **Contraseña de `sa` y clave JWT anteriores** expuestas hasta que se roten (acciones 2 y 3).
 - **Eliminación física** de datos que, por regulación (NOM-004-SSA3-2012), podrían requerir conservación (P1). La interpretación legal debe validarla un especialista.
 - **Sin auditoría** de quién crea, edita o borra usuarios y citas (P4).
+- **Fotos de pacientes publicadas sin consentimiento registrado** en la galería de casos del sitio (P13).
