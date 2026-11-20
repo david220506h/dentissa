@@ -6,18 +6,17 @@ using backend.Entities;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace backend.Tests;
 
-// Levanta la API completa en memoria. Solo se sustituye el DbContext por EF InMemory;
-// el proveedor de la aplicación (SQL Server) no cambia.
+// Levanta la API completa en memoria contra un PostgreSQL 17 real (Testcontainers).
+// Cada fábrica tiene su propia base, ya migrada; no se sustituye nada del DbContext.
 public class DentissaFactory : WebApplicationFactory<Program>
 {
     public const string PasswordPruebas = "Prueba123!";
 
-    private readonly string _baseDatos = Guid.NewGuid().ToString();
+    private string? _cadenaConexion;
     private readonly string _carpetaImagenes = Path.Combine(Path.GetTempPath(), "dentissa-tests", Guid.NewGuid().ToString("N"));
 
     // Límites altos por defecto para que las pruebas no choquen con el rate limiter
@@ -31,28 +30,25 @@ public class DentissaFactory : WebApplicationFactory<Program>
         ClientOptions.BaseAddress = new Uri("https://localhost");
     }
 
+    // Base propia de esta fábrica (se crea la primera vez que se pide)
+    public string CadenaConexion
+        => _cadenaConexion ??= CrearBase().GetAwaiter().GetResult();
+
+    // Por defecto, base ya migrada; una fábrica puede pedir una vacía
+    protected virtual Task<string> CrearBase() => PostgresCompartido.CrearBaseMigradaAsync();
+
+    protected virtual bool AplicarMigracionesAlArrancar => false;
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        builder.UseSetting("ConnectionStrings:DefaultConnection", "Server=no-se-usa-en-pruebas");
+        builder.UseSetting("ConnectionStrings:DefaultConnection", CadenaConexion);
+        builder.UseSetting("BaseDeDatos:AplicarMigracionesAlArrancar", AplicarMigracionesAlArrancar.ToString());
         builder.UseSetting("JwtSettings:SecretKey", ClaveJwt ?? "");
         builder.UseSetting("RateLimiting:Login:PorIpYCorreo:PermitLimit", LimiteLogin.ToString());
         builder.UseSetting("RateLimiting:Login:PorIp:PermitLimit", (LimiteLogin * 6).ToString());
         builder.UseSetting("RateLimiting:Registro:PorIp:PermitLimit", LimiteLogin.ToString());
         builder.UseSetting("CatalogoImagenes:Ruta", _carpetaImagenes);
-
-        builder.ConfigureServices(services =>
-        {
-            var registrosEf = services.Where(d =>
-                d.ServiceType == typeof(DbContextOptions<DentissaDbContext>) ||
-                d.ServiceType == typeof(DbContextOptions) ||
-                d.ServiceType == typeof(DentissaDbContext) ||
-                d.ServiceType == typeof(IDbContextOptionsConfiguration<DentissaDbContext>)).ToList();
-            foreach (var d in registrosEf) services.Remove(d);
-
-            services.AddDbContext<DentissaDbContext>((sp, o) => o.UseInMemoryDatabase(_baseDatos)
-                .AddInterceptors(sp.GetRequiredService<backend.Services.AuditoriaInterceptor>()));
-        });
     }
 
     protected override void Dispose(bool disposing)
@@ -141,6 +137,40 @@ public class DentissaFactory : WebApplicationFactory<Program>
         return (cita.Id, cuentaDentista);
     });
 
+    // Paciente, dentista activo (con su cuenta) y servicio, sin citas
+    public Task<(int PacienteId, int DentistaId, int ServicioId)> CrearParticipantesAsync(short duracionSlots = 1)
+        => ConDbAsync(async db =>
+        {
+            var cuentaDentista = new Usuario
+            {
+                Nombre = "Dentista", Apellido = "Prueba", Correo = $"dent-{Guid.NewGuid():N}@prueba.test",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(PasswordPruebas), Rol = Roles.Dentista
+            };
+            var dentista = new Dentista { Usuario = cuentaDentista, Especialidad = "General" };
+            var paciente = new Paciente { Nombre = "Paciente", Apellido = "Prueba", Telefono = "5550001111", Origen = OrigenesCita.Recepcion };
+            var servicio = new Servicio
+            {
+                Nombre = "Servicio " + duracionSlots, Precio = 1000, DuracionSlots = duracionSlots,
+                Categoria = new CategoriaServicio { Nombre = "Cat-" + Guid.NewGuid().ToString("N") }
+            };
+            db.AddRange(dentista, paciente, servicio);
+            await db.SaveChangesAsync();
+            return (paciente.Id, dentista.Id, servicio.Id);
+        });
+
+    public static Cita NuevaCita(int pacienteId, int dentistaId, int servicioId, DateTime inicioUtc, int horas = 1) => new()
+    {
+        PacienteId = pacienteId,
+        DentistaId = dentistaId,
+        ServicioId = servicioId,
+        Inicio = inicioUtc,
+        Fin = inicioUtc.AddHours(horas),
+        Estado = EstadosCita.Pendiente,
+        Origen = OrigenesCita.Recepcion,
+        CostoBase = 1000,
+        CostoTotal = 1000
+    };
+
     public record LoginRespuesta(string AccessToken, string RefreshToken);
 }
 
@@ -154,4 +184,11 @@ public class DentissaFactoryLimitesReales : DentissaFactory
 public class DentissaFactorySinClaveJwt : DentissaFactory
 {
     protected override string? ClaveJwt => null;
+}
+
+// Fábrica sobre una base vacía: la API aplica la migración al arrancar
+public class DentissaFactoryBaseVacia : DentissaFactory
+{
+    protected override Task<string> CrearBase() => PostgresCompartido.CrearBaseVaciaAsync();
+    protected override bool AplicarMigracionesAlArrancar => true;
 }

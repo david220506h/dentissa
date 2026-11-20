@@ -35,6 +35,7 @@ namespace backend.Services
 
         private readonly IActorActual _actor;
         private readonly List<(EntityEntry Entrada, Dictionary<string, object?> Detalle)> _altas = new();
+        private readonly List<Auditoria> _filas = new();
         private IDbContextTransaction? _transaccionPropia;
         private bool _guardandoBitacora;
 
@@ -110,6 +111,7 @@ namespace backend.Services
         {
             if (_guardandoBitacora) return;
             _transaccionPropia?.Rollback();
+            DescartarFilasPendientes(eventData.Context);
             Limpiar();
         }
 
@@ -118,11 +120,32 @@ namespace backend.Services
             if (_guardandoBitacora) return;
             if (_transaccionPropia != null)
                 await _transaccionPropia.RollbackAsync(CancellationToken.None);
+            DescartarFilasPendientes(eventData.Context);
             Limpiar();
+        }
+
+        private void Agregar(DentissaDbContext db, Auditoria fila)
+        {
+            db.Auditoria.Add(fila);
+            _filas.Add(fila);
+        }
+
+        // Si el guardado falla, las filas de bitácora que agregó este interceptor salen
+        // del contexto: un reintento las vuelve a generar sin duplicarlas.
+        private void DescartarFilasPendientes(DbContext? db)
+        {
+            if (db == null) return;
+            foreach (var fila in _filas)
+            {
+                var entrada = db.Entry(fila);
+                if (entrada.State == EntityState.Added)
+                    entrada.State = EntityState.Detached;
+            }
         }
 
         private void Limpiar()
         {
+            _filas.Clear();
             _altas.Clear();
             _transaccionPropia?.Dispose();
             _transaccionPropia = null;
@@ -151,10 +174,10 @@ namespace backend.Services
                         if (cambios == null) break;
                         var eliminado = entrada.Entity is IEliminable eliminable && eliminable.EliminadoEn != null
                             && entrada.OriginalValues[nameof(IEliminable.EliminadoEn)] == null;
-                        db.Auditoria.Add(Fila(eliminado ? AccionesAuditoria.Eliminar : AccionesAuditoria.Modificar, entrada, cambios));
+                        Agregar(db, Fila(eliminado ? AccionesAuditoria.Eliminar : AccionesAuditoria.Modificar, entrada, cambios));
                         break;
                     case EntityState.Deleted:
-                        db.Auditoria.Add(Fila(AccionesAuditoria.Eliminar, entrada, null));
+                        Agregar(db, Fila(AccionesAuditoria.Eliminar, entrada, null));
                         break;
                 }
             }
@@ -167,7 +190,7 @@ namespace backend.Services
         private bool AgregarAltas(DentissaDbContext db)
         {
             foreach (var (entrada, detalle) in _altas)
-                db.Auditoria.Add(Fila(AccionesAuditoria.Crear, entrada, detalle));
+                Agregar(db, Fila(AccionesAuditoria.Crear, entrada, detalle));
             return _altas.Count > 0;
         }
 

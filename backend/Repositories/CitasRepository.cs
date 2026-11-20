@@ -42,22 +42,44 @@ namespace backend.Repositories
             await GuardarAsync();
         }
 
+        private const int IntentosPorInterbloqueo = 3;
+
         // La restricción citas_sin_traslape_dentista es la autoridad: el backend no
         // repite la comprobación, solo traduce la violación a un mensaje claro.
+        // Dos inserciones simultáneas que chocan pueden esperar una a la otra dentro de
+        // la restricción de exclusión; PostgreSQL aborta una con 40P01 (interbloqueo).
+        // Se reintenta: el reintento ya ve la cita confirmada y recibe 23P01.
         private async Task GuardarAsync()
         {
-            try
+            for (var intento = 1; ; intento++)
             {
-                await _context.SaveChangesAsync();
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    return;
+                }
+                catch (Exception ex) when (ErrorDePostgres(ex) is
+                {
+                    SqlState: PostgresErrorCodes.ExclusionViolation,
+                    ConstraintName: CitaConfiguracion.RestriccionSinTraslape
+                })
+                {
+                    throw new HorarioOcupadoException(ex);
+                }
+                catch (Exception ex) when (intento < IntentosPorInterbloqueo &&
+                                           ErrorDePostgres(ex)?.SqlState == PostgresErrorCodes.DeadlockDetected)
+                {
+                    // reintenta con los mismos cambios (EF no los aceptó al fallar)
+                }
             }
-            catch (DbUpdateException ex) when (ex.InnerException is PostgresException
-            {
-                SqlState: PostgresErrorCodes.ExclusionViolation,
-                ConstraintName: CitaConfiguracion.RestriccionSinTraslape
-            })
-            {
-                throw new HorarioOcupadoException(ex);
-            }
+        }
+
+        // Npgsql envuelve los errores transitorios (como 40P01) en otra excepción
+        private static PostgresException? ErrorDePostgres(Exception? ex)
+        {
+            for (; ex != null; ex = ex.InnerException)
+                if (ex is PostgresException pg) return pg;
+            return null;
         }
 
         // Vigencia inclusiva en fechas locales de la clínica
