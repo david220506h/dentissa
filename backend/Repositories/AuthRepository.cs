@@ -13,7 +13,7 @@ namespace backend.Repositories
         }
 
         public async Task<Usuario?> GetByEmailAsync(string email)
-            => await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+            => await _context.Usuarios.FirstOrDefaultAsync(u => u.Correo == email);
 
         public async Task<Usuario?> GetByIdAsync(int id)
             => await _context.Usuarios.FindAsync(id);
@@ -35,7 +35,7 @@ namespace backend.Repositories
         }
 
         public async Task<bool> EmailExistsAsync(string email)
-            => await _context.Usuarios.AnyAsync(u => u.Email == email);
+            => await _context.Usuarios.AnyAsync(u => u.Correo == email);
         
         public async Task<List<Usuario>> GetAllAsync()
              => await _context.Usuarios.ToListAsync();

@@ -1,25 +1,29 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace backend.DTOs
 {
+    // Alta desde el panel: el origen es siempre "recepcion" y el usuario sale del token.
+    // fecha + hora son hora local de la clínica.
     public class CitaDto
     {
-        public int      ClienteId    { get; set; }
-        public int      TrabajadorId { get; set; }
-        public int      ServicioId   { get; set; }
-        public DateOnly Fecha        { get; set; }
-        public TimeOnly Hora         { get; set; }
-        public decimal? CostoExtra   { get; set; }
-        public string?  MotivoExtra  { get; set; }
-        public string?  AgendadoPor  { get; set; }
+        [Range(1, int.MaxValue)] public int PacienteId { get; set; }
+        [Range(1, int.MaxValue)] public int DentistaId { get; set; }
+        [Range(1, int.MaxValue)] public int ServicioId { get; set; }
+        public DateOnly Fecha       { get; set; }
+        public TimeOnly Hora        { get; set; }
+        [Range(0, 999999)] public decimal? CostoExtra { get; set; }
+        [MaxLength(300)] public string? MotivoExtra { get; set; }
+        [MaxLength(500)] public string? Motivo      { get; set; }
     }
 
     public class CitaEditDto
     {
-        public int      TrabajadorId { get; set; }
-        public DateOnly Fecha        { get; set; }
-        public TimeOnly Hora         { get; set; }
-        public string?  Estado       { get; set; }
-        public decimal? CostoExtra   { get; set; }
-        public string?  MotivoExtra  { get; set; }
+        [Range(1, int.MaxValue)] public int DentistaId { get; set; }
+        public DateOnly Fecha       { get; set; }
+        public TimeOnly Hora        { get; set; }
+        public string?  Estado      { get; set; }
+        [Range(0, 999999)] public decimal? CostoExtra { get; set; }
+        [MaxLength(300)] public string? MotivoExtra { get; set; }
     }
 
     // Respuesta de GET api/Citas y GET api/Citas/{id}: solo nombres, nunca
@@ -29,30 +33,44 @@ namespace backend.DTOs
         public int      Id                { get; set; }
         public string   Paciente          { get; set; } = string.Empty;
         public string   Servicio          { get; set; } = string.Empty;
-        public string   Trabajador        { get; set; } = string.Empty;
+        public string   Dentista          { get; set; } = string.Empty;
+        // Hora local de la clínica
         public string   Fecha             { get; set; } = string.Empty;
         public string   Hora              { get; set; } = string.Empty;
-        public string?  Estado            { get; set; }
-        public decimal? CostoBase         { get; set; }
-        public decimal? DescuentoAplicado { get; set; }
-        public decimal? CostoExtra        { get; set; }
+        // ISO 8601 en UTC
+        public DateTime Inicio            { get; set; }
+        public DateTime Fin               { get; set; }
+        public string   Estado            { get; set; } = string.Empty;
+        public string   Origen            { get; set; } = string.Empty;
+        public string?  Motivo            { get; set; }
+        public string?  MotivoCancelacion { get; set; }
+        public SolicitudCambioDto? SolicitudCambio { get; set; }
+        public decimal  CostoBase         { get; set; }
+        public decimal  DescuentoAplicado { get; set; }
+        public decimal  CostoExtra        { get; set; }
         public string?  MotivoExtra       { get; set; }
-        public decimal? CostoTotal        { get; set; }
-        public string?  AgendadoPor       { get; set; }
-        public int      ClienteId         { get; set; }
-        public int      TrabajadorId      { get; set; }
+        public decimal  CostoTotal        { get; set; }
+        public int      PacienteId        { get; set; }
+        public int      DentistaId        { get; set; }
         public int      ServicioId        { get; set; }
         public decimal? Oferta            { get; set; }
     }
 
-    public class ClienteOpcionDto
+    public class SolicitudCambioDto
+    {
+        public string   Tipo   { get; set; } = string.Empty;
+        public string?  Motivo { get; set; }
+        public DateTime En     { get; set; }
+    }
+
+    public class PacienteOpcionDto
     {
         public int    Id       { get; set; }
         public string Nombre   { get; set; } = string.Empty;
         public string Apellido { get; set; } = string.Empty;
     }
 
-    public class TrabajadorOpcionDto
+    public class DentistaOpcionDto
     {
         public int     Id           { get; set; }
         public string  Nombre       { get; set; } = string.Empty;
@@ -63,9 +81,9 @@ namespace backend.DTOs
 
     public class ServicioOpcionDto
     {
-        public int     Id       { get; set; }
-        public string  Nombre   { get; set; } = string.Empty;
-        public decimal Precio   { get; set; }
-        public int?    Duracion { get; set; }
+        public int     Id            { get; set; }
+        public string  Nombre        { get; set; } = string.Empty;
+        public decimal Precio        { get; set; }
+        public short   DuracionSlots { get; set; }
     }
 }

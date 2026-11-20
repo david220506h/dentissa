@@ -1,5 +1,7 @@
 using backend.Entities;
+using backend.Entities.Configuraciones;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace backend.Repositories
 {
@@ -12,70 +14,28 @@ namespace backend.Repositories
             _context = context;
         }
 
+        private IQueryable<Cita> CitasConRelaciones() => _context.Citas
+            .Include(c => c.Paciente)
+            .Include(c => c.Dentista).ThenInclude(d => d.Usuario)
+            .Include(c => c.Servicio)
+            .Include(c => c.Oferta);
+
         public async Task<List<Cita>> GetAllAsync()
-        {
-            return await _context.Citas
-                .Include(c => c.Cliente).ThenInclude(cl => cl.Usuario)
-                .Include(c => c.Trabajador).ThenInclude(t => t.Usuario)
-                .Include(c => c.Servicio)
-                .Include(c => c.Oferta)
-                .ToListAsync();
-        }
+            => await CitasConRelaciones().OrderBy(c => c.Inicio).ToListAsync();
 
         public async Task<Cita?> GetByIdAsync(int id)
-        {
-            return await _context.Citas
-                .Include(c => c.Cliente).ThenInclude(cl => cl.Usuario)
-                .Include(c => c.Trabajador).ThenInclude(t => t.Usuario)
-                .Include(c => c.Servicio)
-                .Include(c => c.Oferta)
-                .FirstOrDefaultAsync(c => c.Id == id);
-        }
-
-        public async Task<List<string>> GetHorariosDisponiblesAsync(DateOnly fecha)
-        {
-            // Generar horarios de 8:00 a 19:00 cada 30 min
-            var todos = new List<TimeOnly>();
-            var h = new TimeOnly(8, 0);
-            while (h <= new TimeOnly(19, 0))
-            {
-                todos.Add(h);
-                h = h.AddMinutes(30);
-            }
-
-            // Horarios ocupados en esa fecha
-            var ocupados = await _context.Citas
-                .Where(c => c.Fecha == fecha && c.Estado != "cancelada")
-                .Select(c => c.Hora)
-                .ToListAsync();
-
-            return todos
-                .Where(t => !ocupados.Contains(t))
-                .Select(t => t.ToString("HH:mm"))
-                .ToList();
-        }
-
-        public async Task<bool> TrabajadorOcupadoAsync(int trabajadorId, DateOnly fecha, TimeOnly hora, int? excluirId = null)
-        {
-            return await _context.Citas.AnyAsync(c =>
-                c.TrabajadorId == trabajadorId &&
-                c.Fecha        == fecha &&
-                c.Hora         == hora &&
-                c.Estado       != "cancelada" &&
-                (excluirId == null || c.Id != excluirId));
-        }
+            => await CitasConRelaciones().FirstOrDefaultAsync(c => c.Id == id);
 
         public async Task<Cita> CreateAsync(Cita cita)
         {
             _context.Citas.Add(cita);
-            await _context.SaveChangesAsync();
+            await GuardarAsync();
             return cita;
         }
 
         public async Task UpdateAsync(Cita cita)
         {
-            _context.Citas.Update(cita);
-            await _context.SaveChangesAsync();
+            await GuardarAsync();
         }
 
         public async Task DeleteAsync(Cita cita)
@@ -84,39 +44,56 @@ namespace backend.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<Oferta?> GetOfertaActivaAsync(int servicioId)
+        // La restricción citas_sin_traslape_dentista es la autoridad: el backend no
+        // repite la comprobación, solo traduce la violación a un mensaje claro.
+        private async Task GuardarAsync()
         {
-            return await _context.Ofertas.FirstOrDefaultAsync(o =>
-                o.ServicioId  == servicioId &&
-                o.Activa      == true &&
-                o.FechaInicio <= DateTime.UtcNow &&
-                o.FechaFin    >= DateTime.UtcNow);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+            {
+                SqlState: PostgresErrorCodes.ExclusionViolation,
+                ConstraintName: CitaConfiguracion.RestriccionSinTraslape
+            })
+            {
+                throw new HorarioOcupadoException(ex);
+            }
         }
 
-        public async Task<Servicio?> GetServicioAsync(int servicioId)
-        {
-            return await _context.Servicios.FindAsync(servicioId);
-        }
+        // Vigencia inclusiva en fechas locales de la clínica
+        public async Task<Oferta?> GetOfertaVigenteAsync(int servicioId, DateOnly fechaLocal)
+            => await _context.Ofertas
+                .Where(o => o.ServicioId == servicioId && o.Activo &&
+                            o.FechaInicio <= fechaLocal && o.FechaFin >= fechaLocal)
+                .OrderByDescending(o => o.Descuento)
+                .FirstOrDefaultAsync();
 
-        public async Task<List<Cliente>> GetClientesAsync()
-        {
-            return await _context.Clientes
-                .Include(c => c.Usuario)
+        public async Task<Servicio?> GetServicioActivoAsync(int servicioId)
+            => await _context.Servicios.FirstOrDefaultAsync(s => s.Id == servicioId && s.Activo);
+
+        public async Task<Paciente?> GetPacienteAsync(int pacienteId)
+            => await _context.Pacientes.FirstOrDefaultAsync(p => p.Id == pacienteId);
+
+        public async Task<Dentista?> GetDentistaActivoAsync(int dentistaId)
+            => await _context.Dentistas.FirstOrDefaultAsync(d => d.Id == dentistaId && d.Activo);
+
+        public async Task<List<Paciente>> GetPacientesAsync()
+            => await _context.Pacientes
+                .OrderBy(p => p.Nombre).ThenBy(p => p.Apellido)
                 .ToListAsync();
-        }
 
-        public async Task<List<Trabajadore>> GetTrabajadoresAsync()
-        {
-            return await _context.Trabajadores
-                .Include(t => t.Usuario)
+        public async Task<List<Dentista>> GetDentistasActivosAsync()
+            => await _context.Dentistas
+                .Include(d => d.Usuario)
+                .Where(d => d.Activo)
                 .ToListAsync();
-        }
 
-        public async Task<List<Servicio>> GetServiciosAsync()
-        {
-            return await _context.Servicios
-                .Where(s => s.Disponible == true)
+        public async Task<List<Servicio>> GetServiciosActivosAsync()
+            => await _context.Servicios
+                .Where(s => s.Activo)
+                .OrderBy(s => s.Nombre)
                 .ToListAsync();
-        }
     }
 }

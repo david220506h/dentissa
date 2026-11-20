@@ -74,13 +74,12 @@ public class DentissaFactory : WebApplicationFactory<Program>
         {
             Nombre = "Prueba",
             Apellido = rol,
-            Email = email ?? $"{rol}-{Guid.NewGuid():N}@prueba.test",
-            Password = BCrypt.Net.BCrypt.HashPassword(PasswordPruebas),
+            Correo = email ?? $"{rol}-{Guid.NewGuid():N}@prueba.test",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(PasswordPruebas),
             Rol = rol,
-            FechaRegistro = DateTime.Now,
             // Simula un refresh token guardado para comprobar que nunca se expone
             RefreshToken = "refresh-de-prueba-" + Guid.NewGuid().ToString("N"),
-            RefreshTokenExpiration = DateTime.UtcNow.AddDays(1)
+            RefreshTokenExpiraEn = DateTime.UtcNow.AddDays(1)
         };
         db.Usuarios.Add(usuario);
         await db.SaveChangesAsync();
@@ -93,7 +92,7 @@ public class DentissaFactory : WebApplicationFactory<Program>
         var usuario = await CrearUsuarioAsync(rol);
         var client = CreateClient();
 
-        var res = await client.PostAsJsonAsync("/api/auth/login", new { email = usuario.Email, password = PasswordPruebas });
+        var res = await client.PostAsJsonAsync("/api/auth/login", new { email = usuario.Correo, password = PasswordPruebas });
         res.EnsureSuccessStatusCode();
         var login = await res.Content.ReadFromJsonAsync<LoginRespuesta>();
 
@@ -101,27 +100,33 @@ public class DentissaFactory : WebApplicationFactory<Program>
         return client;
     }
 
-    // Cita completa (cliente, trabajador, servicio) para probar las respuestas de citas
+    // Cita completa (paciente, dentista, servicio) para probar las respuestas de citas
     public Task<int> CrearCitaAsync() => ConDbAsync(async db =>
     {
-        var paciente = await CrearUsuarioAsync(Roles.Cliente);
-        var dentista = await CrearUsuarioAsync(Roles.Secretaria);
+        var cuentaPaciente = await CrearUsuarioAsync(Roles.Cliente);
+        var cuentaDentista = await CrearUsuarioAsync(Roles.Secretaria);
 
-        var cliente = new Cliente { UsuarioId = paciente.Id, Curp = "XEXX010101HNEXXXA4" };
-        var trabajador = new Trabajadore { UsuarioId = dentista.Id, Especialidad = "General" };
-        var categoria = new CategoriaServicio { Nombre = "General" };
-        var servicio = new Servicio { Nombre = "Limpieza", Precio = 500, Categoria = categoria, Disponible = true };
-        db.AddRange(cliente, trabajador, categoria, servicio);
+        var paciente = new Paciente
+        {
+            UsuarioId = cuentaPaciente.Id, Nombre = cuentaPaciente.Nombre, Apellido = cuentaPaciente.Apellido,
+            Correo = cuentaPaciente.Correo, Curp = "XEXX010101HNEXXXA4", Origen = OrigenesCita.Recepcion
+        };
+        var dentista = new Dentista { UsuarioId = cuentaDentista.Id, Especialidad = "General" };
+        var categoria = new CategoriaServicio { Nombre = "General-" + Guid.NewGuid().ToString("N") };
+        var servicio = new Servicio { Nombre = "Limpieza", Precio = 500, Categoria = categoria };
+        db.AddRange(paciente, dentista, categoria, servicio);
         await db.SaveChangesAsync();
 
+        var inicio = DateTime.UtcNow.Date.AddDays(1).AddHours(15);
         var cita = new Cita
         {
-            ClienteId = cliente.Id,
-            TrabajadorId = trabajador.Id,
+            PacienteId = paciente.Id,
+            DentistaId = dentista.Id,
             ServicioId = servicio.Id,
-            Fecha = DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
-            Hora = new TimeOnly(9, 0),
-            Estado = "pendiente",
+            Inicio = inicio,
+            Fin = inicio.AddHours(1),
+            Estado = EstadosCita.Pendiente,
+            Origen = OrigenesCita.Recepcion,
             CostoBase = 500,
             CostoTotal = 500
         };

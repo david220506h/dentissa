@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-
 namespace backend.Entities;
 
-public partial class ConsultaRegistro
+public class ConsultaRegistro
 {
     public int Id { get; set; }
 

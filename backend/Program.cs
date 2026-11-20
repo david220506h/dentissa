@@ -26,6 +26,10 @@ builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<ICitasRepository, CitasRepository>();
+builder.Services.AddScoped<IAgendaService, AgendaService>();
+builder.Services.AddScoped<IPacientesService, PacientesService>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<IRelojClinica, RelojClinica>();
 builder.Services.AddSingleton<ICatalogoImagenesService, CatalogoImagenesService>();
 
 // JWT Authentication

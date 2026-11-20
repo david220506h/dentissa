@@ -3,8 +3,8 @@ import { authFetch, esErrorDeAcceso } from "../services/authService";
 import "./citas.css";
 
 const API      = "/api/Citas";
-const API_CLI  = "/api/Citas/clientes";
-const API_TRAB = "/api/Citas/trabajadores";
+const API_PAC  = "/api/Citas/pacientes";
+const API_DENT = "/api/Citas/dentistas";
 const API_SERV = "/api/Citas/servicios";
 
 // ── Íconos ───────────────────────────────────────────────
@@ -69,8 +69,8 @@ function EstadoBadge({ estado }) {
 
 // ── Modal Nueva Cita ──────────────────────────────────────
 function ModalNueva({ onClose, onGuardar }) {
-  const [clientes,    setClientes]    = useState([]);
-  const [trabajadores, setTrabajadores] = useState([]);
+  const [pacientes,   setPacientes]   = useState([]);
+  const [dentistas,   setDentistas]   = useState([]);
   const [servicios,   setServicios]   = useState([]);
   const [horarios,    setHorarios]    = useState([]);
   const [cargandoH,   setCargandoH]   = useState(false);
@@ -78,19 +78,19 @@ function ModalNueva({ onClose, onGuardar }) {
   const [error,       setError]       = useState(null);
 
   const [form, setForm] = useState({
-    clienteId: "", trabajadorId: "", servicioId: "",
-    fecha: "", hora: "", motivoExtra: "", agendadoPor: "secretaria",
+    pacienteId: "", dentistaId: "", servicioId: "",
+    fecha: "", hora: "", motivoExtra: "",
   });
 
   // Cargar dropdowns al abrir
   useEffect(() => {
     const cargar = async () => {
       try {
-        const [rCli, rTrab, rServ] = await Promise.all([
-          authFetch(API_CLI), authFetch(API_TRAB), authFetch(API_SERV),
+        const [rPac, rDent, rServ] = await Promise.all([
+          authFetch(API_PAC), authFetch(API_DENT), authFetch(API_SERV),
         ]);
-        setClientes(await rCli.json());
-        setTrabajadores(await rTrab.json());
+        setPacientes(await rPac.json());
+        setDentistas(await rDent.json());
         setServicios(await rServ.json());
       } catch (err) {
         setError(esErrorDeAcceso(err) ? err.message : "Error al cargar datos");
@@ -99,16 +99,17 @@ function ModalNueva({ onClose, onGuardar }) {
     cargar();
   }, []);
 
-  // Cargar horarios al cambiar fecha
+  // Cargar horarios al cambiar fecha o dentista
   useEffect(() => {
     if (!form.fecha) return;
     const cargarHorarios = async () => {
       setCargandoH(true);
       setForm(prev => ({ ...prev, hora: "" }));
       try {
-        const res = await authFetch(`${API}/horarios-disponibles?fecha=${form.fecha}`);
+        const dentista = form.dentistaId ? `&dentistaId=${form.dentistaId}` : "";
+        const res = await authFetch(`${API}/horarios-disponibles?fecha=${form.fecha}${dentista}`);
         const data = await res.json();
-        setHorarios(data);
+        setHorarios(Array.isArray(data) ? data : []);
       } catch (err) {
         setError(esErrorDeAcceso(err) ? err.message : "Error al cargar horarios");
       } finally {
@@ -116,14 +117,14 @@ function ModalNueva({ onClose, onGuardar }) {
       }
     };
     cargarHorarios();
-  }, [form.fecha]);
+  }, [form.fecha, form.dentistaId]);
 
   const handleChange = (e) =>
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.clienteId || !form.trabajadorId || !form.servicioId || !form.fecha || !form.hora) {
+    if (!form.pacienteId || !form.dentistaId || !form.servicioId || !form.fecha || !form.hora) {
       setError("Completa todos los campos obligatorios");
       return;
     }
@@ -134,13 +135,12 @@ function ModalNueva({ onClose, onGuardar }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          clienteId:    parseInt(form.clienteId),
-          trabajadorId: parseInt(form.trabajadorId),
+          pacienteId:   parseInt(form.pacienteId),
+          dentistaId:   parseInt(form.dentistaId),
           servicioId:   parseInt(form.servicioId),
           fecha:        form.fecha,
           hora:         form.hora + ":00",
           motivoExtra:  form.motivoExtra || null,
-          agendadoPor:  form.agendadoPor,
         }),
       });
       if (!res.ok) {
@@ -176,9 +176,9 @@ function ModalNueva({ onClose, onGuardar }) {
           {/* Paciente */}
           <div className="citas-modal-field">
             <label>Paciente <span className="req">*</span></label>
-            <select name="clienteId" value={form.clienteId} onChange={handleChange} required>
+            <select name="pacienteId" value={form.pacienteId} onChange={handleChange} required>
               <option value="">Seleccionar paciente...</option>
-              {clientes.map(c => (
+              {pacientes.map(c => (
                 <option key={c.id} value={c.id}>
                   {c.nombre} {c.apellido}
                 </option>
@@ -186,12 +186,12 @@ function ModalNueva({ onClose, onGuardar }) {
             </select>
           </div>
 
-          {/* Trabajador */}
+          {/* Dentista */}
           <div className="citas-modal-field">
-            <label>Trabajador <span className="req">*</span></label>
-            <select name="trabajadorId" value={form.trabajadorId} onChange={handleChange} required>
-              <option value="">Seleccionar trabajador...</option>
-              {trabajadores.map(t => (
+            <label>Dentista <span className="req">*</span></label>
+            <select name="dentistaId" value={form.dentistaId} onChange={handleChange} required>
+              <option value="">Seleccionar dentista...</option>
+              {dentistas.map(t => (
                 <option key={t.id} value={t.id}>
                   {t.nombre} {t.apellido} — {t.especialidad}
                 </option>
@@ -251,16 +251,6 @@ function ModalNueva({ onClose, onGuardar }) {
             />
           </div>
 
-          {/* Agendado por */}
-          <div className="citas-modal-field">
-            <label>Agendado por</label>
-            <select name="agendadoPor" value={form.agendadoPor} onChange={handleChange}>
-              <option value="secretaria">Secretaria</option>
-              <option value="admin">Admin</option>
-              <option value="cliente">Cliente</option>
-            </select>
-          </div>
-
           <div className="citas-modal-actions">
             <button type="button" className="btn-cancelar" onClick={onClose}>Cancelar</button>
             <button type="submit" className="btn-guardar" disabled={guardando}>
@@ -276,7 +266,7 @@ function ModalNueva({ onClose, onGuardar }) {
 
 // ── Modal Editar Cita ─────────────────────────────────────
 function ModalEditar({ cita, onClose, onGuardar }) {
-  const [trabajadores, setTrabajadores] = useState([]);
+  const [dentistas,   setDentistas]   = useState([]);
   const [horarios,     setHorarios]     = useState([]);
   const [cargandoH,    setCargandoH]    = useState(false);
   const [guardando,    setGuardando]    = useState(false);
@@ -287,7 +277,7 @@ function ModalEditar({ cita, onClose, onGuardar }) {
     : "";
 
   const [form, setForm] = useState({
-    trabajadorId: cita.trabajadorId ?? "",
+    dentistaId:   cita.dentistaId ?? "",
     fecha:        fechaISO,
     hora:         cita.hora ?? "",
     estado:       cita.estado ?? "pendiente",
@@ -296,7 +286,7 @@ function ModalEditar({ cita, onClose, onGuardar }) {
   });
 
   useEffect(() => {
-    authFetch(API_TRAB).then(r => r.json()).then(setTrabajadores).catch(() => {});
+    authFetch(API_DENT).then(r => r.json()).then(setDentistas).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -304,15 +294,17 @@ function ModalEditar({ cita, onClose, onGuardar }) {
     const cargarHorarios = async () => {
       setCargandoH(true);
       try {
-        const res = await authFetch(`${API}/horarios-disponibles?fecha=${form.fecha}`);
+        const dentista = form.dentistaId ? `&dentistaId=${form.dentistaId}` : "";
+        const res = await authFetch(`${API}/horarios-disponibles?fecha=${form.fecha}${dentista}`);
         const data = await res.json();
+        const lista = Array.isArray(data) ? data : [];
         // Incluir la hora actual de la cita aunque ya esté "ocupada"
-        if (cita.hora && !data.includes(cita.hora)) data.unshift(cita.hora);
-        setHorarios(data);
+        if (cita.hora && !lista.includes(cita.hora)) lista.unshift(cita.hora);
+        setHorarios(lista);
       } catch {} finally { setCargandoH(false); }
     };
     cargarHorarios();
-  }, [form.fecha]);
+  }, [form.fecha, form.dentistaId]);
 
   const handleChange = (e) =>
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -326,7 +318,7 @@ function ModalEditar({ cita, onClose, onGuardar }) {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          trabajadorId: parseInt(form.trabajadorId),
+          dentistaId:   parseInt(form.dentistaId),
           fecha:        form.fecha,
           hora:         form.hora + ":00",
           estado:       form.estado,
@@ -365,9 +357,9 @@ function ModalEditar({ cita, onClose, onGuardar }) {
         <form className="citas-modal-form" onSubmit={handleSubmit}>
 
           <div className="citas-modal-field">
-            <label>Trabajador</label>
-            <select name="trabajadorId" value={form.trabajadorId} onChange={handleChange}>
-              {trabajadores.map(t => (
+            <label>Dentista</label>
+            <select name="dentistaId" value={form.dentistaId} onChange={handleChange}>
+              {dentistas.map(t => (
                 <option key={t.id} value={t.id}>
                   {t.nombre} {t.apellido} — {t.especialidad}
                 </option>
@@ -399,7 +391,7 @@ function ModalEditar({ cita, onClose, onGuardar }) {
             <select name="estado" value={form.estado} onChange={handleChange}>
               <option value="pendiente">Pendiente</option>
               <option value="confirmada">Confirmada</option>
-              <option value="cancelada">Cancelada</option>
+              <option value="no_asistio">No asistió</option>
               <option value="completada">Completada</option>
             </select>
           </div>

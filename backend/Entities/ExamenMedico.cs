@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-
 namespace backend.Entities;
 
-public partial class ExamenMedico
+public class ExamenMedico : IConMarcasDeTiempo
 {
     public int Id { get; set; }
 
-    public int ClienteId { get; set; }
+    public int PacienteId { get; set; }
 
     public string? MotivoConsulta { get; set; }
 
@@ -85,9 +82,9 @@ public partial class ExamenMedico
 
     public string? OtrasMolestias { get; set; }
 
-    public DateTime? FechaCreacion { get; set; }
+    public DateTime CreadoEn { get; set; }
 
-    public DateTime? FechaActualizacion { get; set; }
+    public DateTime ActualizadoEn { get; set; }
 
-    public virtual Cliente Cliente { get; set; } = null!;
+    public virtual Paciente Paciente { get; set; } = null!;
 }

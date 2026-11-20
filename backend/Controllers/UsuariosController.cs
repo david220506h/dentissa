@@ -45,11 +45,10 @@ namespace backend.Controllers
             {
                 Nombre       = dto.Nombre,
                 Apellido     = dto.Apellido,
-                Email        = dto.Email,
+                Correo       = dto.Email,
                 Telefono     = dto.Telefono,
-                Password     = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Rol          = dto.Rol.ToLower(),
-                FechaRegistro = DateTime.UtcNow
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                Rol          = dto.Rol.ToLower()
             };
 
             var creado = await _authRepository.CreateAsync(usuario);
@@ -75,10 +74,10 @@ namespace backend.Controllers
             dto.Id            = u.Id;
             dto.Nombre        = u.Nombre;
             dto.Apellido      = u.Apellido;
-            dto.Email         = u.Email;
+            dto.Email         = u.Correo;
             dto.Telefono      = u.Telefono;
             dto.Rol           = u.Rol;
-            dto.FechaRegistro = u.FechaRegistro?.ToString("dd/MM/yyyy") ?? "";
+            dto.FechaRegistro = u.CreadoEn.ToString("dd/MM/yyyy");
             return dto;
         }
     }

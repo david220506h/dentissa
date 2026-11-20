@@ -6,15 +6,23 @@ namespace backend.Repositories
     {
         Task<List<Cita>> GetAllAsync();
         Task<Cita?> GetByIdAsync(int id);
-        Task<List<string>> GetHorariosDisponiblesAsync(DateOnly fecha);
-        Task<bool> TrabajadorOcupadoAsync(int trabajadorId, DateOnly fecha, TimeOnly hora, int? excluirId = null);
         Task<Cita> CreateAsync(Cita cita);
         Task UpdateAsync(Cita cita);
         Task DeleteAsync(Cita cita);
-        Task<Oferta?> GetOfertaActivaAsync(int servicioId);
-        Task<Servicio?> GetServicioAsync(int servicioId);
-        Task<List<Cliente>> GetClientesAsync();
-        Task<List<Trabajadore>> GetTrabajadoresAsync();
-        Task<List<Servicio>> GetServiciosAsync();
+        Task<Oferta?> GetOfertaVigenteAsync(int servicioId, DateOnly fechaLocal);
+        Task<Servicio?> GetServicioActivoAsync(int servicioId);
+        Task<Paciente?> GetPacienteAsync(int pacienteId);
+        Task<Dentista?> GetDentistaActivoAsync(int dentistaId);
+        Task<List<Paciente>> GetPacientesAsync();
+        Task<List<Dentista>> GetDentistasActivosAsync();
+        Task<List<Servicio>> GetServiciosActivosAsync();
+    }
+
+    // La base rechazó la cita por traslape con otra activa del mismo dentista (23P01)
+    public class HorarioOcupadoException : Exception
+    {
+        public const string Mensaje = "El dentista ya tiene una cita en ese horario.";
+
+        public HorarioOcupadoException(Exception interna) : base(Mensaje, interna) { }
     }
 }

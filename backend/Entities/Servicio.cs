@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-
 namespace backend.Entities;
 
-public partial class Servicio
+public class Servicio : IConMarcasDeTiempo, IEliminable
 {
     public int Id { get; set; }
 
@@ -15,19 +12,26 @@ public partial class Servicio
 
     public decimal Precio { get; set; }
 
-    public int? Duracion { get; set; }
+    // Horarios seguidos que ocupa; cada uno dura configuracion_agenda.duracion_slot_minutos
+    public short DuracionSlots { get; set; } = 1;
 
     public string? Imagen { get; set; }
 
-    public bool? Disponible { get; set; }
+    public bool Activo { get; set; } = true;
+
+    public DateTime CreadoEn { get; set; }
+
+    public DateTime ActualizadoEn { get; set; }
+
+    public DateTime? EliminadoEn { get; set; }
 
     public virtual CategoriaServicio Categoria { get; set; } = null!;
 
-    public virtual ICollection<Cita> Cita { get; set; } = new List<Cita>();
+    public virtual ICollection<Cita> Citas { get; set; } = new List<Cita>();
 
-    public virtual ICollection<Oferta> Oferta { get; set; } = new List<Oferta>();
+    public virtual ICollection<Oferta> Ofertas { get; set; } = new List<Oferta>();
+
+    public virtual ICollection<DentistaServicio> DentistaServicios { get; set; } = new List<DentistaServicio>();
 
     public virtual ICollection<ServiciosRealizado> ServiciosRealizados { get; set; } = new List<ServiciosRealizado>();
-
-    public virtual ICollection<TrabajadorServicio> TrabajadorServicios { get; set; } = new List<TrabajadorServicio>();
 }

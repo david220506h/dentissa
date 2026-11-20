@@ -9,12 +9,14 @@ namespace backend.Services
     {
         private readonly IAuthRepository _authRepository;
         private readonly IJwtService _jwtService;
+        private readonly IPacientesService _pacientes;
         private readonly IConfiguration _config;
 
-        public AuthService(IAuthRepository authRepository, IJwtService jwtService, IConfiguration config)
+        public AuthService(IAuthRepository authRepository, IJwtService jwtService, IPacientesService pacientes, IConfiguration config)
         {
             _authRepository = authRepository;
             _jwtService = jwtService;
+            _pacientes = pacientes;
             _config = config;
         }
 
@@ -23,9 +25,10 @@ namespace backend.Services
             var usuario = await _authRepository.GetByEmailAsync(loginDto.Email);
 
             // Verificar que existe y que el password coincide con el hash
-            if (usuario == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, usuario.Password))
+            if (usuario == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, usuario.PasswordHash))
                 throw new UnauthorizedAccessException("Credenciales incorrectas");
 
+            usuario.UltimoAccesoEn = DateTime.UtcNow;
             return await GenerateAuthResponse(usuario);
         }
 
@@ -38,12 +41,13 @@ namespace backend.Services
             {
                 Nombre = registerDto.Nombre,
                 Apellido = registerDto.Apellido,
-                Email = registerDto.Email,
+                Correo = registerDto.Email,
                 Telefono = registerDto.Telefono,
-                Password = BCrypt.Net.BCrypt.HashPassword(registerDto.Password), // Hash aquí
-                Rol = Roles.Cliente, // El registro público nunca acepta un rol del cliente
-                FechaRegistro = DateTime.UtcNow
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password), // Hash aquí
+                Rol = Roles.Cliente // El registro público nunca acepta un rol del cliente
             };
+            // Cuenta y ficha de paciente se guardan juntas (un solo SaveChanges)
+            nuevoUsuario.Paciente = _pacientes.NuevaFichaParaCuenta(nuevoUsuario, OrigenesCita.Portal);
 
             var usuarioCreado = await _authRepository.CreateAsync(nuevoUsuario);
             return MapToResponseDto(usuarioCreado);
@@ -53,7 +57,7 @@ namespace backend.Services
         {
             var usuario = await _authRepository.GetByRefreshTokenAsync(refreshToken);
 
-            if (usuario == null || usuario.RefreshTokenExpiration < DateTime.UtcNow)
+            if (usuario == null || usuario.RefreshTokenExpiraEn < DateTime.UtcNow)
                 throw new UnauthorizedAccessException("RefreshToken inválido o expirado");
 
             return await GenerateAuthResponse(usuario);
@@ -65,7 +69,7 @@ namespace backend.Services
             if (usuario == null) return;
 
             usuario.RefreshToken = null;
-            usuario.RefreshTokenExpiration = null;
+            usuario.RefreshTokenExpiraEn = null;
             await _authRepository.UpdateAsync(usuario);
         }
 
@@ -79,7 +83,7 @@ namespace backend.Services
 
             // Guardar RefreshToken en DB
             usuario.RefreshToken = refreshToken;
-            usuario.RefreshTokenExpiration = DateTime.UtcNow.AddDays(refreshDays);
+            usuario.RefreshTokenExpiraEn = DateTime.UtcNow.AddDays(refreshDays);
             await _authRepository.UpdateAsync(usuario);
 
             return new AuthResponseDto
@@ -96,10 +100,10 @@ namespace backend.Services
             Id = usuario.Id,
             Nombre = usuario.Nombre,
             Apellido = usuario.Apellido,
-            Email = usuario.Email,
+            Email = usuario.Correo,
             Telefono = usuario.Telefono,
             Rol = usuario.Rol,
-            FechaRegistro = usuario.FechaRegistro
+            FechaRegistro = usuario.CreadoEn
         };
     }
 }

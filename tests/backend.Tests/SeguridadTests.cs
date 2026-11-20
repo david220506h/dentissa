@@ -19,7 +19,7 @@ public class AutorizacionTests : IClassFixture<DentissaFactory>
     [InlineData("DELETE", "/api/Usuarios/1")]
     [InlineData("GET", "/api/Citas")]
     [InlineData("GET", "/api/Citas/1")]
-    [InlineData("GET", "/api/Citas/clientes")]
+    [InlineData("GET", "/api/Citas/pacientes")]
     [InlineData("POST", "/api/Citas")]
     [InlineData("PATCH", "/api/Citas/1/confirmar")]
     [InlineData("POST", "/api/catalogo/imagenes")]
@@ -88,7 +88,7 @@ public class AutorizacionTests : IClassFixture<DentissaFactory>
         });
 
         Assert.Equal(HttpStatusCode.Forbidden, res.StatusCode);
-        Assert.False(await _factory.ConDbAsync(db => db.Usuarios.AnyAsync(u => u.Email == email)));
+        Assert.False(await _factory.ConDbAsync(db => db.Usuarios.AnyAsync(u => u.Correo == email)));
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class RegistroTests : IClassFixture<DentissaFactory>
         var cuerpo = await res.Content.ReadFromJsonAsync<Dictionary<string, object>>();
         Assert.Equal(Roles.Cliente, cuerpo!["rol"].ToString());
 
-        var rolGuardado = await _factory.ConDbAsync(db => db.Usuarios.Where(u => u.Email == email).Select(u => u.Rol).SingleAsync());
+        var rolGuardado = await _factory.ConDbAsync(db => db.Usuarios.Where(u => u.Correo == email).Select(u => u.Rol).SingleAsync());
         Assert.Equal(Roles.Cliente, rolGuardado);
     }
 }
@@ -172,8 +172,8 @@ public class DtosTests : IClassFixture<DentissaFactory>
 
     [Theory]
     [InlineData("/api/Citas")]
-    [InlineData("/api/Citas/clientes")]
-    [InlineData("/api/Citas/trabajadores")]
+    [InlineData("/api/Citas/pacientes")]
+    [InlineData("/api/Citas/dentistas")]
     [InlineData("/api/Usuarios")]
     public async Task Listados_NoExponenHashNiTokens(string ruta)
     {

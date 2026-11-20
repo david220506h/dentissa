@@ -36,7 +36,7 @@ namespace backend.Services
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
-                new Claim(ClaimTypes.Email, usuario.Email),
+                new Claim(ClaimTypes.Email, usuario.Correo),
                 new Claim(ClaimTypes.Name, usuario.Nombre),
                 new Claim(ClaimTypes.Role, usuario.Rol),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
