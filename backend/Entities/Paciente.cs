@@ -20,14 +20,18 @@ public class Paciente : IConMarcasDeTiempo, IEliminable
 
     public string? Sexo { get; set; }
 
+    [DatoSensible]
     public string? Curp { get; set; }
 
+    [DatoSensible]
     public string? Direccion { get; set; }
 
     public string? TipoSangre { get; set; }
 
+    [DatoSensible]
     public string? Alergias { get; set; }
 
+    [DatoSensible]
     public string? CondicionesMedicas { get; set; }
 
     public string Origen { get; set; } = null!;

@@ -50,7 +50,8 @@ public class DentissaFactory : WebApplicationFactory<Program>
                 d.ServiceType == typeof(IDbContextOptionsConfiguration<DentissaDbContext>)).ToList();
             foreach (var d in registrosEf) services.Remove(d);
 
-            services.AddDbContext<DentissaDbContext>(o => o.UseInMemoryDatabase(_baseDatos));
+            services.AddDbContext<DentissaDbContext>((sp, o) => o.UseInMemoryDatabase(_baseDatos)
+                .AddInterceptors(sp.GetRequiredService<backend.Services.AuditoriaInterceptor>()));
         });
     }
 

@@ -10,13 +10,16 @@ namespace backend.Services
         private readonly IAuthRepository _authRepository;
         private readonly IJwtService _jwtService;
         private readonly IPacientesService _pacientes;
+        private readonly IAuditoriaService _auditoria;
         private readonly IConfiguration _config;
 
-        public AuthService(IAuthRepository authRepository, IJwtService jwtService, IPacientesService pacientes, IConfiguration config)
+        public AuthService(IAuthRepository authRepository, IJwtService jwtService, IPacientesService pacientes,
+                           IAuditoriaService auditoria, IConfiguration config)
         {
             _authRepository = authRepository;
             _jwtService = jwtService;
             _pacientes = pacientes;
+            _auditoria = auditoria;
             _config = config;
         }
 
@@ -28,10 +31,18 @@ namespace backend.Services
             // está activa. Las eliminadas no llegan aquí (filtro global). Mismo mensaje en
             // todos los casos para no revelar si la cuenta existe o está desactivada.
             if (usuario == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, usuario.PasswordHash) || !usuario.Activo)
+            {
+                // Evento anónimo: sin usuario_id; se guarda el correo intentado, nunca la contraseña
+                await _auditoria.RegistrarAsync(AccionesAuditoria.InicioSesionFallido, "usuarios",
+                    usuario?.Id.ToString(), usuarioCorreo: loginDto.Email);
                 throw new UnauthorizedAccessException("Credenciales incorrectas");
+            }
 
             usuario.UltimoAccesoEn = DateTime.UtcNow;
-            return await GenerateAuthResponse(usuario);
+            var respuesta = await GenerateAuthResponse(usuario);
+            await _auditoria.RegistrarAsync(AccionesAuditoria.InicioSesion, "usuarios", usuario.Id.ToString(),
+                usuarioId: usuario.Id, usuarioCorreo: usuario.Correo);
+            return respuesta;
         }
 
         public async Task<UsuarioResponseDto> RegisterAsync(RegisterDto registerDto)
@@ -73,6 +84,8 @@ namespace backend.Services
             usuario.RefreshToken = null;
             usuario.RefreshTokenExpiraEn = null;
             await _authRepository.UpdateAsync(usuario);
+            await _auditoria.RegistrarAsync(AccionesAuditoria.CierreSesion, "usuarios", usuario.Id.ToString(),
+                usuarioId: usuario.Id, usuarioCorreo: usuario.Correo);
         }
 
         // Genera AccessToken + RefreshToken y los guarda

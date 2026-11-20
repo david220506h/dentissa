@@ -16,12 +16,20 @@ if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException(
         "Falta ConnectionStrings:DefaultConnection. Configúrala con user-secrets o con la variable de entorno ConnectionStrings__DefaultConnection.");
 
+// Bitácora: el interceptor es por petición (lleva el actor y la transacción propia)
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IActorActual, ActorActual>();
+builder.Services.AddScoped<AuditoriaInterceptor>();
+
 // Conexión PostgreSQL; tablas y columnas en snake_case
-builder.Services.AddDbContext<DentissaDbContext>(options =>
+builder.Services.AddDbContext<DentissaDbContext>((sp, options) =>
     options.UseNpgsql(connectionString)
-           .UseSnakeCaseNamingConvention());
+           .UseSnakeCaseNamingConvention()
+           .AddInterceptors(sp.GetRequiredService<AuditoriaInterceptor>()));
 
 // Inyección de dependencias
+builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
+builder.Services.AddScoped<ICitaHistorialService, CitaHistorialService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();

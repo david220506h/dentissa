@@ -6,6 +6,7 @@ public class Usuario : IConMarcasDeTiempo, IEliminable
 
     public string Correo { get; set; } = null!;
 
+    [DatoSensible]
     public string PasswordHash { get; set; } = null!;
 
     public string Rol { get; set; } = null!;
@@ -18,10 +19,13 @@ public class Usuario : IConMarcasDeTiempo, IEliminable
 
     public bool Activo { get; set; } = true;
 
+    [DatoSensible, ControlDeSesion]
     public string? RefreshToken { get; set; }
 
+    [ControlDeSesion]
     public DateTime? RefreshTokenExpiraEn { get; set; }
 
+    [ControlDeSesion]
     public DateTime? UltimoAccesoEn { get; set; }
 
     public DateTime CreadoEn { get; set; }

@@ -42,6 +42,7 @@ public class Cita : IConMarcasDeTiempo
     // Solo solicitudes del paciente (web, portal)
     public DateTime? BloqueoExpiraEn { get; set; }
 
+    [DatoSensible]
     public string? ConfirmacionTokenHash { get; set; }
 
     public DateTime? ConfirmacionTokenExpiraEn { get; set; }

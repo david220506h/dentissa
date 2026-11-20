@@ -21,12 +21,14 @@ namespace backend.Controllers
         private readonly ICitasRepository _repo;
         private readonly IAgendaService _agenda;
         private readonly IRelojClinica _reloj;
+        private readonly ICitaHistorialService _historial;
 
-        public CitasController(ICitasRepository repo, IAgendaService agenda, IRelojClinica reloj)
+        public CitasController(ICitasRepository repo, IAgendaService agenda, IRelojClinica reloj, ICitaHistorialService historial)
         {
             _repo = repo;
             _agenda = agenda;
             _reloj = reloj;
+            _historial = historial;
         }
 
         // ── GET: api/Citas ────────────────────────────────────
@@ -150,6 +152,7 @@ namespace backend.Controllers
                     CostoTotal        = CalcularTotal(costoBase, descuento, extra)
                 };
 
+                _historial.Registrar(cita, AccionesCitaHistorial.Creacion, "Cita creada desde el panel");
                 await _repo.CreateAsync(cita);
                 return CreatedAtAction(nameof(GetById), new { id = cita.Id }, new { cita.Id, mensaje = "Cita creada correctamente" });
             }
@@ -181,6 +184,7 @@ namespace backend.Controllers
 
             try
             {
+                var antes = new { cita.DentistaId, cita.Inicio, cita.Fin, cita.Estado, cita.CostoExtra, cita.MotivoExtra };
                 var (fechaActual, horaActual) = _reloj.ALocal(cita.Inicio);
                 var cambioHorario = fechaActual != dto.Fecha || horaActual != dto.Hora || cita.DentistaId != dto.DentistaId;
 
@@ -203,6 +207,15 @@ namespace backend.Controllers
                 cita.CostoExtra  = dto.CostoExtra ?? 0;
                 cita.MotivoExtra = dto.MotivoExtra;
                 cita.CostoTotal  = CalcularTotal(cita.CostoBase, cita.DescuentoAplicado, cita.CostoExtra);
+
+                var despues = new { cita.DentistaId, cita.Inicio, cita.Fin, cita.Estado, cita.CostoExtra, cita.MotivoExtra };
+                var datos = new { antes, despues };
+                if (cambioHorario)
+                    _historial.Registrar(cita, AccionesCitaHistorial.Reagenda, "Cambio de fecha, hora o dentista", datos);
+                if (antes.Estado != cita.Estado)
+                    _historial.Registrar(cita, AccionesCitaHistorial.CambioEstado, $"{antes.Estado} → {cita.Estado}", datos);
+                if (!cambioHorario && antes.Estado == cita.Estado && !Equals(antes, despues))
+                    _historial.Registrar(cita, AccionesCitaHistorial.Modificacion, "Cambio de costos", datos);
 
                 await _repo.UpdateAsync(cita);
                 return Ok(new { mensaje = "Cita actualizada correctamente" });
@@ -235,6 +248,7 @@ namespace backend.Controllers
             cita.Estado            = EstadosCita.Cancelada;
             cita.MotivoCancelacion = motivo;
             cita.CanceladaEn       = DateTime.UtcNow;
+            _historial.Registrar(cita, AccionesCitaHistorial.Cancelacion, motivo);
             await _repo.UpdateAsync(cita);
             return Ok(new { mensaje = "Cita cancelada", estado = cita.Estado });
         }
@@ -256,6 +270,7 @@ namespace backend.Controllers
                 cita.ConfirmadaEn      = DateTime.UtcNow;
                 cita.ConfirmadaPor     = UsuarioActualId();
                 cita.ConfirmacionCanal = "llamada";
+                _historial.Registrar(cita, AccionesCitaHistorial.Confirmacion, "Confirmada por recepción (llamada)");
                 await _repo.UpdateAsync(cita);
             }
             return Ok(new { mensaje = "Cita confirmada", estado = cita.Estado });
