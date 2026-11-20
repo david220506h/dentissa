@@ -12,3 +12,10 @@ public interface IEliminable
 {
     DateTime? EliminadoEn { get; set; }
 }
+
+// La clínica nunca se queda sin un administrador activo
+public class UltimoAdministradorException : InvalidOperationException
+{
+    public UltimoAdministradorException()
+        : base("No se puede desactivar, eliminar ni cambiar de rol al último administrador activo.") { }
+}

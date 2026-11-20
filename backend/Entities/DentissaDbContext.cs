@@ -1,3 +1,4 @@
+using backend.Constants;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Entities;
@@ -69,16 +70,34 @@ public class DentissaDbContext : DbContext
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         ConvertirBorradosEnLogicos();
+        var admins = AdminsQueDejanDeSerlo();
+        if (admins.Count > 0 && !Usuarios.Any(u => u.Rol == Roles.Admin && u.Activo && !admins.Contains(u.Id)))
+            throw new UltimoAdministradorException();
         AplicarMarcasDeTiempo();
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
-    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
         ConvertirBorradosEnLogicos();
+        var admins = AdminsQueDejanDeSerlo();
+        if (admins.Count > 0 && !await Usuarios.AnyAsync(u => u.Rol == Roles.Admin && u.Activo && !admins.Contains(u.Id), cancellationToken))
+            throw new UltimoAdministradorException();
         AplicarMarcasDeTiempo();
-        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
+
+    // Administradores activos que en este guardado se desactivan, se eliminan
+    // (lógicamente) o cambian de rol. Si no queda otro admin activo, no se guarda.
+    private List<int> AdminsQueDejanDeSerlo()
+        => ChangeTracker.Entries<Usuario>()
+            .Where(e => e.State == EntityState.Modified)
+            .Where(e => (string?)e.OriginalValues[nameof(Usuario.Rol)] == Roles.Admin
+                        && (bool)e.OriginalValues[nameof(Usuario.Activo)]!
+                        && e.OriginalValues[nameof(Usuario.EliminadoEn)] == null)
+            .Where(e => e.Entity.Rol != Roles.Admin || !e.Entity.Activo || e.Entity.EliminadoEn != null)
+            .Select(e => e.Entity.Id)
+            .ToList();
 
     // Un Remove() sobre una entidad con borrado lógico se guarda como
     // UPDATE … SET eliminado_en = now(): la fila nunca sale de la tabla

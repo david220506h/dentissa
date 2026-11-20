@@ -87,7 +87,14 @@ namespace backend.Controllers
             usuario.Activo = false;
             usuario.RefreshToken = null;
             usuario.RefreshTokenExpiraEn = null;
-            await _authRepository.UpdateAsync(usuario);
+            try
+            {
+                await _authRepository.UpdateAsync(usuario);
+            }
+            catch (UltimoAdministradorException ex)
+            {
+                return Conflict(new { mensaje = ex.Message });
+            }
             return Ok(new { mensaje = "Usuario desactivado", activo = false });
         }
 
