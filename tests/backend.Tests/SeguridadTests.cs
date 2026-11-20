@@ -47,10 +47,16 @@ public class AutorizacionTests : IClassFixture<DentissaFactory>
     }
 
     [Theory]
-    [InlineData(Roles.Cliente, "/api/Usuarios")]
-    [InlineData(Roles.Cliente, "/api/Citas")]
-    [InlineData(Roles.Cliente, "/api/Citas/servicios")]
-    [InlineData(Roles.Secretaria, "/api/Usuarios")]
+    [InlineData(Roles.Paciente, "/api/Usuarios")]
+    [InlineData(Roles.Paciente, "/api/Citas")]
+    [InlineData(Roles.Paciente, "/api/Citas/servicios")]
+    [InlineData(Roles.Asistente, "/api/Usuarios")]
+    [InlineData(Roles.Dentista, "/api/Usuarios")]
+    [InlineData(Roles.Dentista, "/api/Citas")]
+    [InlineData(Roles.Dentista, "/api/Citas/pacientes")]
+    [InlineData(Roles.Asistente, "/api/citas/mi-agenda")]
+    [InlineData(Roles.Paciente, "/api/citas/mi-agenda")]
+    [InlineData(Roles.Admin, "/api/citas/mi-agenda")]
     public async Task RolIncorrecto_Devuelve403(string rol, string ruta)
     {
         var client = await _factory.ClienteConRolAsync(rol);
@@ -63,8 +69,8 @@ public class AutorizacionTests : IClassFixture<DentissaFactory>
     [Theory]
     [InlineData(Roles.Admin, "/api/Usuarios")]
     [InlineData(Roles.Admin, "/api/Citas")]
-    [InlineData(Roles.Secretaria, "/api/Citas")]
-    [InlineData(Roles.Secretaria, "/api/Citas/servicios")]
+    [InlineData(Roles.Asistente, "/api/Citas")]
+    [InlineData(Roles.Asistente, "/api/Citas/servicios")]
     public async Task RolCorrecto_Devuelve200(string rol, string ruta)
     {
         var client = await _factory.ClienteConRolAsync(rol);
@@ -75,8 +81,8 @@ public class AutorizacionTests : IClassFixture<DentissaFactory>
     }
 
     [Theory]
-    [InlineData(Roles.Secretaria)]
-    [InlineData(Roles.Cliente)]
+    [InlineData(Roles.Asistente)]
+    [InlineData(Roles.Paciente)]
     public async Task SoloAdminPuedeCrearAdmin(string rol)
     {
         var client = await _factory.ClienteConRolAsync(rol);
@@ -114,7 +120,8 @@ public class RegistroTests : IClassFixture<DentissaFactory>
 
     [Theory]
     [InlineData("admin")]
-    [InlineData("secretaria")]
+    [InlineData("asistente")]
+    [InlineData("dentista")]
     [InlineData("ADMIN")]
     public async Task Register_IgnoraElRolEnviado(string rolEnviado)
     {
@@ -129,10 +136,10 @@ public class RegistroTests : IClassFixture<DentissaFactory>
 
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
         var cuerpo = await res.Content.ReadFromJsonAsync<Dictionary<string, object>>();
-        Assert.Equal(Roles.Cliente, cuerpo!["rol"].ToString());
+        Assert.Equal(Roles.Paciente, cuerpo!["rol"].ToString());
 
         var rolGuardado = await _factory.ConDbAsync(db => db.Usuarios.Where(u => u.Correo == email).Select(u => u.Rol).SingleAsync());
-        Assert.Equal(Roles.Cliente, rolGuardado);
+        Assert.Equal(Roles.Paciente, rolGuardado);
     }
 }
 
@@ -196,7 +203,7 @@ public class DtosTests : IClassFixture<DentissaFactory>
         var res = await client.PostAsJsonAsync("/api/Usuarios", new
         {
             nombre = "X", apellido = "Y", email = $"u-{Guid.NewGuid():N}@prueba.test",
-            password = "Segura123!", rol = Roles.Secretaria
+            password = "Segura123!", rol = Roles.Asistente
         });
 
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
@@ -297,9 +304,9 @@ public class CatalogoImagenesTests : IClassFixture<DentissaFactory>
     }
 
     [Fact]
-    public async Task Secretaria_NoPuedeSubir()
+    public async Task Asistente_NoPuedeSubir()
     {
-        var client = await _factory.ClienteConRolAsync(Roles.Secretaria);
+        var client = await _factory.ClienteConRolAsync(Roles.Asistente);
 
         var res = await client.PostAsync("/api/catalogo/imagenes", Formulario(PngMinimo, "foto.png", "image/png"));
 

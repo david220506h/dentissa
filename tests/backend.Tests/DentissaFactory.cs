@@ -88,8 +88,10 @@ public class DentissaFactory : WebApplicationFactory<Program>
 
     // Cliente HTTP con sesión iniciada mediante el login real de la API
     public async Task<HttpClient> ClienteConRolAsync(string rol)
+        => await ClienteDeAsync(await CrearUsuarioAsync(rol));
+
+    public async Task<HttpClient> ClienteDeAsync(Usuario usuario)
     {
-        var usuario = await CrearUsuarioAsync(rol);
         var client = CreateClient();
 
         var res = await client.PostAsJsonAsync("/api/auth/login", new { email = usuario.Correo, password = PasswordPruebas });
@@ -101,10 +103,13 @@ public class DentissaFactory : WebApplicationFactory<Program>
     }
 
     // Cita completa (paciente, dentista, servicio) para probar las respuestas de citas
-    public Task<int> CrearCitaAsync() => ConDbAsync(async db =>
+    public async Task<int> CrearCitaAsync() => (await CrearCitaConDentistaAsync()).CitaId;
+
+    // Devuelve también la cuenta del dentista para iniciar sesión con ella
+    public Task<(int CitaId, Usuario CuentaDentista)> CrearCitaConDentistaAsync() => ConDbAsync(async db =>
     {
-        var cuentaPaciente = await CrearUsuarioAsync(Roles.Cliente);
-        var cuentaDentista = await CrearUsuarioAsync(Roles.Secretaria);
+        var cuentaPaciente = await CrearUsuarioAsync(Roles.Paciente);
+        var cuentaDentista = await CrearUsuarioAsync(Roles.Dentista);
 
         var paciente = new Paciente
         {
@@ -132,7 +137,7 @@ public class DentissaFactory : WebApplicationFactory<Program>
         };
         db.Citas.Add(cita);
         await db.SaveChangesAsync();
-        return cita.Id;
+        return (cita.Id, cuentaDentista);
     });
 
     public record LoginRespuesta(string AccessToken, string RefreshToken);

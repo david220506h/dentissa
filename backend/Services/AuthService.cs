@@ -44,7 +44,7 @@ namespace backend.Services
                 Correo = registerDto.Email,
                 Telefono = registerDto.Telefono,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password), // Hash aquí
-                Rol = Roles.Cliente // El registro público nunca acepta un rol del cliente
+                Rol = Roles.Paciente // El registro público nunca acepta un rol del cliente
             };
             // Cuenta y ficha de paciente se guardan juntas (un solo SaveChanges)
             nuevoUsuario.Paciente = _pacientes.NuevaFichaParaCuenta(nuevoUsuario, OrigenesCita.Portal);

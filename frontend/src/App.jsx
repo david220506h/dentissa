@@ -24,7 +24,7 @@ function App() {
   if (!usuario) return <Principal usuario={usuario} setUsuario={setUsuario}
                         avisoSesion={avisoSesion} onAvisoVisto={() => setAvisoSesion(null)} />;
 
-  // El panel es para admin y secretaria; el backend valida el rol en cada petición
+  // El panel es para admin, asistente y dentista; el backend valida el rol en cada petición
   if (puedeVerPanel(usuario) && vistaActual !== 'principal')
     return <Dashboard usuario={usuario} setUsuario={setUsuario}
              onVerPrincipal={() => setVistaActual('principal')} />;

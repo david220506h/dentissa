@@ -2,6 +2,7 @@ using backend.Constants;
 using backend.DTOs;
 using backend.Entities;
 using backend.Repositories;
+using backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,10 +14,12 @@ namespace backend.Controllers
     public class UsuariosController : ControllerBase
     {
         private readonly IAuthRepository _authRepository;
+        private readonly IPacientesService _pacientes;
 
-        public UsuariosController(IAuthRepository authRepository)
+        public UsuariosController(IAuthRepository authRepository, IPacientesService pacientes)
         {
             _authRepository = authRepository;
+            _pacientes = pacientes;
         }
 
         // ── GET: api/Usuarios ─────────────────────────────────
@@ -50,6 +53,17 @@ namespace backend.Controllers
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 Rol          = dto.Rol.ToLower()
             };
+
+            // La ficha se guarda junto con la cuenta (un solo SaveChanges)
+            if (usuario.Rol == Roles.Dentista)
+                usuario.Dentista = new Dentista
+                {
+                    Usuario           = usuario,
+                    CedulaProfesional = dto.CedulaProfesional,
+                    Especialidad      = dto.Especialidad
+                };
+            else if (usuario.Rol == Roles.Paciente)
+                usuario.Paciente = _pacientes.NuevaFichaParaCuenta(usuario, OrigenesCita.Recepcion);
 
             var creado = await _authRepository.CreateAsync(usuario);
             var respuesta = ToListaDto(creado, new UsuarioCreadoDto());

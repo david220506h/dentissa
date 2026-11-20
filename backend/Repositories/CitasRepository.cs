@@ -95,5 +95,15 @@ namespace backend.Repositories
                 .Where(s => s.Activo)
                 .OrderBy(s => s.Nombre)
                 .ToListAsync();
+
+        public async Task<Dentista?> GetDentistaPorUsuarioAsync(int usuarioId)
+            => await _context.Dentistas.FirstOrDefaultAsync(d => d.UsuarioId == usuarioId);
+
+        // Citas que empiezan en [desde, hasta)
+        public async Task<List<Cita>> GetAgendaDentistaAsync(int dentistaId, DateTime desdeUtc, DateTime hastaUtc)
+            => await CitasConRelaciones()
+                .Where(c => c.DentistaId == dentistaId && c.Inicio >= desdeUtc && c.Inicio < hastaUtc)
+                .OrderBy(c => c.Inicio)
+                .ToListAsync();
     }
 }

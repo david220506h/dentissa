@@ -1,16 +1,18 @@
 namespace backend.Constants
 {
-    // Nombres de rol centralizados. El renombre a los roles objetivo
-    // (admin, asistente, dentista, paciente) se hará en la Fase 1 solo aquí.
+    // Nombres de rol centralizados (deben coincidir con frontend/src/constants/roles.js
+    // y con la restricción ck_usuarios_rol de la base). Un solo rol por cuenta.
     public static class Roles
     {
-        public const string Admin      = "admin";
-        public const string Secretaria = "secretaria";
-        public const string Cliente    = "cliente";
+        public const string Admin     = "admin";
+        public const string Asistente = "asistente";
+        public const string Dentista  = "dentista";
+        public const string Paciente  = "paciente";
 
         // Combinaciones para [Authorize(Roles = ...)]
-        public const string Panel = Admin + "," + Secretaria;
+        // Recepción: gestiona citas y pacientes
+        public const string Panel = Admin + "," + Asistente;
 
-        public static readonly string[] Todos = { Admin, Secretaria, Cliente };
+        public static readonly string[] Todos = { Admin, Asistente, Dentista, Paciente };
     }
 }

@@ -27,15 +27,16 @@ const CloseIcon = () => (
 
 const ROL_COLORES = {
   admin:      "badge-admin",
-  secretaria: "badge-asistente",
-  cliente:    "badge-paciente",
+  asistente:  "badge-asistente",
+  dentista:   "badge-admin",
+  paciente:   "badge-paciente",
 };
 
 // ── Modal nuevo usuario ───────────────────────────────────
 function Modal({ onClose, onGuardar }) {
   const [form, setForm] = useState({
     nombre: "", apellido: "", email: "", telefono: "",
-    password: "", rol: "cliente",
+    password: "", rol: "paciente",
   });
   const [guardando, setGuardando] = useState(false);
   const [error,     setError]     = useState(null);
@@ -117,8 +118,9 @@ function Modal({ onClose, onGuardar }) {
           <div className="modal-field">
             <label>Rol</label>
             <select name="rol" value={form.rol} onChange={handleChange}>
-              <option value="cliente">Cliente</option>
-              <option value="secretaria">Secretaria</option>
+              <option value="paciente">Paciente</option>
+              <option value="asistente">Asistente</option>
+              <option value="dentista">Dentista</option>
               <option value="admin">Admin</option>
             </select>
           </div>

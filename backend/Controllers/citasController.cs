@@ -256,39 +256,6 @@ namespace backend.Controllers
         private static decimal CalcularTotal(decimal costoBase, decimal descuento, decimal extra)
             => Math.Round(costoBase - (costoBase * descuento / 100) + extra, 2, MidpointRounding.AwayFromZero);
 
-        private CitaRespuestaDto ToRespuestaDto(Cita c)
-        {
-            var (fecha, hora) = _reloj.ALocal(c.Inicio);
-            return new CitaRespuestaDto
-            {
-                Id                = c.Id,
-                Paciente          = c.Paciente.Nombre + " " + c.Paciente.Apellido,
-                Servicio          = c.Servicio.Nombre,
-                Dentista          = c.Dentista.Usuario.Nombre + " " + c.Dentista.Usuario.Apellido,
-                Fecha             = fecha.ToString("dd/MM/yyyy"),
-                Hora              = hora.ToString("HH:mm"),
-                Inicio            = DateTime.SpecifyKind(c.Inicio, DateTimeKind.Utc),
-                Fin               = DateTime.SpecifyKind(c.Fin, DateTimeKind.Utc),
-                Estado            = c.Estado,
-                Origen            = c.Origen,
-                Motivo            = c.Motivo,
-                MotivoCancelacion = c.MotivoCancelacion,
-                SolicitudCambio   = c.SolicitudCambioTipo == null ? null : new SolicitudCambioDto
-                {
-                    Tipo   = c.SolicitudCambioTipo,
-                    Motivo = c.SolicitudCambioMotivo,
-                    En     = DateTime.SpecifyKind(c.SolicitudCambioEn!.Value, DateTimeKind.Utc)
-                },
-                CostoBase         = c.CostoBase,
-                DescuentoAplicado = c.DescuentoAplicado,
-                CostoExtra        = c.CostoExtra,
-                MotivoExtra       = c.MotivoExtra,
-                CostoTotal        = c.CostoTotal,
-                PacienteId        = c.PacienteId,
-                DentistaId        = c.DentistaId,
-                ServicioId        = c.ServicioId,
-                Oferta            = c.Oferta?.Descuento
-            };
-        }
+        private CitaRespuestaDto ToRespuestaDto(Cita c) => CitaMapper.ARespuesta(c, _reloj);
     }
 }

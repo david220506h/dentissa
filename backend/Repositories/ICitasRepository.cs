@@ -16,6 +16,8 @@ namespace backend.Repositories
         Task<List<Paciente>> GetPacientesAsync();
         Task<List<Dentista>> GetDentistasActivosAsync();
         Task<List<Servicio>> GetServiciosActivosAsync();
+        Task<Dentista?> GetDentistaPorUsuarioAsync(int usuarioId);
+        Task<List<Cita>> GetAgendaDentistaAsync(int dentistaId, DateTime desdeUtc, DateTime hastaUtc);
     }
 
     // La base rechazó la cita por traslape con otra activa del mismo dentista (23P01)

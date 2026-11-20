@@ -8,7 +8,7 @@ import Ofertas from "../../components/ofertas";
 import Usuarios from "../../components/usuarios";
 import Comentarios from "../../components/comentarios"
 import { FaUserCircle } from 'react-icons/fa';
-import { ROLES } from "../../constants/roles";
+import { ROLES, ROLES_RECEPCION } from "../../constants/roles";
 
 // ── Íconos ───────────────────────────────────────────────
 const Icons = {
@@ -183,11 +183,12 @@ function ModalPacientes({ onClose }) {
 
 // ── Nav items ────────────────────────────────────────────
 // roles: quién ve cada sección (el backend vuelve a validar en cada petición)
-const RECEPCION = [ROLES.ADMIN, ROLES.SECRETARIA];
+const RECEPCION = ROLES_RECEPCION;
+const PANEL = [...ROLES_RECEPCION, ROLES.DENTISTA];
 const SOLO_ADMIN = [ROLES.ADMIN];
 
 const NAV_ITEMS = [
-  { id: "dashboard",   label: "Dashboard",   icon: Icons.dashboard,   roles: RECEPCION },
+  { id: "dashboard",   label: "Dashboard",   icon: Icons.dashboard,   roles: PANEL },
   { id: "citas",       label: "Citas",        icon: Icons.citas,       roles: RECEPCION },
   { id: "pacientes",   label: "Pacientes",    icon: Icons.pacientes,   roles: RECEPCION },
   { id: "servicios",   label: "Servicios",    icon: Icons.servicios,   roles: SOLO_ADMIN },
