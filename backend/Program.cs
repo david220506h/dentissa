@@ -25,11 +25,17 @@ builder.Services.AddScoped<AuditoriaInterceptor>();
 builder.Services.AddDbContext<DentissaDbContext>((sp, options) =>
     options.UseNpgsql(connectionString)
            .UseSnakeCaseNamingConvention()
-           .AddInterceptors(sp.GetRequiredService<AuditoriaInterceptor>()));
+           .AddInterceptors(sp.GetRequiredService<AuditoriaInterceptor>())
+           // Intencional: las consultas de citas ignoran el filtro de borrado lógico
+           // (CitasRepository) para no perder citas cuyo paciente, dentista o servicio
+           // está eliminado. La fase del expediente debe hacer lo mismo en sus consultas.
+           .ConfigureWarnings(w => w.Ignore(
+               Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning)));
 
 // Inyección de dependencias
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 builder.Services.AddScoped<ICitaHistorialService, CitaHistorialService>();
+builder.Services.AddScoped<DatosInicialesService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -115,6 +121,10 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Migraciones (solo si se pide), configuración de agenda y administrador inicial
+using (var scope = app.Services.CreateScope())
+    await scope.ServiceProvider.GetRequiredService<DatosInicialesService>().EjecutarAsync();
 
 app.UseSecurityHeaders();
 
