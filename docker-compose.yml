@@ -13,7 +13,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en el archivo .env (copia .env.example)}
     ports:
       # Solo accesible desde este equipo
-      - "127.0.0.1:5432:5432"
+      # POSTGRES_PORT en .env si el 5432 ya está ocupado (p. ej., por un PostgreSQL instalado en Windows)
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - dentissa-pgdata:/var/lib/postgresql/data
     healthcheck:
