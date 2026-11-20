@@ -9,6 +9,7 @@ namespace backend.DTOs
         public string  Email         { get; set; } = string.Empty;
         public string? Telefono      { get; set; }
         public string  Rol           { get; set; } = string.Empty;
+        public bool    Activo        { get; set; }
         public string  FechaRegistro { get; set; } = string.Empty;
     }
 

@@ -4,6 +4,8 @@ namespace backend.Entities;
 
 public class DentissaDbContext : DbContext
 {
+    public const string FiltroBorradoLogico = "BorradoLogico";
+
     public DentissaDbContext(DbContextOptions<DentissaDbContext> options)
         : base(options)
     {
@@ -46,21 +48,51 @@ public class DentissaDbContext : DbContext
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DentissaDbContext).Assembly);
 
-        // Nada se borra en cascada: lo clínico y lo financiero no se borra físicamente
+        // Borrado lógico: filtro con nombre para que las consultas de citas puedan
+        // ignorar solo este filtro (IgnoreQueryFilters([FiltroBorradoLogico]))
+        modelBuilder.Entity<Usuario>().HasQueryFilter(FiltroBorradoLogico, e => e.EliminadoEn == null);
+        modelBuilder.Entity<Paciente>().HasQueryFilter(FiltroBorradoLogico, e => e.EliminadoEn == null);
+        modelBuilder.Entity<Dentista>().HasQueryFilter(FiltroBorradoLogico, e => e.EliminadoEn == null);
+        modelBuilder.Entity<Servicio>().HasQueryFilter(FiltroBorradoLogico, e => e.EliminadoEn == null);
+        modelBuilder.Entity<Oferta>().HasQueryFilter(FiltroBorradoLogico, e => e.EliminadoEn == null);
+
+        // Nada se borra en cascada: lo clínico y lo financiero no se borra físicamente.
+        // Hacia entidades con borrado lógico la FK es ClientNoAction: un Remove() del
+        // principal (que se guarda como borrado lógico) no toca a sus dependientes en
+        // memoria, y la base sigue impidiendo el borrado físico (NO ACTION).
         foreach (var fk in modelBuilder.Model.GetEntityTypes().SelectMany(t => t.GetForeignKeys()))
-            fk.DeleteBehavior = DeleteBehavior.Restrict;
+            fk.DeleteBehavior = typeof(IEliminable).IsAssignableFrom(fk.PrincipalEntityType.ClrType)
+                ? DeleteBehavior.ClientNoAction
+                : DeleteBehavior.Restrict;
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
+        ConvertirBorradosEnLogicos();
         AplicarMarcasDeTiempo();
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
+        ConvertirBorradosEnLogicos();
         AplicarMarcasDeTiempo();
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    // Un Remove() sobre una entidad con borrado lógico se guarda como
+    // UPDATE … SET eliminado_en = now(): la fila nunca sale de la tabla
+    private void ConvertirBorradosEnLogicos()
+    {
+        var ahora = DateTime.UtcNow;
+        foreach (var entrada in ChangeTracker.Entries<IEliminable>().Where(e => e.State == EntityState.Deleted))
+        {
+            entrada.State = EntityState.Modified;
+            foreach (var propiedad in entrada.Properties)
+                propiedad.IsModified = false;
+            entrada.Entity.EliminadoEn = ahora;
+            entrada.Property(e => e.EliminadoEn).IsModified = true;
+        }
     }
 
     // creado_en y actualizado_en los llena el contexto, no cada controlador

@@ -1541,7 +1541,7 @@ namespace backend.Migrations
                     b.HasOne("backend.Entities.Usuario", "CreadoPorUsuario")
                         .WithMany()
                         .HasForeignKey("CreadoPor")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .HasConstraintName("fk_agenda_cierres_usuarios_creado_por");
 
                     b.Navigation("Configuracion");
@@ -1554,7 +1554,7 @@ namespace backend.Migrations
                     b.HasOne("backend.Entities.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .HasConstraintName("fk_auditoria_usuarios_usuario_id");
 
                     b.Navigation("Usuario");
@@ -1565,39 +1565,39 @@ namespace backend.Migrations
                     b.HasOne("backend.Entities.Usuario", "ConfirmadaPorUsuario")
                         .WithMany()
                         .HasForeignKey("ConfirmadaPor")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .HasConstraintName("fk_citas_usuarios_confirmada_por");
 
                     b.HasOne("backend.Entities.Usuario", "CreadoPorUsuario")
                         .WithMany()
                         .HasForeignKey("CreadoPor")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .HasConstraintName("fk_citas_usuarios_creado_por");
 
                     b.HasOne("backend.Entities.Dentista", "Dentista")
                         .WithMany("Citas")
                         .HasForeignKey("DentistaId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .IsRequired()
                         .HasConstraintName("fk_citas_dentistas_dentista_id");
 
                     b.HasOne("backend.Entities.Oferta", "Oferta")
                         .WithMany("Citas")
                         .HasForeignKey("OfertaId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .HasConstraintName("fk_citas_ofertas_oferta_id");
 
                     b.HasOne("backend.Entities.Paciente", "Paciente")
                         .WithMany("Citas")
                         .HasForeignKey("PacienteId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .IsRequired()
                         .HasConstraintName("fk_citas_pacientes_paciente_id");
 
                     b.HasOne("backend.Entities.Servicio", "Servicio")
                         .WithMany("Citas")
                         .HasForeignKey("ServicioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .IsRequired()
                         .HasConstraintName("fk_citas_servicios_servicio_id");
 
@@ -1626,7 +1626,7 @@ namespace backend.Migrations
                     b.HasOne("backend.Entities.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .HasConstraintName("fk_cita_historial_usuarios_usuario_id");
 
                     b.Navigation("Cita");
@@ -1639,7 +1639,7 @@ namespace backend.Migrations
                     b.HasOne("backend.Entities.Usuario", "ActualizadoPorUsuario")
                         .WithMany()
                         .HasForeignKey("ActualizadoPor")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .HasConstraintName("fk_configuracion_agenda_usuarios_actualizado_por");
 
                     b.Navigation("ActualizadoPorUsuario");
@@ -1674,7 +1674,7 @@ namespace backend.Migrations
                     b.HasOne("backend.Entities.Usuario", "Usuario")
                         .WithOne("Dentista")
                         .HasForeignKey("backend.Entities.Dentista", "UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .IsRequired()
                         .HasConstraintName("fk_dentistas_usuarios_usuario_id");
 
@@ -1686,14 +1686,14 @@ namespace backend.Migrations
                     b.HasOne("backend.Entities.Dentista", "Dentista")
                         .WithMany("DentistaServicios")
                         .HasForeignKey("DentistaId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .IsRequired()
                         .HasConstraintName("fk_dentista_servicios_dentistas_dentista_id");
 
                     b.HasOne("backend.Entities.Servicio", "Servicio")
                         .WithMany("DentistaServicios")
                         .HasForeignKey("ServicioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .IsRequired()
                         .HasConstraintName("fk_dentista_servicios_servicios_servicio_id");
 
@@ -1713,7 +1713,7 @@ namespace backend.Migrations
                     b.HasOne("backend.Entities.Paciente", "Paciente")
                         .WithMany("ExamenesClinicos")
                         .HasForeignKey("PacienteId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .IsRequired()
                         .HasConstraintName("fk_examen_clinico_pacientes_paciente_id");
 
@@ -1727,7 +1727,7 @@ namespace backend.Migrations
                     b.HasOne("backend.Entities.Paciente", "Paciente")
                         .WithMany("ExamenesMedicos")
                         .HasForeignKey("PacienteId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .IsRequired()
                         .HasConstraintName("fk_examen_medico_pacientes_paciente_id");
 
@@ -1769,13 +1769,13 @@ namespace backend.Migrations
                     b.HasOne("backend.Entities.Paciente", "Paciente")
                         .WithMany("Notificaciones")
                         .HasForeignKey("PacienteId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .HasConstraintName("fk_notificaciones_pacientes_paciente_id");
 
                     b.HasOne("backend.Entities.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .HasConstraintName("fk_notificaciones_usuarios_usuario_id");
 
                     b.Navigation("Cita");
@@ -1790,7 +1790,7 @@ namespace backend.Migrations
                     b.HasOne("backend.Entities.Servicio", "Servicio")
                         .WithMany("Ofertas")
                         .HasForeignKey("ServicioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .IsRequired()
                         .HasConstraintName("fk_ofertas_servicios_servicio_id");
 
@@ -1802,7 +1802,7 @@ namespace backend.Migrations
                     b.HasOne("backend.Entities.Usuario", "Usuario")
                         .WithOne("Paciente")
                         .HasForeignKey("backend.Entities.Paciente", "UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .HasConstraintName("fk_pacientes_usuarios_usuario_id");
 
                     b.Navigation("Usuario");
@@ -1825,14 +1825,14 @@ namespace backend.Migrations
                     b.HasOne("backend.Entities.Dentista", "Dentista")
                         .WithMany("ServiciosRealizados")
                         .HasForeignKey("DentistaId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .IsRequired()
                         .HasConstraintName("fk_servicios_realizados_dentistas_dentista_id");
 
                     b.HasOne("backend.Entities.Servicio", "Servicio")
                         .WithMany("ServiciosRealizados")
                         .HasForeignKey("ServicioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.ClientNoAction)
                         .IsRequired()
                         .HasConstraintName("fk_servicios_realizados_servicios_servicio_id");
 

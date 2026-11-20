@@ -35,6 +35,9 @@ namespace backend.DTOs
                 MotivoExtra       = c.MotivoExtra,
                 CostoTotal        = c.CostoTotal,
                 PacienteId        = c.PacienteId,
+                PacienteEliminado = c.Paciente.EliminadoEn != null,
+                DentistaEliminado = c.Dentista.EliminadoEn != null,
+                ServicioEliminado = c.Servicio.EliminadoEn != null,
                 DentistaId        = c.DentistaId,
                 ServicioId        = c.ServicioId,
                 Oferta            = c.Oferta?.Descuento

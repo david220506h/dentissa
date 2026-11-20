@@ -51,9 +51,20 @@ namespace backend.DTOs
         public string?  MotivoExtra       { get; set; }
         public decimal  CostoTotal        { get; set; }
         public int      PacienteId        { get; set; }
+        // La relación está eliminada lógicamente; la cita se muestra igual
+        public bool     PacienteEliminado { get; set; }
+        public bool     DentistaEliminado { get; set; }
+        public bool     ServicioEliminado { get; set; }
         public int      DentistaId        { get; set; }
         public int      ServicioId        { get; set; }
         public decimal? Oferta            { get; set; }
+    }
+
+    public class CancelarCitaDto
+    {
+        [Required(ErrorMessage = "El motivo de cancelación es obligatorio")]
+        [MaxLength(500)]
+        public string? Motivo { get; set; }
     }
 
     public class SolicitudCambioDto

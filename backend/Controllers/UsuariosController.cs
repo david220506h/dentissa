@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using backend.Constants;
 using backend.DTOs;
 using backend.Entities;
@@ -71,16 +72,36 @@ namespace backend.Controllers
             return Ok(respuesta);
         }
 
-        // ── DELETE: api/Usuarios/5 ────────────────────────────
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Eliminar(int id)
+        // ── PATCH: api/Usuarios/5/desactivar ─────────────────
+        // Una cuenta desactivada no inicia sesión ni renueva su token
+        [HttpPatch("{id}/desactivar")]
+        public async Task<IActionResult> Desactivar(int id)
         {
             var usuario = await _authRepository.GetByIdAsync(id);
             if (usuario == null)
                 return NotFound(new { mensaje = "Usuario no encontrado" });
 
-            await _authRepository.DeleteAsync(usuario);
-            return Ok(new { mensaje = "Usuario eliminado correctamente" });
+            if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var actualId) && actualId == id)
+                return BadRequest(new { mensaje = "No puedes desactivar tu propia cuenta" });
+
+            usuario.Activo = false;
+            usuario.RefreshToken = null;
+            usuario.RefreshTokenExpiraEn = null;
+            await _authRepository.UpdateAsync(usuario);
+            return Ok(new { mensaje = "Usuario desactivado", activo = false });
+        }
+
+        // ── PATCH: api/Usuarios/5/activar ────────────────────
+        [HttpPatch("{id}/activar")]
+        public async Task<IActionResult> Activar(int id)
+        {
+            var usuario = await _authRepository.GetByIdAsync(id);
+            if (usuario == null)
+                return NotFound(new { mensaje = "Usuario no encontrado" });
+
+            usuario.Activo = true;
+            await _authRepository.UpdateAsync(usuario);
+            return Ok(new { mensaje = "Usuario activado", activo = true });
         }
 
         private static T ToListaDto<T>(Usuario u, T dto) where T : UsuarioListaDto
@@ -91,6 +112,7 @@ namespace backend.Controllers
             dto.Email         = u.Correo;
             dto.Telefono      = u.Telefono;
             dto.Rol           = u.Rol;
+            dto.Activo        = u.Activo;
             dto.FechaRegistro = u.CreadoEn.ToString("dd/MM/yyyy");
             return dto;
         }

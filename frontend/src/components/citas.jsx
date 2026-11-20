@@ -445,11 +445,26 @@ export default function Citas() {
     }
   };
 
-  const handleEliminar = async (id) => {
-    if (!confirm("¿Seguro que deseas eliminar esta cita?")) return;
+  // Las citas no se borran: se cancelan con motivo obligatorio
+  const handleCancelar = async (id) => {
+    const motivo = prompt("Motivo de la cancelación:");
+    if (motivo === null) return;
+    if (!motivo.trim()) {
+      setError("El motivo de cancelación es obligatorio");
+      return;
+    }
     try {
-      const res = await authFetch(`${API}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Error al eliminar");
+      const res = await authFetch(`${API}/${id}/cancelar`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ motivo: motivo.trim() }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        let msg = "Error al cancelar la cita";
+        try { msg = JSON.parse(txt).mensaje || msg; } catch { /* respuesta sin JSON */ }
+        throw new Error(msg);
+      }
       await cargarCitas();
     } catch (err) {
       setError(err.message);
@@ -518,8 +533,8 @@ export default function Citas() {
                     <div className="citas-acciones">
                       <button className="cita-btn cita-btn--edit" title="Editar"
                         onClick={() => setModal(cita)}><EditIcon /></button>
-                      <button className="cita-btn cita-btn--delete" title="Eliminar"
-                        onClick={() => handleEliminar(cita.id)}><DeleteIcon /></button>
+                      <button className="cita-btn cita-btn--delete" title="Cancelar cita"
+                        onClick={() => handleCancelar(cita.id)}><DeleteIcon /></button>
                       <button className="cita-btn cita-btn--confirm" title="Confirmar"
                         onClick={() => handleConfirmar(cita.id)}><ConfirmIcon /></button>
                     </div>

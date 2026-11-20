@@ -11,6 +11,5 @@ namespace backend.Repositories
         Task UpdateAsync(Usuario usuario);
         Task<bool> EmailExistsAsync(string email);
         Task<List<Usuario>> GetAllAsync();
-        Task DeleteAsync(Usuario usuario);
     }
 }

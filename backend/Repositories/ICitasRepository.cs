@@ -8,7 +8,6 @@ namespace backend.Repositories
         Task<Cita?> GetByIdAsync(int id);
         Task<Cita> CreateAsync(Cita cita);
         Task UpdateAsync(Cita cita);
-        Task DeleteAsync(Cita cita);
         Task<Oferta?> GetOfertaVigenteAsync(int servicioId, DateOnly fechaLocal);
         Task<Servicio?> GetServicioActivoAsync(int servicioId);
         Task<Paciente?> GetPacienteAsync(int pacienteId);

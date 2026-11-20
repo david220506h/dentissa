@@ -111,8 +111,7 @@ namespace backend.Migrations
                         name: "fk_auditoria_usuarios_usuario_id",
                         column: x => x.usuario_id,
                         principalTable: "usuarios",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -136,8 +135,7 @@ namespace backend.Migrations
                         name: "fk_configuracion_agenda_usuarios_actualizado_por",
                         column: x => x.actualizado_por,
                         principalTable: "usuarios",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -164,8 +162,7 @@ namespace backend.Migrations
                         name: "fk_dentistas_usuarios_usuario_id",
                         column: x => x.usuario_id,
                         principalTable: "usuarios",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -203,8 +200,7 @@ namespace backend.Migrations
                         name: "fk_pacientes_usuarios_usuario_id",
                         column: x => x.usuario_id,
                         principalTable: "usuarios",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -231,8 +227,7 @@ namespace backend.Migrations
                         name: "fk_ofertas_servicios_servicio_id",
                         column: x => x.servicio_id,
                         principalTable: "servicios",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -263,8 +258,7 @@ namespace backend.Migrations
                         name: "fk_agenda_cierres_usuarios_creado_por",
                         column: x => x.creado_por,
                         principalTable: "usuarios",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -330,14 +324,12 @@ namespace backend.Migrations
                         name: "fk_dentista_servicios_dentistas_dentista_id",
                         column: x => x.dentista_id,
                         principalTable: "dentistas",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "fk_dentista_servicios_servicios_servicio_id",
                         column: x => x.servicio_id,
                         principalTable: "servicios",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -361,14 +353,12 @@ namespace backend.Migrations
                         name: "fk_servicios_realizados_dentistas_dentista_id",
                         column: x => x.dentista_id,
                         principalTable: "dentistas",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "fk_servicios_realizados_servicios_servicio_id",
                         column: x => x.servicio_id,
                         principalTable: "servicios",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -426,8 +416,7 @@ namespace backend.Migrations
                         name: "fk_examen_medico_pacientes_paciente_id",
                         column: x => x.paciente_id,
                         principalTable: "pacientes",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -482,38 +471,32 @@ namespace backend.Migrations
                         name: "fk_citas_dentistas_dentista_id",
                         column: x => x.dentista_id,
                         principalTable: "dentistas",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "fk_citas_ofertas_oferta_id",
                         column: x => x.oferta_id,
                         principalTable: "ofertas",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "fk_citas_pacientes_paciente_id",
                         column: x => x.paciente_id,
                         principalTable: "pacientes",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "fk_citas_servicios_servicio_id",
                         column: x => x.servicio_id,
                         principalTable: "servicios",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "fk_citas_usuarios_confirmada_por",
                         column: x => x.confirmada_por,
                         principalTable: "usuarios",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "fk_citas_usuarios_creado_por",
                         column: x => x.creado_por,
                         principalTable: "usuarios",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -544,8 +527,7 @@ namespace backend.Migrations
                         name: "fk_cita_historial_usuarios_usuario_id",
                         column: x => x.usuario_id,
                         principalTable: "usuarios",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -601,8 +583,7 @@ namespace backend.Migrations
                         name: "fk_examen_clinico_pacientes_paciente_id",
                         column: x => x.paciente_id,
                         principalTable: "pacientes",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -641,14 +622,12 @@ namespace backend.Migrations
                         name: "fk_notificaciones_pacientes_paciente_id",
                         column: x => x.paciente_id,
                         principalTable: "pacientes",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "fk_notificaciones_usuarios_usuario_id",
                         column: x => x.usuario_id,
                         principalTable: "usuarios",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(

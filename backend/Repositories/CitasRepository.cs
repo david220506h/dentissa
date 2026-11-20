@@ -14,7 +14,11 @@ namespace backend.Repositories
             _context = context;
         }
 
+        // Una cita nunca desaparece del listado, el historial ni mi-agenda aunque su
+        // paciente, dentista o servicio esté eliminado lógicamente: se ignora solo el
+        // filtro de borrado lógico y el DTO marca la relación eliminada.
         private IQueryable<Cita> CitasConRelaciones() => _context.Citas
+            .IgnoreQueryFilters([DentissaDbContext.FiltroBorradoLogico])
             .Include(c => c.Paciente)
             .Include(c => c.Dentista).ThenInclude(d => d.Usuario)
             .Include(c => c.Servicio)
@@ -36,12 +40,6 @@ namespace backend.Repositories
         public async Task UpdateAsync(Cita cita)
         {
             await GuardarAsync();
-        }
-
-        public async Task DeleteAsync(Cita cita)
-        {
-            _context.Citas.Remove(cita);
-            await _context.SaveChangesAsync();
         }
 
         // La restricción citas_sin_traslape_dentista es la autoridad: el backend no
@@ -97,7 +95,9 @@ namespace backend.Repositories
                 .ToListAsync();
 
         public async Task<Dentista?> GetDentistaPorUsuarioAsync(int usuarioId)
-            => await _context.Dentistas.FirstOrDefaultAsync(d => d.UsuarioId == usuarioId);
+            => await _context.Dentistas
+                .IgnoreQueryFilters([DentissaDbContext.FiltroBorradoLogico])
+                .FirstOrDefaultAsync(d => d.UsuarioId == usuarioId);
 
         // Citas que empiezan en [desde, hasta)
         public async Task<List<Cita>> GetAgendaDentistaAsync(int dentistaId, DateTime desdeUtc, DateTime hastaUtc)

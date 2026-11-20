@@ -16,19 +16,21 @@ public class AutorizacionTests : IClassFixture<DentissaFactory>
     [Theory]
     [InlineData("GET", "/api/Usuarios")]
     [InlineData("POST", "/api/Usuarios")]
-    [InlineData("DELETE", "/api/Usuarios/1")]
+    [InlineData("PATCH", "/api/Usuarios/1/desactivar")]
+    [InlineData("PATCH", "/api/Usuarios/1/activar")]
     [InlineData("GET", "/api/Citas")]
     [InlineData("GET", "/api/Citas/1")]
     [InlineData("GET", "/api/Citas/pacientes")]
     [InlineData("POST", "/api/Citas")]
     [InlineData("PATCH", "/api/Citas/1/confirmar")]
+    [InlineData("PATCH", "/api/Citas/1/cancelar")]
     [InlineData("POST", "/api/catalogo/imagenes")]
     [InlineData("POST", "/api/auth/logout")]
     public async Task SinSesion_Devuelve401(string metodo, string ruta)
     {
         var client = _factory.CreateClient();
         var req = new HttpRequestMessage(new HttpMethod(metodo), ruta);
-        if (metodo is "POST" or "PUT") req.Content = JsonContent.Create(new { });
+        if (metodo is "POST" or "PUT" or "PATCH") req.Content = JsonContent.Create(new { });
 
         var res = await client.SendAsync(req);
 

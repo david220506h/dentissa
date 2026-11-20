@@ -160,11 +160,18 @@ export default function Usuarios() {
     }
   };
 
-  const handleEliminar = async (id) => {
-    if (!confirm("¿Seguro que deseas eliminar este usuario?")) return;
+  // Las cuentas no se borran: se desactivan (no inician sesión) y se pueden reactivar
+  const handleCambiarActivo = async (u) => {
+    const accion = u.activo ? "desactivar" : "activar";
+    if (!confirm(`¿Seguro que deseas ${accion} este usuario?`)) return;
     try {
-      const res = await authFetch(`${API}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Error al eliminar");
+      const res = await authFetch(`${API}/${u.id}/${accion}`, { method: "PATCH" });
+      if (!res.ok) {
+        const txt = await res.text();
+        let msg = `Error al ${accion}`;
+        try { msg = JSON.parse(txt).mensaje || msg; } catch { /* respuesta sin JSON */ }
+        throw new Error(msg);
+      }
       await cargarUsuarios();
     } catch (err) {
       setError(err.message);
@@ -221,12 +228,14 @@ export default function Usuarios() {
                     <span className={`u-badge ${ROL_COLORES[u.rol] || "badge-paciente"}`}>
                       {u.rol}
                     </span>
+                    {!u.activo && <span className="u-badge badge-inactivo"> inactiva</span>}
                   </td>
                   <td>{u.fechaRegistro}</td>
                   <td>
-                    <button className="cita-btn cita-btn--delete" title="Eliminar"
-                      onClick={() => handleEliminar(u.id)}>
-                      <DeleteIcon />
+                    <button className="cita-btn cita-btn--delete"
+                      title={u.activo ? "Desactivar" : "Activar"}
+                      onClick={() => handleCambiarActivo(u)}>
+                      {u.activo ? <DeleteIcon /> : <PlusIcon />}
                     </button>
                   </td>
                 </tr>

@@ -217,15 +217,26 @@ namespace backend.Controllers
             }
         }
 
-        // ── DELETE: api/Citas/5 ───────────────────────────────
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Eliminar(int id)
+        // ── PATCH: api/Citas/5/cancelar ──────────────────────
+        // Una cita no se borra nunca: se cancela con motivo (RN-02)
+        [HttpPatch("{id}/cancelar")]
+        public async Task<IActionResult> Cancelar(int id, [FromBody] CancelarCitaDto dto)
         {
+            var motivo = dto.Motivo?.Trim();
+            if (string.IsNullOrEmpty(motivo))
+                return BadRequest(new { mensaje = "El motivo de cancelación es obligatorio" });
+
             var cita = await _repo.GetByIdAsync(id);
             if (cita == null) return NotFound(new { mensaje = "Cita no encontrada" });
 
-            await _repo.DeleteAsync(cita);
-            return Ok(new { mensaje = "Cita eliminada correctamente" });
+            if (!EstadosCita.Activos.Contains(cita.Estado))
+                return BadRequest(new { mensaje = "Solo se puede cancelar una cita pendiente o confirmada" });
+
+            cita.Estado            = EstadosCita.Cancelada;
+            cita.MotivoCancelacion = motivo;
+            cita.CanceladaEn       = DateTime.UtcNow;
+            await _repo.UpdateAsync(cita);
+            return Ok(new { mensaje = "Cita cancelada", estado = cita.Estado });
         }
 
         // ── PATCH: api/Citas/5/confirmar ─────────────────────

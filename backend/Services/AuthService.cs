@@ -24,8 +24,10 @@ namespace backend.Services
         {
             var usuario = await _authRepository.GetByEmailAsync(loginDto.Email);
 
-            // Verificar que existe y que el password coincide con el hash
-            if (usuario == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, usuario.PasswordHash))
+            // Verificar que existe, que el password coincide con el hash y que la cuenta
+            // está activa. Las eliminadas no llegan aquí (filtro global). Mismo mensaje en
+            // todos los casos para no revelar si la cuenta existe o está desactivada.
+            if (usuario == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, usuario.PasswordHash) || !usuario.Activo)
                 throw new UnauthorizedAccessException("Credenciales incorrectas");
 
             usuario.UltimoAccesoEn = DateTime.UtcNow;
@@ -57,7 +59,7 @@ namespace backend.Services
         {
             var usuario = await _authRepository.GetByRefreshTokenAsync(refreshToken);
 
-            if (usuario == null || usuario.RefreshTokenExpiraEn < DateTime.UtcNow)
+            if (usuario == null || !usuario.Activo || usuario.RefreshTokenExpiraEn < DateTime.UtcNow)
                 throw new UnauthorizedAccessException("RefreshToken inválido o expirado");
 
             return await GenerateAuthResponse(usuario);

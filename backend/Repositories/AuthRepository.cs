@@ -37,14 +37,8 @@ namespace backend.Repositories
         public async Task<bool> EmailExistsAsync(string email)
             => await _context.Usuarios.AnyAsync(u => u.Correo == email);
         
+        // Las cuentas eliminadas lógicamente quedan fuera por el filtro global
         public async Task<List<Usuario>> GetAllAsync()
-             => await _context.Usuarios.ToListAsync();
- 
-        public async Task DeleteAsync(Usuario usuario)
-         {
-            _context.Usuarios.Remove(usuario);
-             await _context.SaveChangesAsync();
-        }
- 
+            => await _context.Usuarios.OrderBy(u => u.Nombre).ThenBy(u => u.Apellido).ToListAsync();
     }
 }
