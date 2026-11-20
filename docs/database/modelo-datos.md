@@ -1,6 +1,6 @@
 # Modelo de datos — Fase 1
 
-> **Estado:** aprobado por el arquitecto con 9 ajustes (ya incorporados). La implementación avanza por commits (sección 5).
+> **Estado:** implementado en la rama `fase-1-base-datos` (ver `docs/fase-1-informe.md`). Las diferencias con esta propuesta están en la sección 5 y en el informe. Desde la integración a `main`, la migración `Inicial` queda cerrada: todo cambio de esquema será una migración nueva.
 > **Fecha:** 2026-11-18 · **Rama:** `fase-1-base-datos`
 > **Base de datos destino:** PostgreSQL 17 · **Backend:** .NET 10 LTS, EF Core 10 con Npgsql
 
@@ -464,6 +464,7 @@ Cada commit compila y deja las pruebas en verde, salvo que se indique.
 | # | Commit | Contenido |
 |---|---|---|
 | 0 | `fix(frontend): imports de CSS…` | **Hecho** (`9186efb`): 6 imports corregidos (`Citas.css`, `Comentarios.css`, `Ofertas.css`, `Pacientes.css`, `Servicios.css`, `Usuarios.css`). |
+| — | **Resultado** | Hechos todos (hashes en `docs/fase-1-informe.md`). Commits añadidos al plan: `global.json` (`6957d4c`), puerto configurable de PostgreSQL (`53abe00`) y token de 15 minutos con la regla del último administrador (`881039b`). |
 | 1 | `docs: modelo de datos de la Fase 1` | Este documento, con los ajustes que pidas. |
 | 2 | `chore: .NET 10` | `net10.0` en `backend` y `backend.Tests`; paquetes `Microsoft.*` a 10.x; `global.json` fijando el SDK 10. Se documentan los ajustes (p. ej., Swashbuckle y `Microsoft.OpenApi` 2.x). |
 | 3 | `feat(db): PostgreSQL con Npgsql` | Quita `Microsoft.EntityFrameworkCore.SqlServer`; agrega `Npgsql.EntityFrameworkCore.PostgreSQL` y `EFCore.NamingConventions`; `docker-compose.yml` con `postgres:17`; cadena de conexión solo en user-secrets o variables de entorno; `appsettings.Example.json` actualizado. Todavía con el modelo actual, para aislar el cambio de proveedor. |
@@ -504,7 +505,7 @@ Solo `login`, `registro`, `citas` y `usuarios` están conectados al frontend; el
 - La migración se aplica desde una base vacía (y `dotnet ef migrations has-pending-model-changes` no detecta diferencias).
 - La restricción impide dos citas activas traslapadas del mismo dentista, incluidas las de dos slots, y permite: el mismo horario con dentistas distintos, citas contiguas (`[)`), y una cita nueva sobre una cancelada.
 - Las restricciones `CHECK` de rol, estado y motivo de cancelación.
-- **Concurrencia:** dos inserciones simultáneas del mismo horario y dentista, lanzadas en paralelo con contextos y conexiones distintos (y una barrera para que lleguen juntas a la base), donde **exactamente una** se guarda y la otra falla. Se prueba dos veces: directo contra la base (la otra recibe `23P01`) y por la API (la otra recibe `409 Conflict` con el mensaje en español «El dentista ya tiene una cita en ese horario.»).
+- **Concurrencia:** dos inserciones simultáneas del mismo horario y dentista, lanzadas en paralelo con contextos y conexiones distintos (y una barrera para que lleguen juntas a la base), donde **exactamente una** se guarda y la otra falla. Se prueba dos veces: directo contra la base (la otra recibe `23P01` o, si ambas se esperan dentro de la restricción de exclusión, `40P01` por interbloqueo) y por la API (la otra recibe `409 Conflict` con el mensaje en español «El dentista ya tiene una cita en ese horario.»; el backend reintenta el `40P01`).
 - `bloqueo_expira_en` con origen `recepcion` es rechazado por la base.
 - El correo de usuario es único sin distinguir mayúsculas entre cuentas no eliminadas, y una cuenta eliminada libera su correo.
 - Ofertas: `fecha_fin < fecha_inicio` es rechazado; una oferta aplica el primer y el último día de su vigencia (fechas locales).
