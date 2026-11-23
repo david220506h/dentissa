@@ -1,0 +1,58 @@
+/*
+  Estilos base del documento a partir de los tokens. Importar después de tokens.css y fuente.css.
+*/
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--fuente);
+  font-size: var(--texto-cuerpo);
+  font-weight: var(--peso-normal);
+  color: var(--texto);
+  background: var(--fondo);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* Foco visible (Main: outline de 3 px Rosa 500 con separación de 2 px). Aparece al instante. */
+:focus-visible {
+  outline: var(--foco-anillo);
+  outline-offset: var(--foco-separacion);
+}
+
+/* Movimiento reducido: sin desplazamientos ni escalas; los componentes dejan solo la opacidad. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Texto solo para lectores de pantalla */
+.solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

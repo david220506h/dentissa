@@ -1,0 +1,9 @@
+/*
+  Nunito autoalojada (sin CDN externo): 400, 600, 700 y 800, subconjunto latino (incluye español).
+  El diseño la carga desde Google Fonts; en el panel se sirve desde el mismo origen
+  (privacidad y funcionamiento de la PWA sin conexión).
+*/
+@import '@fontsource/nunito/latin-400.css';
+@import '@fontsource/nunito/latin-600.css';
+@import '@fontsource/nunito/latin-700.css';
+@import '@fontsource/nunito/latin-800.css';

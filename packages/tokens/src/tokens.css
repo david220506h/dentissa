@@ -1,0 +1,165 @@
+/*
+  Sistema visual de Dentissa: única implementación de los valores del diseño aprobado.
+
+  Autoridad: docs/design/panel/*.dc.html (Main.dc.html = sistema visual). Cada valor de este archivo
+  aparece en el diseño; una prueba (packages/tokens/test/diseno.test.ts) lo comprueba y falla si
+  el diseño y este archivo se separan. Ningún componente usa un color, tamaño de letra o radio
+  literal: todo sale de aquí.
+
+  Modo claro. Los nombres de los colores permiten añadir un modo oscuro más adelante (Main).
+*/
+
+:root {
+  /* ── Color: marca (Main · Color · Marca) ───────────────────────────── */
+  --rosa-500: #d75078; /* Acentos, íconos grandes, indicadores, anillo de foco. 4.0:1 con blanco: solo texto grande */
+  --rosa-700: #b22f56; /* Botones y enlaces. 6.1:1 con texto blanco */
+  --rosa-800: #9b294b; /* Hover y texto sobre rosa suave. 6.5:1 sobre Rosa 50 */
+  --rosa-50: #fdecef; /* Elemento activo del menú y fondos */
+  --rosa-100: #fce7f3; /* Avatares; halo del campo con foco */
+  --rosa-25: #fff5f8; /* Día de hoy y fila seleccionada */
+
+  /* ── Color: neutros (Main · Color · Neutros) ───────────────────────── */
+  --texto: #333333; /* Texto principal. 12.6:1 sobre blanco */
+  --texto-secundario: #555555; /* Etiquetas y descripciones. 6.8:1 sobre el fondo */
+  --texto-terciario: #6b7280; /* Solo sobre blanco. 4.8:1 */
+  --borde: #eeeeee; /* Tarjetas y separadores */
+  --borde-campo: #6b7280; /* Campos de formulario (3:1 mínimo). 4.8:1 sobre blanco */
+  --fondo: #f5f5f5; /* Fondo de página, detrás de las tarjetas */
+  --superficie: #ffffff; /* Tarjetas y menú */
+
+  /* ── Color: neutros de componentes (Main · Componentes, Inicio, Pacientes, Movil) ─ */
+  --borde-control: #d1d5db; /* Botón secundario, botón de notificaciones, grupo Día/Semana */
+  --fondo-encabezado-tabla: #f9fafb; /* Encabezado de tabla */
+  --deshabilitado-fondo: #f3f4f6; /* Botón deshabilitado ("Sin teléfono") */
+  --deshabilitado-borde: #e5e7eb;
+  --borde-libre: #9ca3af; /* Horario libre en la agenda del celular (borde punteado) */
+  --borde-peligro: #fca5a5; /* Botón "Rechazar solicitud" */
+
+  /* ── Color: estados de la cita (Main · Estados de la cita) ─────────── */
+  --estado-confirmada-fondo: #dcfce7;
+  --estado-confirmada-texto: #14532d; /* 8.3:1 */
+  --estado-pendiente-fondo: #fef9c3;
+  --estado-pendiente-texto: #854d0e; /* 6.4:1 */
+  --estado-completada-fondo: #dbeafe;
+  --estado-completada-texto: #1e40af; /* 7.1:1 */
+  --estado-cancelada-fondo: #fee2e2;
+  --estado-cancelada-texto: #991b1b; /* 6.8:1 (se oscureció un tono respecto al panel anterior) */
+  --estado-no-asistio-fondo: #f3f4f6;
+  --estado-no-asistio-texto: #374151; /* 9.4:1 */
+
+  /* Avisos (Main · Avisos): reutilizan las parejas de estado */
+  --aviso-info-fondo: var(--estado-completada-fondo);
+  --aviso-info-texto: var(--estado-completada-texto);
+  --aviso-exito-fondo: var(--estado-confirmada-fondo);
+  --aviso-exito-texto: var(--estado-confirmada-texto);
+  --aviso-advertencia-fondo: var(--estado-pendiente-fondo);
+  --aviso-advertencia-texto: var(--estado-pendiente-texto);
+  --aviso-error-fondo: var(--estado-cancelada-fondo);
+  --aviso-error-texto: var(--estado-cancelada-texto);
+
+  /* Odontograma (Expediente): bordes de las piezas según su estado */
+  --odontograma-borde-azul: #93c5fd;
+  --odontograma-borde-amarillo: #fde047;
+  --odontograma-borde-rosa: #f9a8d4;
+
+  /* ── Tipografía (Main · Tipografía) ────────────────────────────────── */
+  --fuente: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --peso-normal: 400;
+  --peso-seminegrita: 600;
+  --peso-negrita: 700;
+  --peso-extranegrita: 800;
+
+  /* Escala: los tamaños que usa el diseño. Mínimo 12.5 px (decisión 3 del plan de la Fase 3a). */
+  --texto-12-5: 12.5px;
+  --texto-13: 13px;
+  --texto-13-5: 13.5px;
+  --texto-14: 14px;
+  --texto-14-5: 14.5px;
+  --texto-15: 15px;
+  --texto-15-5: 15.5px;
+  --texto-16: 16px;
+  --texto-17: 17px;
+  --texto-18: 18px;
+  --texto-20: 20px;
+  --texto-22: 22px;
+  --texto-24: 24px;
+  --texto-26: 26px;
+  --texto-28: 28px;
+  --texto-30: 30px;
+  --texto-36: 36px;
+  --texto-40: 40px;
+
+  /* Usos de la tabla de tipografía de Main */
+  --texto-titulo-pagina: var(--texto-26); /* · 800 */
+  --texto-titulo-tarjeta: var(--texto-18); /* · 700 */
+  --texto-cuerpo: var(--texto-15); /* · 400 */
+  --texto-etiqueta: var(--texto-14); /* · 700 */
+  --texto-tabla: var(--texto-14-5); /* · 400 y 700 */
+  --texto-detalle: var(--texto-13); /* · 600 */
+  --texto-insignia: var(--texto-12-5); /* · 700 */
+  --texto-boton: var(--texto-14-5); /* · 700 */
+  --altura-linea-titulo: 1.2;
+
+  /* ── Forma ─────────────────────────────────────────────────────────── */
+  --radio-8: 8px; /* Bloque de descanso, leyenda del odontograma */
+  --radio-10: 10px; /* Botones, campos, elementos del menú */
+  --radio-12: 12px; /* Tarjetas pequeñas, ícono de indicador, días en el celular */
+  --radio-14: 14px; /* Secciones y tarjetas principales */
+  --radio-pildora: 999px; /* Insignias y contadores */
+  --radio-circulo: 50%;
+
+  /* ── Medidas ───────────────────────────────────────────────────────── */
+  --alto-toque: 44px; /* Mínimo de todo lo que se toca (Main · Componentes) */
+  --alto-control-grande: 48px; /* Campos y botón de Iniciar sesión */
+  --alto-grupo-vista: 42px; /* Botones Día/Semana */
+  --alto-insignia: 26px;
+  --alto-contador: 22px;
+  --alto-menu-inferior: 60px;
+  --ancho-menu-lateral-min: 240px;
+  --ancho-menu-lateral-max: 264px;
+
+  /* Espacios usados en el diseño */
+  --espacio-2: 2px;
+  --espacio-4: 4px;
+  --espacio-6: 6px;
+  --espacio-8: 8px;
+  --espacio-10: 10px;
+  --espacio-12: 12px;
+  --espacio-14: 14px;
+  --espacio-16: 16px;
+  --espacio-18: 18px;
+  --espacio-20: 20px;
+  --espacio-24: 24px;
+  --espacio-28: 28px;
+  --espacio-32: 32px;
+  --espacio-40: 40px;
+  --espacio-48: 48px;
+  --espacio-56: 56px;
+  --espacio-64: 64px;
+
+  /* ── Profundidad y foco ────────────────────────────────────────────── */
+  --sombra-tarjeta: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --foco-anillo: 3px solid var(--rosa-500); /* a:focus-visible, button:focus-visible… */
+  --foco-separacion: 2px;
+  --campo-foco-borde: 2px solid var(--rosa-700);
+  --campo-foco-halo: 0 0 0 3px var(--rosa-100);
+  --campo-error-borde: 2px solid var(--estado-cancelada-texto);
+
+  /* Descansos de la agenda: rayado, el estado no depende solo del color (Main · Principios) */
+  --patron-descanso: repeating-linear-gradient(
+    135deg,
+    var(--fondo),
+    var(--fondo) 8px,
+    var(--superficie) 8px,
+    var(--superficie) 16px
+  );
+
+  /* ── Movimiento (plan de la Fase 3a, sección 4; aprobado) ──────────── */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-presion: 120ms;
+  --dur-rapida: 150ms;
+  --dur-dialogo: 200ms;
+  --dur-panel: 220ms;
+  --dur-hoja: 280ms;
+}
