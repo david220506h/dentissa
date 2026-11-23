@@ -600,7 +600,7 @@ Rama `fase-2-agenda`, rebasada sobre `main` antes de empezar. Cada commit compil
 
 | # | Commit | Contenido |
 |---|---|---|
-| 1 | `feat(db): citas sin borrado físico` | Migración nueva: trigger `BEFORE DELETE` por fila y `BEFORE TRUNCATE` por sentencia en `citas`. `cita_historial` ya rechaza `UPDATE`, `DELETE` y `TRUNCATE` desde la `Inicial`; se agrega su prueba de regresión junto a la nueva. Pruebas: `DELETE` y `TRUNCATE` de `citas` rechazados; los tres de `cita_historial` rechazados. |
+| 1 | `feat(db): citas sin borrado físico` | Migración nueva: trigger `BEFORE DELETE` por fila y `BEFORE TRUNCATE` por sentencia en `citas`. `cita_historial` ya rechaza `UPDATE`, `DELETE` y `TRUNCATE` desde la `Inicial`; se agrega su prueba de regresión junto a la nueva. Pruebas: `DELETE` y `TRUNCATE` de `citas` rechazados; los tres de `cita_historial` rechazados. **En el mismo commit:** quitar de `CLAUDE.md` (sección 5) la aclaración entre paréntesis de que «el trigger de `citas` es el primer commit de la Fase 2», porque desde ese momento la base ya lo impide. |
 | 2 | `feat(db): configuración de agenda por canal y horizonte` | Migración: anticipación en minutos por canal, horizonte y columnas de la decisión de la sección 2; `CHECK` de bloqueo si se aprueba; datos iniciales actualizados. |
 | 3 | `feat(agenda): motor de disponibilidad` | `IDisponibilidadService` (secciones 1.3 a 1.5), con pruebas de disponibilidad, duración múltiple, zona horaria y anticipación. Sin endpoints. |
 | 4 | `feat(agenda): endpoints de disponibilidad` | Público y de recepción; `horarios-disponibles` delega en el motor (compatibilidad). |
