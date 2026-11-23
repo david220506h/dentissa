@@ -16,13 +16,15 @@ No avances a una etapa posterior sin que se indique expresamente.
 
 ## 2. Estado actual del código (resultado de la auditoría)
 
-- La **Fase 0 (seguridad base)** está completada.
-- `backend/`: ASP.NET Core (.NET 9), EF Core, **hoy usa SQL Server**. Decisión confirmada: migrar a **PostgreSQL** y a **.NET 10 LTS** en la Fase 1 (el soporte de .NET 9 terminó el 10 de noviembre de 2026). No antes.
+- La **Fase 0 (seguridad base)** y la **Fase 1 (base de datos, roles y bitácora)** están completadas (informe en `docs/fase-1-informe.md`).
+- `backend/`: ASP.NET Core en **.NET 10** (SDK fijado en `global.json`), **EF Core 10 con Npgsql** sobre **PostgreSQL 17** (Docker; en local, puerto **5433**). Pruebas de integración contra PostgreSQL real con **Testcontainers** (requieren Docker).
+- La migración `Inicial` queda **cerrada** al integrarse la Fase 1 a `main`: todo cambio de esquema posterior es una **migración nueva**.
+- **Fase 2 (agenda): en diseño** (`docs/agenda/diseno-agenda.md`). **Panel nuevo: Fase 3.**
 - `frontend/`: React + Vite. Solo login, registro, citas y usuarios están conectados a la API; el resto usa datos fijos en el código.
 - **El panel se rediseña por completo; solo se conservan los colores actuales.** El diseño (sistema visual, componentes y pantallas) lo entrega el arquitecto y se guardará en `docs/design/`. No rediseñes ni reorganices la interfaz por tu cuenta; los únicos cambios de frontend permitidos hasta recibir el diseño son los que pida cada fase de manera expresa.
 - Autenticación: JWT con refresh token y BCrypt. Se conserva.
 - Patrón repositorio y servicios en `backend/`. Se conserva.
-- Roles actuales: `admin`, `secretaria`, `cliente`. Roles objetivo: `admin`, `asistente`, `dentista`, `paciente`. El renombre se hace en la Fase 1; mientras tanto, centraliza los nombres de rol en constantes.
+- Roles (ya renombrados en la Fase 1): `admin`, `asistente`, `dentista`, `paciente`. Un rol por cuenta. Los nombres viven centralizados en `backend/Constants/Roles.cs` y `frontend/src/constants/roles.js`.
 
 ## 3. Decisiones de negocio vigentes
 
@@ -32,7 +34,7 @@ No avances a una etapa posterior sin que se indique expresamente.
 - La tabla `Comentarios` se **elimina** (confirmado); el sitio usará reseñas de Google.
 - La clínica asigna dentista; el paciente solo elige servicio, fecha y hora.
 - Estados de cita: Pendiente, Confirmada, Completada, Cancelada, No asistió.
-- Una solicitud pendiente **bloquea** el horario hasta resolverse (se libera a las 24 h o 2 h antes de la cita, lo que ocurra primero).
+- Una solicitud pendiente **bloquea** el horario hasta resolverse; vence según la regla en horas de atención aprobada en `docs/agenda/diseno-agenda.md`, sección 2 (vida máxima 12 h, liberación 2 h antes, anticipación en línea 3 h).
 - Confirmación: correo automático con enlace; si no hay respuesta, recepción llama y confirma. El paciente solo **solicita** reagendar o cancelar; recepción aprueba.
 - Notificaciones al paciente por correo. Los comentarios en citas se eliminan; el sitio usará reseñas de Google.
 - Expediente clínico completo (odontograma, notas por consulta, fotos, radiografías, consentimiento, plan de tratamiento, recetas), además de inventario y pagos. Se construirán por fases.
@@ -57,6 +59,11 @@ No avances a una etapa posterior sin que se indique expresamente.
 - Nunca devolver entidades de EF con datos sensibles (hashes, tokens): siempre DTOs.
 - Registro de auditoría para acciones críticas.
 - Los eliminados son lógicos; nada clínico ni financiero se borra físicamente.
+- **No hay borrado físico de datos clínicos ni de citas.** Las citas se cancelan con motivo; los usuarios se desactivan. (En la base, las tablas del expediente, `auditoria` y `cita_historial` ya lo impiden por trigger; el trigger de `citas` es el primer commit de la Fase 2.)
+- **El administrador inicial y las contraseñas** vienen de user-secrets (`Seed:AdminEmail`, `Seed:AdminPassword`) o de variables de entorno, y **nunca se imprimen** en consola, logs ni respuestas.
+- **El token de acceso dura 15 minutos** (`JwtSettings:ExpirationMinutes`, configurable).
+- **Regla del último administrador:** no se puede desactivar, eliminar ni cambiar de rol al último administrador activo (lo valida el backend).
+- **La bitácora enmascara las columnas sensibles** (`[DatoSensible]`): se registran como `"[cambió]"`, nunca con su valor. Hoy: `password_hash`, `refresh_token`, `confirmacion_token_hash`, `alergias`, `condiciones_medicas`, `curp` y `direccion`.
 - Legislación mexicana aplicable: protección de datos personales en posesión de particulares y NOM-004-SSA3-2012 (expediente clínico). Se valida con un especialista; no la interpretes por tu cuenta.
 
 ## 6. Convenciones
