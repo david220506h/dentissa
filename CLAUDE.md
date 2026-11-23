@@ -34,7 +34,7 @@ No avances a una etapa posterior sin que se indique expresamente.
 - La tabla `Comentarios` se **elimina** (confirmado); el sitio usará reseñas de Google.
 - La clínica asigna dentista; el paciente solo elige servicio, fecha y hora.
 - Estados de cita: Pendiente, Confirmada, Completada, Cancelada, No asistió.
-- Una solicitud pendiente **bloquea** el horario hasta resolverse. La regla de liberación (24 h o 2 h antes de la cita, lo que ocurra primero) está **en revisión según `docs/agenda/diseno-agenda.md`, sección 2**: no la apliques hasta que el arquitecto la apruebe.
+- Una solicitud pendiente **bloquea** el horario hasta resolverse; vence según la regla en horas de atención aprobada en `docs/agenda/diseno-agenda.md`, sección 2 (vida máxima 12 h, liberación 2 h antes, anticipación en línea 3 h).
 - Confirmación: correo automático con enlace; si no hay respuesta, recepción llama y confirma. El paciente solo **solicita** reagendar o cancelar; recepción aprueba.
 - Notificaciones al paciente por correo. Los comentarios en citas se eliminan; el sitio usará reseñas de Google.
 - Expediente clínico completo (odontograma, notas por consulta, fotos, radiografías, consentimiento, plan de tratamiento, recetas), además de inventario y pagos. Se construirán por fases.

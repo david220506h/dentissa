@@ -1,6 +1,6 @@
 # Diseño de la Fase 2: agenda y citas
 
-> **Estado:** **aprobado con ajustes** (2026-11-23). Las decisiones están en la sección 12.1. No se programa hasta que se apruebe la tabla de escenarios (sección 2.5) y la Fase 1 esté integrada a `main`; entonces esta rama se rebasa sobre `main`.
+> **Estado:** **aprobado con ajustes** (2026-11-23). Las decisiones están en la sección 12.1. La tabla de escenarios (sección 2.5) está aprobada. No se programa hasta que la Fase 1 esté integrada a `main`; entonces esta rama se rebasa sobre `main`.
 > **Rama:** `fase-2-agenda` (creada desde `fase-1-base-datos`).
 > **Alcance:** toda la lógica de citas del backend y su contrato de API. El panel React no se toca (el panel nuevo es la Fase 3). El sitio y el portal (páginas) son de otra etapa; aquí solo se diseña su API.
 > **Base:** `CLAUDE.md`, `docs/database/modelo-datos.md`, `docs/fase-1-informe.md`, `docs/requirements/requerimientos.md`.
@@ -169,7 +169,7 @@ bloqueo_expira_en = min( SumarAtencion(creado, vida_maxima),                    
 | 6 | mar 1-dic 11:30 (en descanso) | mar 1-dic 15:00 | En línea | 2 h (12–14) | **Rechazada** | — | — | — | — |
 | 7 | sáb 5-dic 09:00 | lun 7-dic 10:00 | En línea; **cruza el domingo** | 7 h (sáb 5 + lun 2) | **Aceptada** | mar 8-dic 09:00 | lun 7-dic 08:00 | **lun 7-dic 08:00** | 5 h (todo el sábado) |
 | 8 | vie 4-dic 15:30 | lun 7-dic 09:00 | En línea; **cruza el domingo** | 7.5 h | **Aceptada** | lun 7-dic 15:30 | sáb 5-dic 15:00 | **sáb 5-dic 15:00** | 5.5 h |
-| 9 | lun 30-nov 08:00 | lun 14-dic 08:00 | En línea; manda la vida máxima | 60 h | **Aceptada** | mar 1-dic 16:00 | sáb 12-dic 13:00 | **mar 1-dic 16:00** | 12 h |
+| 9 | lun 30-nov 08:00 | lun 14-dic 08:00 | En línea; manda la vida máxima | 72 h (12 días laborables × 6 h) | **Aceptada** | mar 1-dic 16:00 | sáb 12-dic 13:00 | **mar 1-dic 16:00** | 12 h |
 | 10 | jue 24-dic 10:00 | sáb 26-dic 10:00 | En línea; **cierre de todo el día vie 25-dic** | 6 h (jue 4 + vie 0 + sáb 2) | **Aceptada** | lun 28-dic 10:00 | sáb 26-dic 08:00 | **sáb 26-dic 08:00** | 4 h (jueves) |
 | 11 | jue 24-dic 15:00 | sáb 26-dic 09:00 | En línea; **cierre vie 25-dic** | 2 h (jue 1 + vie 0 + sáb 1) | **Rechazada** (sin el cierre: 8 h y aceptada) | — | — | — | — |
 | 12 | mié 2-dic 08:00 | jue 3-dic 09:00 | En línea; **cierre parcial mié 2-dic 12:00–16:00** | 4 h (mié 8–11 + jue 8–9) | **Aceptada** | vie 4-dic 11:00 | mié 2-dic 10:00 | **mié 2-dic 10:00** | 2 h |
@@ -572,7 +572,7 @@ Reloj controlado (`FakeTimeProvider`) salvo en concurrencia.
 | Área | Casos |
 |---|---|
 | **Reloj de atención** (función pura) | `AtencionEntre`, `SumarAtencion` y `RestarAtencion` con descansos, días no laborables, cierres totales y parciales, y límites de tramo (convenciones de 2.2). Configuración sin días laborables → error controlado. |
-| **`CalcularBloqueo`** | **Los 15 escenarios de la tabla 2.5**, parametrizados, como función pura y otra vez de punta a punta con la base. Propiedad: para toda solicitud aceptada, `bloqueo_expira_en > creado` y la ventana está entre 1 h y 12 h de atención (prueba con fechas aleatorias). `CHECK` de la base rechaza `bloqueo_expira_en <= creado_en`. |
+| **`CalcularBloqueo`** | **Los 15 escenarios de la tabla 2.5**, parametrizados, como función pura y otra vez de punta a punta con la base. Cada fila comprueba **todas sus columnas**, no solo el resultado: `AtencionEntre(creado, inicio)` (p. ej., 72 h en la fila 9), aceptada o rechazada con su motivo, vida, liberación, `bloqueo_expira_en` y ventana. Así un error en la suma de horas de atención no queda oculto por un resultado correcto. Propiedad: para toda solicitud aceptada, `bloqueo_expira_en > creado` y la ventana está entre 1 h y 12 h de atención (prueba con fechas aleatorias). `CHECK` de la base rechaza `bloqueo_expira_en <= creado_en`. |
 | **Disponibilidad** | Lunes → 8, 9, 10, 12, 13, 15. Domingo, cierre total y cierre parcial. Descanso solo de sábado. |
 | **Duración múltiple** | 2 espacios → 8, 9, 12. Una cita de 2 espacios ocupa ambos. No cabe en un hueco de 1. |
 | **Zona horaria** | Sin desplazamientos fijos. Zona con horario de verano en prueba aislada. Límite de medianoche UTC. |
@@ -654,7 +654,7 @@ Punto de revisión intermedia sugerido: después del commit 7.
 | 23 | Proveedor de correo | Se decide antes del primer despliegue. |
 | — | Ajustes | Motivo de máximo 300 caracteres con el texto del formulario (4.3); límite de 10 por hora por IP en `POST /api/publico/citas`; clave del candado con hash determinista SHA-256 → `bigint`; commit propio del reloj de atención y `CalcularBloqueo` antes de la disponibilidad (plan renumerado). |
 
-**Pendiente de tu aprobación:** la tabla de escenarios (2.5). El commit 1 empieza cuando la apruebes y la Fase 1 esté integrada a `main`.
+**Tabla de escenarios (2.5): aprobada**, con la corrección de la fila 9 (72 h de atención). Se confirman además dos interpretaciones: la corrección de estados finales es solo `completada` ↔ `no_asistio`, y los correos van sin enlace hasta que exista el sitio. El commit 1 empieza cuando la Fase 1 esté integrada a `main` y esta rama se rebase.
 
 ### 12.2 Riesgos
 
