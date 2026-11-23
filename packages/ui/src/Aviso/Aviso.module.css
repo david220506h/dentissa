@@ -1,0 +1,86 @@
+/* Avisos de Main.dc.html · Componentes · Avisos: ícono, título (800) y texto (600), 14 px. */
+.aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-10);
+  padding: var(--espacio-12) var(--espacio-14);
+  border-radius: var(--radio-10);
+  font-size: var(--texto-14);
+}
+
+.icono {
+  flex: 0 0 auto;
+  display: inline-flex;
+  margin-top: 1px;
+}
+
+.titulo {
+  font-weight: var(--peso-extranegrita);
+}
+
+.texto {
+  font-weight: var(--peso-seminegrita);
+}
+
+.cuerpo {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cerrar {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--alto-toque);
+  height: var(--alto-toque);
+  margin: calc(var(--espacio-12) * -1) calc(var(--espacio-14) * -1) calc(var(--espacio-12) * -1) 0;
+  border: 0;
+  border-radius: var(--radio-10);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.info {
+  background: var(--aviso-info-fondo);
+  color: var(--aviso-info-texto);
+}
+
+.exito {
+  background: var(--aviso-exito-fondo);
+  color: var(--aviso-exito-texto);
+}
+
+.advertencia {
+  background: var(--aviso-advertencia-fondo);
+  color: var(--aviso-advertencia-texto);
+}
+
+.error {
+  background: var(--aviso-error-fondo);
+  color: var(--aviso-error-texto);
+}
+
+/* Entrada tras una acción: opacidad y 4 px hacia arriba, 200 ms (especificación de movimiento) */
+.anunciado {
+  transition:
+    opacity var(--dur-dialogo) var(--ease-out),
+    transform var(--dur-dialogo) var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anunciado {
+    transition: opacity var(--dur-rapida) ease;
+
+    @starting-style {
+      opacity: 0;
+      transform: none;
+    }
+  }
+}

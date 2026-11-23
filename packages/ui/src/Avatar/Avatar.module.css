@@ -1,0 +1,23 @@
+/* Avatar con iniciales (Inicio: pie del menú; Movil y Solicitudes: detalle). Rosa 100 con texto Rosa 800. */
+.avatar {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radio-circulo);
+  background: var(--rosa-100);
+  color: var(--rosa-800);
+  font-size: var(--texto-14);
+  font-weight: var(--peso-extranegrita);
+  line-height: 1;
+}
+
+.t40 {
+  width: 40px;
+  height: 40px;
+}
+
+.t44 {
+  width: 44px;
+  height: 44px;
+}
