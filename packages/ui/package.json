@@ -1,0 +1,23 @@
+{
+  "name": "@dentissa/ui",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Componentes de interfaz de Dentissa según docs/design/panel. No dependen del enrutador ni de la API: reciben datos y funciones por propiedades.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "react-aria-components": "1.22.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  }
+}
