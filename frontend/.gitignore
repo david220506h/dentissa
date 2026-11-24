@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Playwright: resultados e informe visual (locales, se regeneran)
+e2e/resultados/
+e2e/informe-visual/
+playwright-report/

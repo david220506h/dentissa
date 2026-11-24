@@ -5,8 +5,24 @@
     "noEmit": false,
     "emitDeclarationOnly": true,
     "outDir": "../node_modules/.tsbuild/frontend",
-    "types": ["vite/client", "@testing-library/jest-dom/vitest"]
+    "types": [
+      "vite/client",
+      "@testing-library/jest-dom/vitest",
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "references": [{ "path": "../packages/tokens" }, { "path": "../packages/ui" }]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "e2e/**/*.ts",
+    "playwright.config.ts"
+  ],
+  "references": [
+    {
+      "path": "../packages/tokens"
+    },
+    {
+      "path": "../packages/ui"
+    }
+  ]
 }
