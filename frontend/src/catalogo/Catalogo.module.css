@@ -106,3 +106,13 @@
   border: 1px solid var(--borde);
   border-radius: var(--radio-14);
 }
+
+/* Lista de pacientes del celular (Movil2): columna con 12 px entre tarjetas, a lo ancho de un teléfono */
+.listaTarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-12);
+  max-width: 358px;
+  padding: var(--espacio-12) var(--espacio-16);
+  background: var(--fondo);
+}

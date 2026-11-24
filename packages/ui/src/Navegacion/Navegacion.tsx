@@ -13,6 +13,7 @@ export type ComponenteEnlace = ComponentType<{
   href: string;
   className?: string;
   'aria-current'?: 'page';
+  onClick?: () => void;
   children: ReactNode;
 }>;
 
@@ -115,12 +116,14 @@ export function MenuLateral({ grupos, usuario, alCerrarSesion, activo, enlace }:
 }
 
 export interface MenuInferiorProps extends PropsComunes {
-  /** Hasta cinco entradas (Movil: Inicio, Agenda, Solicitudes, Pacientes, Más). */
+  /** Secciones del menú (Movil: Inicio, Agenda, Solicitudes, Pacientes). */
   elementos: ElementoMenu[];
+  /** Botón "Más" al final: abre la hoja con el resto de las secciones (Movil2). */
+  mas?: { abierta: boolean; alActivar: () => void };
 }
 
 /** Menú inferior del celular (Movil.dc.html), por debajo de 1024 px. */
-export function MenuInferior({ elementos, activo, enlace: Enlace = EnlaceNativo }: MenuInferiorProps) {
+export function MenuInferior({ elementos, activo, mas, enlace: Enlace = EnlaceNativo }: MenuInferiorProps) {
   return (
     <nav aria-label="Menú móvil" className={estilos.inferior}>
       {elementos.map((e) => (
@@ -142,6 +145,20 @@ export function MenuInferior({ elementos, activo, enlace: Enlace = EnlaceNativo 
           )}
         </Enlace>
       ))}
+      {mas && (
+        <button
+          type="button"
+          className={estilos.inferiorElemento}
+          aria-haspopup="dialog"
+          aria-expanded={mas.abierta}
+          onClick={mas.alActivar}
+        >
+          <span className={estilos.inferiorIcono}>
+            <Icono nombre="menu" tamano={22} />
+          </span>
+          Más
+        </button>
+      )}
     </nav>
   );
 }

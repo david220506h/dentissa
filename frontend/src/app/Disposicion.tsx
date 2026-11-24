@@ -1,4 +1,14 @@
-import { Icono, MenuInferior, MenuLateral, SinConexion, type ComponenteEnlace, type ElementoMenu, type GrupoMenu } from '@dentissa/ui';
+import {
+  HojaMas,
+  Icono,
+  MenuInferior,
+  MenuLateral,
+  SinConexion,
+  type ComponenteEnlace,
+  type ElementoMenu,
+  type GrupoMenu,
+} from '@dentissa/ui';
+import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AvisoInactividad } from './AvisoInactividad';
 import { useConexion } from './conexion';
@@ -13,7 +23,7 @@ export const EnlaceRouter: ComponenteEnlace = ({ href, children, ...resto }) => 
   </Link>
 );
 
-// Menú inferior del celular (Movil.dc.html): cuatro secciones principales y "Más"
+// Menú inferior del celular (Movil.dc.html): cuatro secciones principales; el resto va en la hoja "Más" (Movil2)
 const INFERIOR: IdSeccion[] = ['inicio', 'agenda', 'solicitudes', 'pacientes'];
 
 const aElemento = (s: Seccion): ElementoMenu => ({ id: s.id, etiqueta: s.etiqueta, icono: s.icono, href: s.ruta });
@@ -27,7 +37,6 @@ export function agrupar(secciones: Seccion[]): GrupoMenu[] {
 
 /** Sección activa según la ruta ("/" solo es Inicio si la ruta es exactamente "/"). */
 export function seccionActiva(ruta: string): string | undefined {
-  if (ruta === '/mas') return 'mas';
   return SECCIONES.filter((s) => (s.ruta === '/' ? ruta === '/' : ruta === s.ruta || ruta.startsWith(`${s.ruta}/`)))[0]?.id;
 }
 
@@ -36,6 +45,16 @@ export function Disposicion() {
   const { enLinea, reintentar } = useConexion();
   const ubicacion = useLocation();
   const navegar = useNavigate();
+  const [masAbierta, setMasAbierta] = useState(false);
+
+  // La hoja solo existe con el menú inferior: si la ventana pasa a 1024 px o más, se cierra
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return; // entornos sin matchMedia (pruebas)
+    const ancho = window.matchMedia('(min-width: 1024px)');
+    const alCambiar = (e: MediaQueryListEvent) => e.matches && setMasAbierta(false);
+    ancho.addEventListener('change', alCambiar);
+    return () => ancho.removeEventListener('change', alCambiar);
+  }, []);
 
   if (!usuario) return null;
   // Sin conexión: la pantalla reemplaza al panel; no se muestra ningún dato guardado
@@ -49,10 +68,9 @@ export function Disposicion() {
     navegar('/iniciar-sesion', { replace: true });
   };
 
-  const inferior: ElementoMenu[] = [
-    ...permitidas.filter((s) => INFERIOR.includes(s.id)).map(aElemento),
-    { id: 'mas', etiqueta: 'Más', icono: 'menu', href: '/mas' },
-  ];
+  const inferior = permitidas.filter((s) => INFERIOR.includes(s.id)).map(aElemento);
+  // Hoja "Más": lo que el rol puede ver según la matriz de Main y no cabe en el menú inferior
+  const enHoja: ElementoMenu[] = permitidas.filter((s) => !INFERIOR.includes(s.id)).map(aElemento);
 
   return (
     <div className={estilos.raiz}>
@@ -81,7 +99,24 @@ export function Disposicion() {
           <Outlet />
         </main>
         <div className={estilos.inferior}>
-          <MenuInferior elementos={inferior} enlace={EnlaceRouter} {...(activa ? { activo: activa } : {})} />
+          {/* Con la hoja abierta, solo "Más" se marca como activo (Movil2) */}
+          <MenuInferior
+            elementos={inferior}
+            enlace={EnlaceRouter}
+            mas={{ abierta: masAbierta, alActivar: () => setMasAbierta((a) => !a) }}
+            {...(activa && !masAbierta ? { activo: activa } : {})}
+          />
+          <HojaMas
+            abierta={masAbierta}
+            alCerrar={() => setMasAbierta(false)}
+            usuario={{ nombre, rol: NOMBRE_ROL[usuario.rol] }}
+            elementos={enHoja}
+            alCerrarSesion={() => {
+              setMasAbierta(false);
+              void alCerrarSesion();
+            }}
+            enlace={EnlaceRouter}
+          />
         </div>
       </div>
       <AvisoInactividad />

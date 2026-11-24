@@ -8,14 +8,14 @@ export type TonoInsignia = 'verde' | 'amarillo' | 'azul' | 'rojo' | 'gris';
 
 export interface InsigniaProps extends HTMLAttributes<HTMLSpanElement> {
   tono: TonoInsignia;
-  /** Ícono de 14 px antes del texto (p. ej., "alerta" en una alergia). */
+  /** Ícono de 14 px antes del texto. (La alergia no es una insignia: usa ChipAlergia.) */
   icono?: NombreIcono;
   /** Punto de color antes del texto (insignias de estado de la cita). */
   punto?: boolean;
   children: ReactNode;
 }
 
-/** Insignia genérica: "Con cuenta" (azul), "Invitado" (gris), alergia (rojo con ícono)… */
+/** Insignia genérica: "Con cuenta" (azul), "Invitado" (gris)… La alergia usa ChipAlergia, un componente aparte. */
 export function Insignia({ tono, icono, punto = false, className, children, ...resto }: InsigniaProps) {
   return (
     <span className={clases(estilos.insignia, estilos[tono], punto && estilos.conPunto, className)} {...resto}>

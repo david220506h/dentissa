@@ -56,3 +56,5 @@ export { SoloLector } from './utilidades/SoloLector';
 export { clases } from './utilidades/clases';
 export { MensajeEstado, CargandoLista, type MensajeEstadoProps, type CargandoListaProps } from './Estado/Estado';
 export { Dialogo, type DialogoProps } from './Dialogo/Dialogo';
+export { HojaMas, type HojaMasProps } from './Navegacion/HojaMas';
+export { ChipAlergia, TarjetaPaciente, type TarjetaPacienteProps, type CuentaPaciente } from './Paciente/Paciente';

@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { IniciarSesion } from '../features/auth/IniciarSesion';
 import { NoEncontrado, Proximamente } from '../features/estados/Estados';
-import { Mas } from '../features/mas/Mas';
 import { Disposicion } from './Disposicion';
 import { SECCIONES } from './permisos';
 import { RutaProtegida } from './RutaProtegida';
@@ -31,7 +30,6 @@ export function Rutas() {
             }
           />
         ))}
-        <Route path="/mas" element={<Mas />} />
         <Route path="*" element={<NoEncontrado />} />
       </Route>
       <Route path="/registro" element={<Navigate to="/iniciar-sesion" replace />} />

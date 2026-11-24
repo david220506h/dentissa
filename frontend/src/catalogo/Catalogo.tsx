@@ -4,6 +4,7 @@ import {
   Boton,
   Busqueda,
   CargandoLista,
+  ChipAlergia,
   CampoAreaTexto,
   CampoContrasena,
   CampoSeleccion,
@@ -13,6 +14,7 @@ import {
   EncabezadoPagina,
   GrupoVista,
   GruposMenu,
+  HojaMas,
   Icono,
   Insignia,
   MensajeEstado,
@@ -26,7 +28,9 @@ import {
   SinConexion,
   Tabla,
   Tarjeta,
+  TarjetaPaciente,
   TarjetaIndicador,
+  type ComponenteEnlace,
   type EstadoCita,
   type GrupoMenu,
 } from '@dentissa/ui';
@@ -124,6 +128,40 @@ function DialogoDeMuestra() {
   );
 }
 
+const ENLACE_MUESTRA: ComponenteEnlace = ({ href, children, ...resto }) => (
+  <a href={href} {...resto}>
+    {children}
+  </a>
+);
+
+/** Hoja "Más" de la administradora (Movil2), con los datos de ejemplo del diseño. */
+function HojaDeMuestra() {
+  const [abierta, setAbierta] = useState(false);
+  return (
+    <>
+      <Boton variante="secundario" icono="menu" onClick={() => setAbierta(true)}>
+        Ver hoja Más
+      </Boton>
+      <HojaMas
+        abierta={abierta}
+        alCerrar={() => setAbierta(false)}
+        usuario={{ nombre: 'Laura Mendoza', rol: 'Administradora' }}
+        elementos={[
+          { id: 'servicios', etiqueta: 'Servicios', icono: 'servicios', href: '#' },
+          { id: 'inventario', etiqueta: 'Inventario', icono: 'inventario', href: '#' },
+          { id: 'pagos', etiqueta: 'Pagos', icono: 'pagos', href: '#' },
+          { id: 'reportes', etiqueta: 'Reportes', icono: 'reportes', href: '#' },
+          { id: 'equipo', etiqueta: 'Equipo y usuarios', icono: 'equipo', href: '#' },
+          { id: 'configuracion', etiqueta: 'Configuración', icono: 'configuracion', href: '#' },
+          { id: 'auditoria', etiqueta: 'Auditoría', icono: 'auditoria', href: '#' },
+        ]}
+        alCerrarSesion={() => setAbierta(false)}
+        enlace={ENLACE_MUESTRA}
+      />
+    </>
+  );
+}
+
 export function Catalogo() {
   const [vista, setVista] = useState<'dia' | 'semana'>('semana');
   const [pieza, setPieza] = useState(36);
@@ -163,9 +201,8 @@ export function Catalogo() {
           ))}
           <Insignia tono="azul">Con cuenta</Insignia>
           <Insignia tono="gris">Invitado</Insignia>
-          <Insignia tono="rojo" icono="alerta">
-            Penicilina
-          </Insignia>
+          {/* Main conserva esta insignia roja suave de muestra; la alergia real usa ChipAlergia */}
+          <Insignia tono="rojo">Penicilina</Insignia>
           <Contador valor={5} descripcion="5 solicitudes por revisar" />
           <Avatar nombre="Laura Mendoza" />
           <Avatar nombre="Valeria Núñez" tamano={44} />
@@ -324,9 +361,7 @@ export function Catalogo() {
               <Insignia tono="azul">Con cuenta</Insignia>
             </td>
             <td>
-              <Insignia tono="rojo" icono="alerta">
-                Penicilina
-              </Insignia>
+              <ChipAlergia alergia="Penicilina" />
             </td>
             <td>
               <Boton variante="texto" icono="siguiente" aria-label="Ver ficha de Ernesto Vega">
@@ -335,6 +370,35 @@ export function Catalogo() {
             </td>
           </tr>
         </Tabla>
+      </Seccion>
+
+      <Seccion titulo="Pacientes en tarjetas" fuente="Movil2">
+        <div className={estilos.listaTarjetas}>
+          <TarjetaPaciente nombre="Rosa Aguilar" telefono="55 5555 0101" cuenta="con-cuenta" detalle="Próxima: 14 dic" href="#" />
+          <TarjetaPaciente
+            nombre="Ernesto Vega"
+            telefono="55 5555 0148"
+            cuenta="con-cuenta"
+            alergia="Penicilina"
+            detalle="Próxima: 18 nov"
+            href="#"
+          />
+          <TarjetaPaciente nombre="Valeria Núñez" cuenta="invitado" detalle="Solicitada: 19 nov" href="#" />
+          <TarjetaPaciente
+            nombre="Mario Delgado"
+            telefono="55 5555 0133"
+            cuenta="con-cuenta"
+            alergia="Látex"
+            detalle="Próxima: 18 nov"
+            href="#"
+          />
+        </div>
+      </Seccion>
+
+      <Seccion titulo="Hoja Más" fuente="Movil2">
+        <div className={estilos.muestra}>
+          <HojaDeMuestra />
+        </div>
       </Seccion>
 
       <Seccion titulo="Menú lateral" fuente="Inicio (desde 1024 px)">

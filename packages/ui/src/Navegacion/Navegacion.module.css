@@ -170,6 +170,17 @@
   display: inline-flex;
 }
 
+/* "Más" es un botón: mismo aspecto que los enlaces */
+button.inferiorElemento {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Activo: la sección actual, o "Más" con la hoja abierta (Movil2) */
+.inferiorElemento[aria-expanded='true'],
 .inferiorElemento[aria-current='page'] {
   background: var(--rosa-50);
   color: var(--rosa-800);
@@ -177,6 +188,7 @@
 }
 
 /* Ícono activo en Rosa 700; los demás en texto secundario (Movil) */
+.inferiorElemento[aria-expanded='true'] .inferiorIcono,
 .inferiorElemento[aria-current='page'] .inferiorIcono {
   color: var(--rosa-700);
 }

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -140,5 +140,83 @@ describe('panel por rol', () => {
     montar('/');
     window.dispatchEvent(new Event('session-expired'));
     expect(await screen.findByText('Tu sesión expiró. Inicia sesión de nuevo.')).toBeInTheDocument();
+  });
+});
+
+describe('hoja "Más" por rol (Movil2; manda la matriz de Main)', () => {
+  const abrirHoja = async () => {
+    await userEvent.click(await screen.findByRole('button', { name: 'Más' }));
+    return screen.findByRole('dialog', { name: 'Más opciones' });
+  };
+  const enlacesDe = (hoja: HTMLElement) => within(hoja).queryAllByRole('link').map((a) => a.textContent);
+
+  it('administración: todo lo que no está en el menú inferior, incluidos Expediente y Ofertas', async () => {
+    servicio.usuario = ejemplo('admin');
+    montar('/');
+    const hoja = await abrirHoja();
+    expect(enlacesDe(hoja)).toEqual([
+      'Expediente clínico',
+      'Servicios',
+      'Ofertas y contenido',
+      'Inventario',
+      'Pagos',
+      'Reportes',
+      'Equipo y usuarios',
+      'Configuración',
+      'Auditoría',
+    ]);
+    expect(within(hoja).getByText('Ana Ejemplo')).toBeInTheDocument();
+    expect(within(hoja).getByText('Administración')).toBeInTheDocument();
+    // Con la hoja abierta el resto de la página queda inerte y fuera del árbol accesible
+    expect(screen.getByRole('button', { name: 'Más', hidden: true })).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('asistente: Inventario y Pagos (sin Servicios: Main no se lo da, aunque Movil2 lo dibuje)', async () => {
+    servicio.usuario = ejemplo('asistente');
+    montar('/');
+    expect(enlacesDe(await abrirHoja())).toEqual(['Inventario', 'Pagos']);
+  });
+
+  it('dentista: solo perfil y "Cerrar sesión" por ahora', async () => {
+    servicio.usuario = ejemplo('dentista');
+    montar('/');
+    const hoja = await abrirHoja();
+    expect(enlacesDe(hoja)).toEqual([]);
+    expect(within(hoja).getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
+  });
+
+  it('elegir una sección navega y cierra la hoja', async () => {
+    servicio.usuario = ejemplo('admin');
+    montar('/');
+    const hoja = await abrirHoja();
+    await userEvent.click(within(hoja).getByRole('link', { name: 'Pagos' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Pagos' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('Esc la cierra y el foco vuelve a "Más"', async () => {
+    servicio.usuario = ejemplo('admin');
+    montar('/');
+    await abrirHoja();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Más' })).toHaveFocus());
+    expect(screen.getByRole('button', { name: 'Más' })).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('"Cerrar sesión" desde la hoja revoca el token y vuelve al inicio de sesión', async () => {
+    servicio.usuario = ejemplo('asistente');
+    montar('/');
+    const hoja = await abrirHoja();
+    await userEvent.click(within(hoja).getByRole('button', { name: 'Cerrar sesión' }));
+    expect(servicio.logout).toHaveBeenCalledTimes(1);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeInTheDocument();
+  });
+
+  it('sin violaciones de accesibilidad con la hoja abierta', async () => {
+    servicio.usuario = ejemplo('admin');
+    montar('/');
+    await abrirHoja();
+    await sinViolacionesAxe(document.body);
   });
 });

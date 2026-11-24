@@ -1,0 +1,137 @@
+/* Hoja "Más" (Movil2.dc.html). Movimiento (plan, sección 4): sube con translateY(100%)→0 en 280 ms
+   --ease-drawer y baja al cerrar; el fondo, con opacidad. Con reduced-motion solo opacidad, 150 ms. */
+.velo {
+  position: fixed;
+  inset: 0 0 calc(var(--alto-menu-inferior) + env(safe-area-inset-bottom)) 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: var(--velo);
+}
+
+.velo[data-entering] {
+  animation: aparecer var(--dur-hoja) var(--ease-drawer);
+}
+
+.velo[data-exiting] {
+  animation: aparecer var(--dur-hoja) var(--ease-drawer) reverse;
+}
+
+.modal {
+  outline: none;
+}
+
+.modal[data-entering] {
+  animation: subir var(--dur-hoja) var(--ease-drawer);
+}
+
+.modal[data-exiting] {
+  animation: subir var(--dur-hoja) var(--ease-drawer) reverse;
+}
+
+.hoja {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-8);
+  max-height: calc(100dvh - var(--alto-menu-inferior) - var(--espacio-48));
+  overflow-y: auto;
+  padding: var(--espacio-12) var(--espacio-16) var(--espacio-20);
+  background: var(--superficie);
+  border-radius: var(--radio-20) var(--radio-20) 0 0;
+  outline: none;
+}
+
+.asa {
+  align-self: center;
+  width: 44px;
+  height: 5px;
+  border-radius: var(--radio-pildora);
+  background: var(--asa-hoja);
+}
+
+.perfil {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-12);
+  padding: var(--espacio-8) var(--espacio-8) var(--espacio-12);
+  border-bottom: 1px solid var(--borde);
+}
+
+.nombre {
+  font-size: var(--texto-15);
+  font-weight: var(--peso-extranegrita);
+  color: var(--texto);
+}
+
+.rol {
+  font-size: var(--texto-13);
+  font-weight: var(--peso-seminegrita);
+  color: var(--texto-secundario);
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.elemento,
+.cerrarSesion {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-14);
+  width: 100%;
+  min-height: 52px;
+  padding: 0 var(--espacio-8);
+  font-size: var(--texto-16);
+  font-weight: var(--peso-negrita);
+  text-decoration: none;
+}
+
+.elemento {
+  border-radius: var(--radio-10);
+  color: var(--texto);
+}
+
+.icono {
+  display: inline-flex;
+  color: var(--texto-secundario);
+}
+
+.cerrarSesion {
+  border: 0;
+  border-top: 1px solid var(--borde);
+  background: transparent;
+  color: var(--peligro-texto);
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes subir {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .velo[data-entering],
+  .modal[data-entering] {
+    animation: aparecer var(--dur-rapida) ease;
+  }
+
+  .velo[data-exiting],
+  .modal[data-exiting] {
+    animation: aparecer var(--dur-rapida) ease reverse;
+  }
+}

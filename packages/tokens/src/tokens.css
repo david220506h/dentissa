@@ -35,6 +35,10 @@
   --fondo-icono-estado: #f3f4f6; /* Círculo del ícono en vacío, error y sin permiso (Estados) */
   --esqueleto: #e5e7eb; /* Bloques del esqueleto de carga (Estados) */
   --borde-dialogo: #e5e7eb; /* Diálogos (Estados, CitaFormularios) */
+  --alergia-fondo: #991b1b; /* Chip sólido de alergia (Pacientes, Expediente, Movil2). 8.1:1 con blanco */
+  --alergia-texto: #ffffff;
+  --asa-hoja: #d1d5db; /* Asa de la hoja "Más" (Movil2) */
+  --peligro-texto: #991b1b; /* "Cerrar sesión" en la hoja "Más" (Movil2) */
   --borde-libre: #9ca3af; /* Horario libre en la agenda del celular (borde punteado) */
   --borde-peligro: #fca5a5; /* Botón "Rechazar solicitud" */
 

@@ -122,7 +122,7 @@ for (const ancho of ANCHOS) {
       await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), USUARIO_EJEMPLO);
     });
 
-    for (const ruta of ['/', '/mas', '/no-existe']) {
+    for (const ruta of ['/', '/no-existe']) {
       test(`${ruta}: accesible, sin desborde y captura`, async ({ page }) => {
         await page.goto(ruta);
         await expect(page.locator('h1')).toBeVisible();
@@ -180,3 +180,32 @@ for (const ancho of ANCHOS) {
     });
   });
 }
+
+// Hoja "Más" por rol (Movil2), solo con el menú inferior (menos de 1024 px)
+for (const ancho of [360, 768] as const) {
+  for (const rol of ['admin', 'asistente', 'dentista'] as const) {
+    test(`hoja Más de ${rol} a ${ancho} px: accesible y captura`, async ({ page }) => {
+      await page.setViewportSize({ width: ancho, height: 900 });
+      await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), { ...USUARIO_EJEMPLO, rol });
+      await page.goto('/');
+      await page.getByRole('button', { name: 'Más' }).click();
+      const hoja = page.getByRole('dialog', { name: 'Más opciones' });
+      await expect(hoja).toBeVisible();
+      await page.waitForTimeout(400);
+      await sinViolacionesAxe(page);
+      await sinDesbordeHorizontal(page);
+      await expect(page).toHaveScreenshot(`panel-hoja-mas-${rol}-${ancho}.png`);
+      await page.keyboard.press('Escape');
+      await expect(hoja).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Más' })).toBeFocused();
+    });
+  }
+}
+
+test('a 1440 px no hay menú inferior ni botón Más: el menú lateral muestra todo', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), USUARIO_EJEMPLO);
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Más' })).toBeHidden();
+  await expect(page.getByRole('navigation', { name: 'Menú principal' }).getByRole('link', { name: 'Auditoría' })).toBeVisible();
+});

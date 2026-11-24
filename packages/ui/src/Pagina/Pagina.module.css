@@ -216,6 +216,7 @@
 
 .sinConexionTitulo {
   margin: 0;
+  text-wrap: balance;
   font-size: var(--texto-22);
   font-weight: var(--peso-extranegrita);
   color: var(--texto);
@@ -223,6 +224,7 @@
 
 .sinConexionTexto {
   margin: 0;
+  text-wrap: pretty;
   font-size: var(--texto-15);
   color: var(--texto-secundario);
 }

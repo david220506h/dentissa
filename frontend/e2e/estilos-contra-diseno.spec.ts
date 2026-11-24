@@ -79,7 +79,7 @@ const CASOS: Caso[] = [
   })),
   { nombre: 'insignia Con cuenta', diseno: ['Con cuenta', 'span'], catalogo: ['Con cuenta', 'span'] },
   { nombre: 'insignia Invitado', diseno: ['Invitado', 'span'], catalogo: ['Invitado', 'span'] },
-  { nombre: 'insignia de alergia', diseno: ['Penicilina', 'span'], catalogo: ['Penicilina', 'span'] },
+  { nombre: 'insignia roja (muestra de Main; la alergia usa ChipAlergia)', diseno: ['Penicilina', 'span'], catalogo: ['Penicilina', 'span'] },
   { nombre: 'etiqueta de campo', diseno: ['Correo electrónico', 'label'], catalogo: ['Correo electrónico', 'label'] },
   { nombre: 'mensaje de error de campo', diseno: ['Escribe un correo válido.', 'div'], catalogo: ['Escribe un correo válido.', 'div'] },
   ...[

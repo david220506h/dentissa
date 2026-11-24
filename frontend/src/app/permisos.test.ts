@@ -34,7 +34,6 @@ describe('sección activa', () => {
     expect(seccionActiva('/')).toBe('inicio');
     expect(seccionActiva('/agenda')).toBe('agenda');
     expect(seccionActiva('/pacientes/42')).toBe('pacientes');
-    expect(seccionActiva('/mas')).toBe('mas');
     expect(seccionActiva('/agendas')).toBeUndefined();
   });
 });
