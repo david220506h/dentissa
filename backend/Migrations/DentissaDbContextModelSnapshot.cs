@@ -381,6 +381,9 @@ namespace backend.Migrations
                     b.HasIndex("CreadoPor")
                         .HasDatabaseName("ix_citas_creado_por");
 
+                    b.HasIndex("Inicio")
+                        .HasDatabaseName("ix_citas_inicio");
+
                     b.HasIndex("OfertaId")
                         .HasDatabaseName("ix_citas_oferta_id");
 

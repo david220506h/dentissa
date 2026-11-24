@@ -41,13 +41,33 @@ namespace backend.Controllers
         }
 
         // ── GET: api/Citas ────────────────────────────────────
-        // ?dentistaInactivo=true: citas futuras activas de dentistas desactivados o eliminados (diseño, 3.5)
+        // ?desde&hasta (fechas locales, inclusivas; máximo 92 días), ?dentistaId, ?estado: todos opcionales; sin
+        // parámetros responde como siempre (plan 3a, 14.7). ?dentistaInactivo=true: citas futuras activas de
+        // dentistas desactivados o eliminados (diseño, 3.5).
+        public const int DiasMaximosFiltro = 92;
+
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] bool dentistaInactivo, [FromServices] TimeProvider tiempo)
+        public async Task<IActionResult> GetAll([FromQuery] bool dentistaInactivo, [FromQuery] DateOnly? desde, [FromQuery] DateOnly? hasta,
+            [FromQuery] int? dentistaId, [FromQuery] string? estado, [FromServices] TimeProvider tiempo)
         {
+            if (desde is { } d1 && hasta is { } h1)
+            {
+                if (h1 < d1) return BadRequest(new { mensaje = "La fecha final no puede ser anterior a la inicial" });
+                if (h1.DayNumber - d1.DayNumber + 1 > DiasMaximosFiltro)
+                    return BadRequest(new { mensaje = $"El rango máximo es de {DiasMaximosFiltro} días" });
+            }
+            var estadoFiltro = estado?.Trim().ToLowerInvariant();
+            if (estadoFiltro is not null && !EstadosCita.Todos.Contains(estadoFiltro))
+                return BadRequest(new { mensaje = "Estado inválido" });
+
             var citas = dentistaInactivo
                 ? await _repo.GetConDentistaInactivoAsync(tiempo.GetUtcNow().UtcDateTime)
-                : await _repo.GetAllAsync();
+                : desde is null && hasta is null && dentistaId is null && estadoFiltro is null
+                    ? await _repo.GetAllAsync()
+                    : await _repo.GetFiltradasAsync(
+                        desde is { } d ? _reloj.AUtc(d, TimeOnly.MinValue) : null,
+                        hasta is { } h ? _reloj.AUtc(h.AddDays(1), TimeOnly.MinValue) : null,
+                        dentistaId, estadoFiltro);
             return Ok(citas.Select(ToRespuestaDto));
         }
 

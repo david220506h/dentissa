@@ -6,6 +6,9 @@ namespace backend.Repositories
     {
         Task<List<Cita>> GetAllAsync();
 
+        // Filtro opcional por instante de inicio [desde, hasta), dentista y estado (plan 3a, 14.7)
+        Task<List<Cita>> GetFiltradasAsync(DateTime? desdeUtc, DateTime? hastaUtc, int? dentistaId, string? estado);
+
         // Citas futuras activas cuyo dentista está inactivo o eliminado (diseño, 3.5)
         Task<List<Cita>> GetConDentistaInactivoAsync(DateTime desdeUtc);
         Task<Cita?> GetByIdAsync(int id);

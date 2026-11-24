@@ -58,6 +58,7 @@ public class CitaConfiguracion : IEntityTypeConfiguration<Cita>
         e.HasOne(c => c.CreadoPorUsuario).WithMany().HasForeignKey(c => c.CreadoPor);
         e.HasOne(c => c.ConfirmadaPorUsuario).WithMany().HasForeignKey(c => c.ConfirmadaPor);
 
+        e.HasIndex(c => c.Inicio);
         e.HasIndex(c => new { c.DentistaId, c.Inicio });
         e.HasIndex(c => new { c.PacienteId, c.Inicio });
         e.HasIndex(c => new { c.Estado, c.Inicio });

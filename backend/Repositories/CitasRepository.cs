@@ -27,6 +27,16 @@ namespace backend.Repositories
         public async Task<List<Cita>> GetAllAsync()
             => await CitasConRelaciones().OrderBy(c => c.Inicio).ToListAsync();
 
+        public async Task<List<Cita>> GetFiltradasAsync(DateTime? desdeUtc, DateTime? hastaUtc, int? dentistaId, string? estado)
+        {
+            var q = CitasConRelaciones();
+            if (desdeUtc is { } d) q = q.Where(c => c.Inicio >= d);
+            if (hastaUtc is { } h) q = q.Where(c => c.Inicio < h);
+            if (dentistaId is { } id) q = q.Where(c => c.DentistaId == id);
+            if (estado is not null) q = q.Where(c => c.Estado == estado);
+            return await q.OrderBy(c => c.Inicio).ToListAsync();
+        }
+
         public async Task<List<Cita>> GetConDentistaInactivoAsync(DateTime desdeUtc)
             => await CitasConRelaciones()
                 .Where(c => c.Inicio >= desdeUtc && EstadosCita.Activos.Contains(c.Estado)
