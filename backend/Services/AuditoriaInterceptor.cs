@@ -39,7 +39,15 @@ namespace backend.Services
         private IDbContextTransaction? _transaccionPropia;
         private bool _guardandoBitacora;
 
-        public AuditoriaInterceptor(IActorActual actor) => _actor = actor;
+        private readonly ContextoAuditoria _contexto;
+
+        public AuditoriaInterceptor(IActorActual actor, ContextoAuditoria contexto)
+        {
+            _actor = actor;
+            _contexto = contexto;
+        }
+
+        private bool EsSistema => _contexto.Actor == ContextoAuditoria.ActorSistema;
 
         public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
         {
@@ -197,14 +205,16 @@ namespace backend.Services
         private Auditoria Fila(string accion, EntityEntry entrada, object? detalle) => new()
         {
             OcurridoEn    = DateTime.UtcNow,
-            UsuarioId     = _actor.UsuarioId,
-            UsuarioCorreo = _actor.Correo,
+            UsuarioId     = EsSistema ? null : _actor.UsuarioId,
+            UsuarioCorreo = EsSistema ? null : _actor.Correo,
+            Actor         = _contexto.Actor,
+            ProvocadoPor  = _contexto.ProvocadoPor,
             Accion        = accion,
             Entidad       = entrada.Metadata.GetTableName() ?? entrada.Metadata.ClrType.Name,
             EntidadId     = string.Join(",", entrada.Metadata.FindPrimaryKey()!.Properties
                                 .Select(p => entrada.Property(p.Name).CurrentValue?.ToString())),
             Detalle       = detalle == null ? null : JsonBitacora.Serializar(detalle),
-            Ip            = _actor.Ip
+            Ip            = EsSistema ? null : _actor.Ip
         };
 
         private static Dictionary<string, object?> DetalleAlta(EntityEntry entrada)

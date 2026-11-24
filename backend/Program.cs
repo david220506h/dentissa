@@ -19,6 +19,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 // Bitácora: el interceptor es por petición (lleva el actor y la transacción propia)
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IActorActual, ActorActual>();
+builder.Services.AddScoped<ContextoAuditoria>();
 builder.Services.AddScoped<AuditoriaInterceptor>();
 
 // Conexión PostgreSQL; tablas y columnas en snake_case

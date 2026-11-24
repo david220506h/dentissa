@@ -97,6 +97,11 @@ namespace backend.Migrations
                         .HasColumnType("character varying(40)")
                         .HasColumnName("accion");
 
+                    b.Property<string>("Actor")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("actor");
+
                     b.Property<string>("Detalle")
                         .HasColumnType("jsonb")
                         .HasColumnName("detalle");
@@ -123,6 +128,10 @@ namespace backend.Migrations
                         .HasColumnName("ocurrido_en")
                         .HasDefaultValueSql("now()");
 
+                    b.Property<string>("ProvocadoPor")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("provocado_por");
+
                     b.Property<string>("UsuarioCorreo")
                         .HasColumnType("citext")
                         .HasColumnName("usuario_correo");
@@ -143,7 +152,10 @@ namespace backend.Migrations
                     b.HasIndex("Entidad", "EntidadId")
                         .HasDatabaseName("ix_auditoria_entidad_entidad_id");
 
-                    b.ToTable("auditoria", (string)null);
+                    b.ToTable("auditoria", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_auditoria_actor", "actor IS NULL OR actor = 'sistema'");
+                        });
                 });
 
             modelBuilder.Entity("backend.Entities.CategoriaServicio", b =>

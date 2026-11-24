@@ -129,11 +129,13 @@ public class ReservasTests : IClassFixture<FabricaDisponibilidad>
     {
         var (dentista, servicio, paciente, vencida) = await ConSolicitudAsync(Local(2026, 11, 30, 9));
         _f.Reloj.Fijar(Local(2026, 11, 30, 10));
-        var recepcion = await _f.ClienteConRolAsync(Roles.Asistente);
+        var cuenta = await _f.CrearUsuarioAsync(Roles.Asistente);
+        var recepcion = await _f.ClienteDeAsync(cuenta);
 
         var r = await recepcion.PostAsJsonAsync("/api/Citas", new { pacienteId = paciente, dentistaId = dentista, servicioId = servicio, fecha = "2026-11-30", hora = "12:00:00" });
 
         Assert.Equal(HttpStatusCode.Created, r.StatusCode);
+        var nueva = (await r.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt32();
         var vieja = await _f.ConDbAsync(db => db.Citas.AsNoTracking().Include(c => c.Historial).SingleAsync(c => c.Id == vencida));
         Assert.Equal(EstadosCita.Cancelada, vieja.Estado);
         Assert.Equal(ReservasService.MotivoVencimiento, vieja.MotivoCancelacion);
@@ -142,8 +144,22 @@ public class ReservasTests : IClassFixture<FabricaDisponibilidad>
         Assert.Equal(CitaHistorialService.CanalSistema, h.Canal);
         Assert.Null(h.UsuarioId);
         Assert.Equal(Local(2026, 11, 30, 10).UtcDateTime, h.CreadoEn);
-        // La bitácora registra el cambio de estado
-        Assert.True(await _f.ConDbAsync(db => db.Auditoria.AnyAsync(a => a.Entidad == "citas" && a.EntidadId == vencida.ToString() && a.Accion == AccionesAuditoria.Modificar)));
+        // Bitácora: el vencimiento va a nombre del sistema, sin usuario, con la cita y la cuenta que lo provocaron
+        var fila = await _f.ConDbAsync(db => db.Auditoria.AsNoTracking()
+            .SingleAsync(a => a.Entidad == "citas" && a.EntidadId == vencida.ToString() && a.Accion == AccionesAuditoria.Modificar));
+        Assert.Equal(ContextoAuditoria.ActorSistema, fila.Actor);
+        Assert.Null(fila.UsuarioId);
+        Assert.Null(fila.UsuarioCorreo);
+        Assert.Null(fila.Ip);
+        var provocado = JsonDocument.Parse(fila.ProvocadoPor!).RootElement;
+        Assert.Equal(nueva, provocado.GetProperty("citaId").GetInt32());
+        Assert.Equal(cuenta.Id, provocado.GetProperty("usuarioId").GetInt32());
+        // El alta de la cita nueva sigue a nombre de la cuenta
+        var alta = await _f.ConDbAsync(db => db.Auditoria.AsNoTracking()
+            .SingleAsync(a => a.Entidad == "citas" && a.EntidadId == nueva.ToString() && a.Accion == AccionesAuditoria.Crear));
+        Assert.Equal(cuenta.Id, alta.UsuarioId);
+        Assert.Null(alta.Actor);
+        Assert.Null(alta.ProvocadoPor);
         Assert.Equal(1, await _f.ConDbAsync(db => db.Citas.CountAsync(c => c.DentistaId == dentista && EstadosCita.Activos.Contains(c.Estado))));
     }
 

@@ -34,7 +34,7 @@ public class AuditoriaConfiguracion : IEntityTypeConfiguration<Auditoria>
 {
     public void Configure(EntityTypeBuilder<Auditoria> e)
     {
-        e.ToTable("auditoria");
+        e.ToTable("auditoria", t => t.HasCheckConstraint("ck_auditoria_actor", "actor IS NULL OR actor = 'sistema'"));
 
         e.Property(a => a.OcurridoEn).HasDefaultValueSql("now()");
         e.Property(a => a.UsuarioCorreo).HasColumnType("citext");
@@ -43,6 +43,8 @@ public class AuditoriaConfiguracion : IEntityTypeConfiguration<Auditoria>
         e.Property(a => a.EntidadId).HasMaxLength(60);
         e.Property(a => a.Detalle).HasColumnType("jsonb");
         e.Property(a => a.Ip).HasMaxLength(45);
+        e.Property(a => a.Actor).HasMaxLength(20);
+        e.Property(a => a.ProvocadoPor).HasColumnType("jsonb");
 
         e.HasOne(a => a.Usuario).WithMany().HasForeignKey(a => a.UsuarioId);
         e.HasIndex(a => a.OcurridoEn);

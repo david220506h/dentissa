@@ -133,18 +133,28 @@ public class ReservasService : IReservasService
             // El instante se toma después del candado: la espera no debe adelantar el reloj de la regla
             var ahora = _tiempo.GetUtcNow().UtcDateTime;
 
-            // 2. Liberación de solicitudes vencidas que se traslapan, para los dentistas candidatos
-            await LiberarVencidasAsync(db, historial, [s.DentistaId], inicio, fin, ahora, token);
-
-            // 3. Regla de bloqueo y ocupación (la restricción de exclusión queda como respaldo)
+            // 2. Regla de bloqueo y ocupación; una pendiente vencida no ocupa (la restricción de exclusión queda como respaldo)
             var regla = ReglaBloqueo.CalcularBloqueo(ahora, inicio, s.Canal, new RelojAtencion(horario), await calendario.ObtenerParametrosAsync(token));
             if (!regla.Aceptada)
                 throw new ReservaRechazadaException(regla.Motivo!.Value, MensajeRechazo(regla.Motivo.Value, s.Canal));
 
             var ocupado = await db.Citas.AnyAsync(c => c.DentistaId == s.DentistaId && c.Inicio < fin && inicio < c.Fin
-                                                       && EstadosCita.Activos.Contains(c.Estado), token);
+                                                       && EstadosCita.Activos.Contains(c.Estado)
+                                                       && !(c.Estado == EstadosCita.Pendiente && c.BloqueoExpiraEn != null && c.BloqueoExpiraEn <= ahora), token);
             if (ocupado)
                 throw new HorarioOcupadoException();
+
+            // 3. Liberación de las vencidas que se traslapan (6.1), a nombre del sistema. El id de la cita nueva se
+            // reserva antes para que la bitácora diga qué reserva la provocó.
+            int? idReservado = null;
+            if (await HayVencidasAsync(db, [s.DentistaId], inicio, fin, ahora, token))
+            {
+                idReservado = (int)await db.Database
+                    .SqlQueryRaw<long>("SELECT nextval(pg_get_serial_sequence('citas', 'id')) AS \"Value\"")
+                    .SingleAsync(token);
+                await LiberarVencidasAsync(db, historial, sp.GetRequiredService<ContextoAuditoria>(), [s.DentistaId], inicio, fin, ahora,
+                    new { citaId = idReservado, usuarioId = actor.UsuarioId }, token);
+            }
 
             // 4. Alta
             var oferta = await db.Ofertas.AsNoTracking()
@@ -155,6 +165,7 @@ public class ReservasService : IReservasService
             var extra = s.CostoExtra ?? 0;
             var cita = new Cita
             {
+                Id                = idReservado ?? 0,
                 PacienteId        = s.PacienteId,
                 DentistaId        = s.DentistaId,
                 ServicioId        = s.ServicioId,
@@ -178,18 +189,23 @@ public class ReservasService : IReservasService
             return cita;
         }, ct);
 
+    private static IQueryable<Cita> Vencidas(DentissaDbContext db, IReadOnlyCollection<int> dentistas, DateTime inicio, DateTime fin, DateTime ahora) =>
+        db.Citas.Where(c => dentistas.Contains(c.DentistaId) && c.Inicio < fin && inicio < c.Fin
+                            && c.Estado == EstadosCita.Pendiente && c.BloqueoExpiraEn != null && c.BloqueoExpiraEn <= ahora);
+
+    private static Task<bool> HayVencidasAsync(DentissaDbContext db, IReadOnlyCollection<int> dentistas, DateTime inicio, DateTime fin, DateTime ahora, CancellationToken ct) =>
+        Vencidas(db, dentistas, inicio, fin, ahora).AnyAsync(ct);
+
     /// <summary>
     /// Cancela las pendientes con bloqueo vencido que se traslapan con [inicio, fin) para los dentistas dados
-    /// (diseño, 6.1). Historial "vencimiento" con canal "sistema"; la bitácora la escribe el interceptor.
-    /// El aviso al paciente por correo llega con la bandeja de salida (commit 10).
+    /// (diseño, 6.1). Historial "vencimiento" con canal "sistema"; bitácora con actor "sistema", sin usuario, y
+    /// <paramref name="provocadoPor"/> (cita y cuenta que la desencadenaron). El aviso al paciente llega con el commit 10.
     /// </summary>
     public static async Task<int> LiberarVencidasAsync(
-        DentissaDbContext db, ICitaHistorialService historial, IReadOnlyCollection<int> dentistas, DateTime inicio, DateTime fin, DateTime ahora, CancellationToken ct)
+        DentissaDbContext db, ICitaHistorialService historial, ContextoAuditoria auditoria, IReadOnlyCollection<int> dentistas,
+        DateTime inicio, DateTime fin, DateTime ahora, object? provocadoPor, CancellationToken ct)
     {
-        var vencidas = await db.Citas
-            .Where(c => dentistas.Contains(c.DentistaId) && c.Inicio < fin && inicio < c.Fin
-                        && c.Estado == EstadosCita.Pendiente && c.BloqueoExpiraEn != null && c.BloqueoExpiraEn <= ahora)
-            .ToListAsync(ct);
+        var vencidas = await Vencidas(db, dentistas, inicio, fin, ahora).ToListAsync(ct);
         foreach (var cita in vencidas)
         {
             cita.Estado = EstadosCita.Cancelada;
@@ -198,7 +214,8 @@ public class ReservasService : IReservasService
             historial.Registrar(cita, AccionesCitaHistorial.Vencimiento, MotivoVencimiento, canal: CitaHistorialService.CanalSistema);
         }
         if (vencidas.Count > 0)
-            await db.SaveChangesAsync(ct);
+            using (auditoria.ComoSistema(provocadoPor))
+                await db.SaveChangesAsync(ct);
         return vencidas.Count;
     }
 
