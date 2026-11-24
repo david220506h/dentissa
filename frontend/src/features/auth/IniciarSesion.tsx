@@ -58,22 +58,7 @@ export function IniciarSesion() {
 
   return (
     <div className={estilos.raiz}>
-      <div className={estilos.presentacion}>
-        <div className={estilos.marca}>
-          <span className={estilos.marcaIcono}>
-            <Icono nombre="diente" tamano={27} />
-          </span>
-          <span className={estilos.marcaNombre}>Dentissa</span>
-        </div>
-        <div className={estilos.lema}>
-          <h2 className={estilos.lemaTitulo}>Citas, pacientes, expediente e inventario en un solo lugar.</h2>
-          <p className={estilos.lemaTexto}>Acceso exclusivo para el personal de la clínica.</p>
-        </div>
-        <div className={estilos.ilustracion} aria-hidden="true">
-          <Icono nombre="diente" tamano={220} trazo={1.2} />
-        </div>
-      </div>
-
+      {/* El formulario va primero en el documento (lectura y celular); en escritorio la presentación se dibuja a la izquierda */}
       <main className={estilos.formularioLado}>
         <form className={estilos.formulario} onSubmit={alEnviar} noValidate aria-describedby={errorGeneral || aviso ? 'aviso-sesion' : undefined}>
           <div>
@@ -121,6 +106,22 @@ export function IniciarSesion() {
           <p className={estilos.nota}>¿Eres paciente? Entra desde el sitio web de la clínica.</p>
         </form>
       </main>
+
+      <div className={estilos.presentacion}>
+        <div className={estilos.marca}>
+          <span className={estilos.marcaIcono}>
+            <Icono nombre="diente" tamano={27} />
+          </span>
+          <span className={estilos.marcaNombre}>Dentissa</span>
+        </div>
+        <div className={estilos.lema}>
+          <h2 className={estilos.lemaTitulo}>Citas, pacientes, expediente e inventario en un solo lugar.</h2>
+          <p className={estilos.lemaTexto}>Acceso exclusivo para el personal de la clínica.</p>
+        </div>
+        <div className={estilos.ilustracion} aria-hidden="true">
+          <Icono nombre="diente" tamano={220} trazo={1.2} />
+        </div>
+      </div>
     </div>
   );
 }
