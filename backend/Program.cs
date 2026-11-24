@@ -9,9 +9,14 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Render (y otros servicios) indican el puerto en $PORT
+if (Environment.GetEnvironmentVariable("PORT") is { Length: > 0 } puerto)
+    builder.WebHost.UseUrls($"http://0.0.0.0:{puerto}");
+
 // Los secretos vienen de user-secrets (desarrollo) o variables de entorno (producción).
 // Si faltan, la aplicación no arranca.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Acepta también la URI que entrega Neon (postgresql://usuario:clave@host/base?sslmode=require)
+var connectionString = CadenaConexion.Normalizar(builder.Configuration.GetConnectionString("DefaultConnection"));
 if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException(
         "Falta ConnectionStrings:DefaultConnection. Configúrala con user-secrets o con la variable de entorno ConnectionStrings__DefaultConnection.");
@@ -125,6 +130,21 @@ builder.Services.AddCors(options =>
 builder.Services.AddDentissaRateLimiting(builder.Configuration);
 
 builder.Services.AddControllers();
+// Errores 500 como ProblemDetails genérico: sin pila ni mensajes internos fuera de desarrollo
+builder.Services.AddProblemDetails();
+
+// Detrás de un proxy (Render; Vercel → Render) la IP real llega en X-Forwarded-For. Proxy:Saltos indica
+// cuántos proxies se confían (0 = ninguno, en local); de ella dependen el límite de intentos y la bitácora.
+var saltosProxy = builder.Configuration.GetValue<int>("Proxy:Saltos");
+if (saltosProxy > 0)
+    builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(o =>
+    {
+        o.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+                             | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+        o.ForwardLimit = saltosProxy;
+        o.KnownIPNetworks.Clear();
+        o.KnownProxies.Clear();
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -177,6 +197,31 @@ if (args.Contains("--sembrar-demo"))
     return;
 }
 
+// Despliegue (docs/DESPLIEGUE.md): con DEMO_SEMBRAR=true siembra los datos ficticios si la base está vacía,
+// con las contraseñas de DEMO_PASSWORD_ADMIN y DEMO_PASSWORD_PERSONAL. Nunca las escribe en los logs.
+if (app.Configuration.GetValue<bool>("DEMO_SEMBRAR") && !args.Contains("--sembrar-demo"))
+{
+    using var scope = app.Services.CreateScope();
+    var log = scope.ServiceProvider.GetRequiredService<ILogger<SembradoDemoService>>();
+    var sembrado = scope.ServiceProvider.GetRequiredService<SembradoDemoService>();
+    var admin = app.Configuration["DEMO_PASSWORD_ADMIN"];
+    var personal = app.Configuration["DEMO_PASSWORD_PERSONAL"];
+    if ((admin?.Length ?? 0) < DatosInicialesService.LongitudMinimaPassword || (personal?.Length ?? 0) < DatosInicialesService.LongitudMinimaPassword)
+        log.LogWarning("DEMO_SEMBRAR está activo, pero faltan DEMO_PASSWORD_ADMIN o DEMO_PASSWORD_PERSONAL (mínimo {Minimo} caracteres): no se sembró.",
+            DatosInicialesService.LongitudMinimaPassword);
+    else if (!await sembrado.BaseVaciaAsync())
+        log.LogInformation("DEMO_SEMBRAR está activo, pero la base ya tiene datos: no se siembra de nuevo.");
+    else
+    {
+        await sembrado.EjecutarAsync(new SembradoDemoService.ContrasenasFijas(admin!, personal!));
+        log.LogInformation("Se sembraron los datos de la demo.");
+    }
+}
+
+if (saltosProxy > 0)
+    app.UseForwardedHeaders();
+if (!app.Environment.IsDevelopment())
+    app.UseExceptionHandler();
 app.UseSecurityHeaders();
 
 if (app.Environment.IsDevelopment())
@@ -197,6 +242,10 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+// Para el chequeo de salud de Render: sin sesión, sin datos; 503 si no hay base
+app.MapGet("/health", async (DentissaDbContext db, CancellationToken ct) =>
+        await db.Database.CanConnectAsync(ct) ? Results.Ok(new { estado = "ok" }) : Results.StatusCode(503))
+    .AllowAnonymous();
 app.Run();
 
 // Permite que las pruebas de integración usen WebApplicationFactory<Program>

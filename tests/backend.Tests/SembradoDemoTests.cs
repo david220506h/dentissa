@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http.Json;
 using backend.Constants;
 using backend.Entities;
 using backend.Services;
@@ -85,5 +87,68 @@ public class SembradoDemoTests
         using var f = new FabricaDemo(habilitada: false);
         await Assert.ThrowsAsync<InvalidOperationException>(() => Sembrar(f));
         Assert.False(await f.ConDbAsync(db => db.Usuarios.AnyAsync()));
+    }
+}
+
+// Despliegue: DEMO_SEMBRAR siembra al arrancar con las contraseñas de las variables, sin mostrarlas
+public class SembradoAlArrancarTests
+{
+    private const string Admin = "Admin-De-Prueba-2026";
+    private const string Personal = "Personal-De-Prueba-2026";
+
+    private sealed class Fabrica(string? admin, string? personal) : DentissaFactory
+    {
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            base.ConfigureWebHost(builder);
+            builder.UseSetting("DEMO_SEMBRAR", "true");
+            if (admin != null) builder.UseSetting("DEMO_PASSWORD_ADMIN", admin);
+            if (personal != null) builder.UseSetting("DEMO_PASSWORD_PERSONAL", personal);
+        }
+    }
+
+    [Fact]
+    public async Task ConLasDosContrasenas_SiembraYSePuedeEntrar()
+    {
+        using var f = new Fabrica(Admin, Personal);
+        var cliente = f.CreateClient();
+        var admin = await cliente.PostAsJsonAsync("/api/auth/login", new { email = $"administracion@{SembradoDemoService.Dominio}", password = Admin });
+        Assert.Equal(HttpStatusCode.OK, admin.StatusCode);
+        var dentista = await cliente.PostAsJsonAsync("/api/auth/login", new { email = $"mariana.soto@{SembradoDemoService.Dominio}", password = Personal });
+        Assert.Equal(HttpStatusCode.OK, dentista.StatusCode);
+        Assert.Equal(30, await f.ConDbAsync(db => db.Pacientes.CountAsync()));
+    }
+
+    [Fact]
+    public async Task SinContrasenas_NoSiembra()
+    {
+        using var f = new Fabrica(Admin, null);
+        f.CreateClient();
+        Assert.False(await f.ConDbAsync(db => db.Usuarios.AnyAsync()));
+    }
+}
+
+public class SaludYConexionTests
+{
+    [Fact]
+    public async Task Health_SinSesion_Responde200()
+    {
+        using var f = new DentissaFactory();
+        var r = await f.CreateClient().GetAsync("/health");
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+    }
+
+    [Fact]
+    public void UriDeNeon_SeConvierteConSslObligatorio()
+    {
+        var c = new Npgsql.NpgsqlConnectionStringBuilder(CadenaConexion.Normalizar(
+            "postgresql://usuario:cl%40ve@ep-ejemplo-123.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"));
+        Assert.Equal("ep-ejemplo-123.us-east-2.aws.neon.tech", c.Host);
+        Assert.Equal(5432, c.Port);
+        Assert.Equal("neondb", c.Database);
+        Assert.Equal("usuario", c.Username);
+        Assert.Equal("cl@ve", c.Password);
+        Assert.Equal(Npgsql.SslMode.Require, c.SslMode);
+        Assert.Equal("Host=h;Database=d", CadenaConexion.Normalizar("Host=h;Database=d"));
     }
 }

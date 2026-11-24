@@ -11,7 +11,9 @@ Lo que quedó fuera de la versión de demostración (`v0.1-demo`, `docs/DEMO.md`
 5. **Revisión legal** con especialista: LFPDPPP (finalidades, derechos ARCO, transferencias), NOM-004-SSA3-2012 (expediente clínico), NOM-024-SSA3-2012 (sistemas de información en salud), **aviso de privacidad** publicado y enlazado desde el sitio, el portal y los correos, y plazos de **retención** (expediente, bitácora de lecturas, citas). Incluye la propuesta de pacientes (`docs/pacientes/propuesta-api-pacientes.md`), aprobada **solo para la demo con datos ficticios**.
 6. **Turnstile** (o CAPTCHA equivalente) en todo formulario público antes de aceptar solicitudes en línea (`IVerificadorCaptcha`, commit 11), junto con el correo de vencimiento probado de punta a punta (requisitos de despliegue, punto 9).
 7. **Servidor por inactividad:** que el servidor también expire la sesión (hoy solo el panel, 15 min).
-8. **Dependencias:** `npm audit` y `dotnet list package --vulnerable` sin altas ni críticas.
+8. **API solo detrás de Vercel:** hoy Render acepta llamadas directas y una IP falseada en `X-Forwarded-For` evade el límite por IP (decisión de despliegue). Antes de datos reales: secreto compartido entre Vercel y Render o lista de IP.
+9. **Data Protection:** las claves viven dentro del contenedor (se pierden al reiniciar). Hoy no se usan; si se usan, persistirlas.
+10. **Dependencias:** `npm audit` y `dotnet list package --vulnerable` sin altas ni críticas.
 
 ## 2. Portal de pacientes
 
