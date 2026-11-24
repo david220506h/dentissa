@@ -48,9 +48,9 @@ La API crea todas las tablas sola al arrancar (migraciones); no hay que ejecutar
 
    Las demás variables ya vienen en `render.yaml` sin secretos: `ASPNETCORE_ENVIRONMENT=Production`, migraciones al arrancar, `Proxy__Saltos=2`, correo apagado y `DEMO_SEMBRAR=true`.
 3. Pulsa **Apply**. La primera compilación tarda unos 5 a 10 minutos.
-4. Cuando diga **Live**, anota la URL (p. ej., `https://dentissa-api.onrender.com`) y abre `https://<tu-url>/health`: debe responder `{"estado":"ok"}`.
+4. Cuando diga **Live**, anota la URL (la de esta demo es `https://dentissa-api-22cy.onrender.com`) y abre `https://<tu-url>/health`: debe responder `{"estado":"ok"}`.
 
-**Si tu URL no es `https://dentissa-api.onrender.com`** (Render agrega letras si el nombre está ocupado), edita `vercel.json` en la raíz del repositorio, cambia esa URL en la regla de `/api/:path*` y haz commit y push antes del paso 3.
+**Si tu URL no es `https://dentissa-api-22cy.onrender.com`** (Render agrega letras si el nombre está ocupado), edita `vercel.json` en la raíz del repositorio, cambia esa URL en la regla de `/api/:path*` y haz commit y push antes del paso 3.
 
 Al primer arranque con la base vacía, la API siembra los datos ficticios (30 pacientes, citas de dos semanas) y crea las cuentas con las contraseñas que pegaste. **Las contraseñas no aparecen en los logs.** En arranques posteriores no siembra de nuevo.
 
