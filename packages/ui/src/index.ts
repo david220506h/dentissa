@@ -25,5 +25,31 @@ export {
   type BusquedaProps,
 } from './Campo/Campo';
 export { Aviso, type AvisoProps, type TonoAviso } from './Aviso/Aviso';
+export {
+  GruposMenu,
+  MenuLateral,
+  MenuInferior,
+  type ComponenteEnlace,
+  type ElementoMenu,
+  type GrupoMenu,
+  type GruposMenuProps,
+  type MenuLateralProps,
+  type MenuInferiorProps,
+} from './Navegacion/Navegacion';
+export {
+  EncabezadoPagina,
+  Tabla,
+  Paginacion,
+  Pestanas,
+  GrupoVista,
+  SinConexion,
+  type EncabezadoPaginaProps,
+  type TablaProps,
+  type PaginacionProps,
+  type PestanaDef,
+  type PestanasProps,
+  type GrupoVistaProps,
+  type SinConexionProps,
+} from './Pagina/Pagina';
 export { SoloLector } from './utilidades/SoloLector';
 export { clases } from './utilidades/clases';

@@ -111,6 +111,7 @@
   /* ── Medidas ───────────────────────────────────────────────────────── */
   --alto-toque: 44px; /* Mínimo de todo lo que se toca (Main · Componentes) */
   --alto-control-grande: 48px; /* Campos y botón de Iniciar sesión */
+  --alto-boton-destacado: 52px; /* "Reintentar" en Sin conexión (Movil) */
   --alto-grupo-vista: 42px; /* Botones Día/Semana */
   --alto-insignia: 26px;
   --alto-contador: 22px;

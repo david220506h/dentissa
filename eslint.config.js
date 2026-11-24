@@ -16,6 +16,9 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      // Una región con desplazamiento propio (tablas anchas) debe poder recibir el foco del teclado
+      // (WCAG 2.1.1; regla scrollable-region-focusable de axe).
+      'jsx-a11y/no-noninteractive-tabindex': ['error', { roles: ['tabpanel', 'region'] }],
     },
   },
 );
