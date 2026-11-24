@@ -121,6 +121,7 @@ namespace backend.Controllers
             dto.Rol           = u.Rol;
             dto.Activo        = u.Activo;
             dto.FechaRegistro = u.CreadoEn.ToString("dd/MM/yyyy");
+            dto.UltimoAccesoEn = u.UltimoAccesoEn;
             return dto;
         }
     }

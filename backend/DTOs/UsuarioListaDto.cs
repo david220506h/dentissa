@@ -11,6 +11,8 @@ namespace backend.DTOs
         public string  Rol           { get; set; } = string.Empty;
         public bool    Activo        { get; set; }
         public string  FechaRegistro { get; set; } = string.Empty;
+        // Último inicio de sesión correcto, ISO 8601 en UTC; null si nunca ha entrado
+        public DateTime? UltimoAccesoEn { get; set; }
     }
 
     public class UsuarioCreadoDto : UsuarioListaDto
