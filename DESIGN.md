@@ -34,6 +34,7 @@ colors:
   odontograma-borde-azul: "#93c5fd"
   odontograma-borde-amarillo: "#fde047"
   odontograma-borde-rosa: "#f9a8d4"
+  velo: "rgba(51, 51, 51, 0.45)"
 typography:
   titulo-pagina:
     fontFamily: "Nunito, system-ui, -apple-system, Segoe UI, sans-serif"
@@ -68,10 +69,13 @@ typography:
     fontSize: "14.5px"
     fontWeight: 700
 rounded:
+  4: "4px"
   8: "8px"
   10: "10px"
   12: "12px"
   14: "14px"
+  16: "16px"
+  20: "20px"
   pildora: "999px"
   circulo: "50%"
 spacing:

@@ -101,10 +101,13 @@
   --altura-linea-titulo: 1.2;
 
   /* ── Forma ─────────────────────────────────────────────────────────── */
+  --radio-4: 4px; /* Barras de las gráficas (Reportes) */
   --radio-8: 8px; /* Bloque de descanso, leyenda del odontograma */
   --radio-10: 10px; /* Botones, campos, elementos del menú */
   --radio-12: 12px; /* Tarjetas pequeñas, ícono de indicador, días en el celular */
   --radio-14: 14px; /* Secciones y tarjetas principales */
+  --radio-16: 16px; /* Diálogos (Estados, CitaFormularios) */
+  --radio-20: 20px; /* Esquinas superiores de la hoja "Más" (Movil2) */
   --radio-pildora: 999px; /* Insignias y contadores */
   --radio-circulo: 50%;
 
@@ -140,6 +143,9 @@
 
   /* ── Profundidad y foco ────────────────────────────────────────────── */
   --sombra-tarjeta: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --sombra-dialogo: 0 12px 32px rgba(0, 0, 0, 0.14); /* Diálogos (Estados, CitaFormularios) */
+  --sombra-seleccion: inset 0 0 0 2px var(--rosa-700); /* Solicitud seleccionada (Solicitudes) */
+  --velo: rgba(51, 51, 51, 0.45); /* Fondo detrás de la hoja "Más" (Movil2) */
   --foco-anillo: 3px solid var(--rosa-500); /* a:focus-visible, button:focus-visible… */
   --foco-separacion: 2px;
   --campo-foco-borde: 2px solid var(--rosa-700);

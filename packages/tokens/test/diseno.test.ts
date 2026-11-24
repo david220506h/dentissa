@@ -14,7 +14,8 @@ const tokens = leerTokens(readFileSync(resolve(__dirname, '../src/tokens.css'), 
 const archivosDiseno = readdirSync(CARPETA_DISENO).filter((f) => f.endsWith('.dc.html'));
 const html = archivosDiseno.map((f) => readFileSync(resolve(CARPETA_DISENO, f), 'utf8'));
 // Solo los estilos: los colores mencionados en el texto (p. ej., los que "se retiran") no cuentan
-const estilos = html.flatMap((h) => [...h.matchAll(/style="([^"]*)"/g)].map((m) => m[1]!)).join(';');
+const estilosDeElementos = html.flatMap((h) => [...h.matchAll(/style="([^"]*)"/g)].map((m) => m[1]!));
+const estilos = estilosDeElementos.join(';');
 
 const RE_COLOR = /#[0-9a-f]{6}\b|rgba?\([^)]*\)/gi;
 const normalizar = (c: string) => c.toLowerCase().replace(/\s+/g, '');
@@ -24,8 +25,14 @@ const coloresTokens = new Set(valoresLiterales.flatMap((v) => [...v.matchAll(RE_
 const px = (lista: Iterable<string | number>) => new Set([...lista].map((v) => Number.parseFloat(String(v))));
 
 describe('tokens.css frente al diseño aprobado', () => {
-  it('lee los 13 archivos del diseño', () => {
-    expect(archivosDiseno).toHaveLength(13);
+  it('lee todas las pantallas del diseño y están las obligatorias', () => {
+    // Lista mínima: una versión nueva puede traer más pantallas (p. ej., Movil3) sin romper la prueba
+    const obligatorias = [
+      'Main', 'Login', 'Inicio', 'Agenda', 'Solicitudes', 'Pacientes', 'Expediente', 'Servicios', 'Inventario',
+      'Pagos', 'Reportes', 'Configuracion', 'Equipo', 'CitaFormularios', 'Estados', 'Movil', 'Movil2',
+    ].map((n) => `${n}.dc.html`);
+    expect(archivosDiseno).toEqual(expect.arrayContaining(obligatorias));
+    expect(html).toHaveLength(archivosDiseno.length);
   });
 
   it('no inventa colores: cada color de los tokens aparece en el diseño', () => {
@@ -91,5 +98,44 @@ describe('tokens.css frente al diseño aprobado', () => {
     for (const [nombre, valor] of tokens) {
       if (nombre.startsWith('radio-')) expect(radiosDiseno.has(valor), `${nombre}: ${valor}`).toBe(true);
     }
+  });
+
+  it('radios: cada radio del diseño tiene token', () => {
+    const radiosTokens = new Set([...tokens].filter(([n]) => n.startsWith('radio-')).map(([, v]) => v));
+    const sinToken = new Set<string>();
+    for (const estilo of estilosDeElementos) {
+      // El marco que dibuja el teléfono en Movil es presentación del diseño, no parte del producto
+      if (/width:390px;height:780px/.test(estilo)) continue;
+      const radio = /border-radius:\s*([^;]+)/.exec(estilo)?.[1]?.trim();
+      if (!radio) continue;
+      const alto = Number.parseFloat(/(?:^|;)\s*height:\s*([\d.]+)px/.exec(estilo)?.[1] ?? 'NaN');
+      for (const parte of radio.split(/\s+/)) {
+        if (parte === '0' || radiosTokens.has(parte)) continue;
+        // Radio de al menos la mitad del alto = píldora o círculo (esqueletos de carga, asa de la hoja)
+        if (parte.endsWith('px') && Number.parseFloat(parte) >= alto / 2) continue;
+        sinToken.add(parte);
+      }
+    }
+    expect([...sinToken]).toEqual([]);
+  });
+
+  describe('sombras', () => {
+    const normalizarSombra = (s: string) => normalizar(s).replace(/(^|[^\d.])0px/g, '$10');
+    const sombrasTokens = new Set(
+      [...tokens]
+        .filter(([n]) => n.startsWith('sombra-') || n.endsWith('-halo'))
+        .map(([, v]) => normalizarSombra(resolver(tokens, v))),
+    );
+    const sombrasDiseno = new Set(
+      [...estilos.matchAll(/box-shadow:\s*([^;]+)/g)].map((m) => normalizarSombra(m[1]!.trim())),
+    );
+
+    it('cada sombra de los tokens aparece en el diseño', () => {
+      expect([...sombrasTokens].filter((s) => !sombrasDiseno.has(s))).toEqual([]);
+    });
+
+    it('cada sombra del diseño tiene token', () => {
+      expect([...sombrasDiseno].filter((s) => !sombrasTokens.has(s))).toEqual([]);
+    });
   });
 });
