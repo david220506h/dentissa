@@ -56,6 +56,8 @@ async function estiloDe(page: Page, texto: string, ancestro: string, indice = 0)
 
 interface Caso {
   nombre: string;
+  /** Pantalla del diseño (por defecto Main.dc.html). */
+  archivo?: string;
   diseno: [texto: string, ancestro: string, indice?: number];
   catalogo: [texto: string, ancestro: string, indice?: number];
   /** Diferencias aprobadas (p. ej., el mínimo de 12.5 px de la decisión 3). */
@@ -98,15 +100,35 @@ const CASOS: Caso[] = [
     catalogo: ['5', 'span[class*="contador"]'],
     excepciones: { fontSize: '12.5px' },
   },
+  // Odontograma frente a Expediente.dc.html (piezas no seleccionadas, para no medir el anillo)
+  ...[
+    ['17', 'sana'],
+    ['35', 'con caries'],
+    ['16', 'restaurada'],
+    ['46', 'con endodoncia'],
+    ['11', 'con corona'],
+    ['18', 'ausente'],
+  ].map<Caso>(([n, estado]) => ({
+    nombre: `pieza ${estado} (${n})`,
+    archivo: 'Expediente.dc.html',
+    diseno: [n!, 'button'],
+    catalogo: [n!, 'button'],
+  })),
+  ...['Sano', 'Caries', 'Restaurado', 'Endodoncia', 'Corona', 'Ausente'].map<Caso>((t) => ({
+    nombre: `leyenda ${t}`,
+    archivo: 'Expediente.dc.html',
+    diseno: [t, 'li'],
+    catalogo: [t, 'li'],
+  })),
 ];
 
-test.describe('estilos del catálogo frente a Main.dc.html', () => {
+test.describe('estilos del catálogo frente al diseño', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
   for (const caso of CASOS) {
     test(caso.nombre, async ({ page, context }) => {
       const disenoPage = await context.newPage();
-      await abrirDiseno(disenoPage, 'Main.dc.html');
+      await abrirDiseno(disenoPage, caso.archivo ?? 'Main.dc.html');
       const esperado = await estiloDe(disenoPage, ...caso.diseno);
 
       await page.goto('/catalogo.html');

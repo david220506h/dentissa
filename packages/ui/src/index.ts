@@ -51,5 +51,6 @@ export {
   type GrupoVistaProps,
   type SinConexionProps,
 } from './Pagina/Pagina';
+export { Odontograma, ESTADOS_PIEZA, type EstadoPieza, type OdontogramaProps } from './Odontograma/Odontograma';
 export { SoloLector } from './utilidades/SoloLector';
 export { clases } from './utilidades/clases';

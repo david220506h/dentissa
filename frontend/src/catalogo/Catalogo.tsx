@@ -17,6 +17,7 @@ import {
   MenuInferior,
   MenuLateral,
   NOMBRES_ICONOS,
+  Odontograma,
   Paginacion,
   Pestanas,
   SinConexion,
@@ -67,6 +68,12 @@ const GRUPOS: GrupoMenu[] = [
   },
 ];
 
+// Piezas de ejemplo del diseño (Expediente.dc.html)
+const PIEZAS = {
+  18: 'ausente', 16: 'restaurado', 11: 'corona', 21: 'corona', 24: 'restaurado', 26: 'restaurado', 28: 'ausente',
+  48: 'ausente', 46: 'endodoncia', 35: 'caries', 36: 'caries', 38: 'ausente',
+} as const;
+
 const ESTADOS: EstadoCita[] = ['confirmada', 'pendiente', 'completada', 'cancelada', 'no_asistio'];
 
 function Seccion({ titulo, fuente, children }: { titulo: string; fuente: string; children: ReactNode }) {
@@ -83,6 +90,7 @@ function Seccion({ titulo, fuente, children }: { titulo: string; fuente: string;
 
 export function Catalogo() {
   const [vista, setVista] = useState<'dia' | 'semana'>('semana');
+  const [pieza, setPieza] = useState(36);
   return (
     <main className={estilos.pagina}>
       <EncabezadoPagina
@@ -264,6 +272,12 @@ export function Catalogo() {
         <div className={estilos.marcoSinConexion}>
           <SinConexion alReintentar={() => {}} />
         </div>
+      </Seccion>
+
+      <Seccion titulo="Odontograma" fuente="Expediente (presentacional; el expediente llega con su backend)">
+        <Tarjeta titulo="Odontograma" holgada>
+          <Odontograma piezas={PIEZAS} seleccionada={pieza} alSeleccionar={setPieza} />
+        </Tarjeta>
       </Seccion>
 
       <Seccion titulo="Íconos" fuente="Trazos copiados de docs/design/panel">
