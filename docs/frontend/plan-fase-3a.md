@@ -414,6 +414,13 @@ Respondidas por las decisiones del arquitecto: 1 (`CLAUDE.md`), 2 (landing y reg
 | 4 | **Leyenda del odontograma: 30 px reales** con `border-box`. El diseño la declaraba de 30 px sin `border-box` y se dibujaba de 32; el próximo zip lo corrige. (El Aviso nunca tuvo esa diferencia: su altura coincide con el diseño.) |
 | 5 | **BLOQUEANTE del primer despliegue** (no de esta fase): el token de renovación pasa a cookie `HttpOnly` y el token de acceso vive solo en memoria. Requiere cambios de backend. También anotado en `CLAUDE.md`. |
 
+### 14.5 Retiro del panel anterior (decisión del dueño del proyecto, 2026-11-23)
+
+- El panel nuevo es el predeterminado: `index.html` y la raíz `/` abren el inicio de sesión (o el panel si hay sesión). Se quitaron `panel.html`, el desvío de `/panel` en `vite.config.js` y el prefijo `/panel`.
+- Se retiraron con `git rm` (recuperables en el historial) las pantallas anteriores: citas, usuarios, comentarios, ofertas, pacientes, servicios, `Dashboard`, `App` y el `main.jsx` anterior, junto con el lint del JavaScript anterior (`frontend/eslint.config.js`, `lint:legacy`, `@eslint/js` y `eslint-plugin-react-refresh`).
+- Landing, menú, inicio de sesión de pacientes y registro se movieron con `git mv` a `frontend/src/migrar-a-sitio/` (ver su `LEEME.md`, con la imagen externa de `decogaleria.mx` pendiente).
+- **Mientras no existan Agenda y Equipo y usuarios en el panel nuevo, las citas y los usuarios solo se manejan por la API** (`/api/citas`, `/api/usuarios`). El panel no tiene, por ahora, forma de crear, confirmar o cancelar citas, ni de crear o desactivar usuarios.
+
 ### 14.3 Versiones elegidas (estables, publicadas antes del 9-nov-2026 y compatibles entre sí)
 
 | Paquete | Versión | Nota |

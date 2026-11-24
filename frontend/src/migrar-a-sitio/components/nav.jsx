@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Login from '../Sesiones/login';
 import Register from '../Sesiones/register';
-import { logout } from '../services/authService';
+import { logout } from '../../services/authService';
 import './nav.css';
 import { FaUserCircle } from 'react-icons/fa';
 // import {useNavigate} from 'react-router-dom';

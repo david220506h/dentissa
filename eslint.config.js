@@ -1,5 +1,5 @@
-// Lint del código TypeScript nuevo (paquetes compartidos y panel).
-// El código JavaScript anterior del panel conserva su configuración en frontend/eslint.config.js.
+// Lint del código TypeScript (paquetes compartidos y panel).
+// El JavaScript que queda (src/migrar-a-sitio, servicios y roles) no se revisa aquí: se migra al sitio en Astro.
 import tseslint from 'typescript-eslint';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import reactHooks from 'eslint-plugin-react-hooks';

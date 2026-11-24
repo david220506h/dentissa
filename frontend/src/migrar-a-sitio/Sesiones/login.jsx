@@ -1,7 +1,7 @@
 import './login.css';
 import { useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { login } from '../services/authService';
+import { login } from '../../services/authService';
 
 function Login({ setUsuario, onClose }) {
   const [showPassword, setShowPassword] = useState(false);

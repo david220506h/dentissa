@@ -67,7 +67,8 @@ describe('Dialogo', () => {
     await userEvent.keyboard('{Escape}');
     expect(alCerrar).toHaveBeenCalledOnce();
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(abrir).toHaveFocus();
+    // React Aria devuelve el foco un cuadro después de desmontar el diálogo
+    await waitFor(() => expect(abrir).toHaveFocus());
   });
 
   it('"Cerrar" también cierra y devuelve el foco', async () => {
@@ -76,7 +77,8 @@ describe('Dialogo', () => {
     await userEvent.click(abrir);
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(abrir).toHaveFocus();
+    // React Aria devuelve el foco un cuadro después de desmontar el diálogo
+    await waitFor(() => expect(abrir).toHaveFocus());
   });
 
   it('sin violaciones de accesibilidad', async () => {

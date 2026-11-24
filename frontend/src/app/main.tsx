@@ -13,14 +13,10 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: true, gcTime: 5 * 60_000 } },
 });
 
-// TRANSICIÓN: el panel nuevo vive en /panel mientras el anterior (citas y usuarios) sigue en /.
-// En "chore: retirar diseño anterior del panel" pasa a index.html y la base vuelve a "/".
-export const BASE_PANEL = '/panel';
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename={BASE_PANEL}>
+      <BrowserRouter>
         <ProveedorSesion>
           <Rutas />
         </ProveedorSesion>

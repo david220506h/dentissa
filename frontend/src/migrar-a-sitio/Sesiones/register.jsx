@@ -1,7 +1,7 @@
 import './register.css';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useState } from 'react';
-import { register } from '../services/authService';
+import { register } from '../../services/authService';
 
 function Register({ onRegistroExitoso }) {
   const [showPassword, setShowPassword] = useState(false);

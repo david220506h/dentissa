@@ -54,7 +54,7 @@ test.describe('inicio de sesión contra Login.dc.html', () => {
       const esperado = await estilos(caso.diseno(page).first());
 
       const panel = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-      await panel.goto('/panel/iniciar-sesion');
+      await panel.goto('/iniciar-sesion');
       await panel.evaluate(() => document.fonts.ready);
       const real = await estilos(caso.panel(panel).first());
       await panel.close();
@@ -63,7 +63,7 @@ test.describe('inicio de sesión contra Login.dc.html', () => {
   }
 
   test('sin "¿Olvidaste tu contraseña?" (no tiene backend todavía)', async ({ page }) => {
-    await page.goto('/panel/iniciar-sesion');
+    await page.goto('/iniciar-sesion');
     await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
     await expect(page.getByText('¿Olvidaste tu contraseña?')).toHaveCount(0);
   });
@@ -74,7 +74,7 @@ for (const ancho of ANCHOS) {
     test.use({ viewport: { width: ancho, height: 900 } });
 
     test('accesible, sin desborde, texto ≥ 12.5 px y captura', async ({ page }) => {
-      await page.goto('/panel/iniciar-sesion');
+      await page.goto('/iniciar-sesion');
       await page.evaluate(() => document.fonts.ready);
       await sinViolacionesAxe(page);
       await sinDesbordeHorizontal(page);
@@ -91,7 +91,7 @@ for (const ancho of ANCHOS) {
     });
 
     test('errores de validación visibles y accesibles', async ({ page }) => {
-      await page.goto('/panel/iniciar-sesion');
+      await page.goto('/iniciar-sesion');
       await page.getByRole('button', { name: 'Entrar' }).click();
       await expect(page.getByLabel('Correo electrónico')).toBeFocused();
       await sinViolacionesAxe(page);
@@ -101,8 +101,8 @@ for (const ancho of ANCHOS) {
 }
 
 test('sin sesión, una ruta del panel lleva al inicio de sesión', async ({ page }) => {
-  await page.goto('/panel/agenda');
-  await expect(page).toHaveURL(/\/panel\/iniciar-sesion$/);
+  await page.goto('/agenda');
+  await expect(page).toHaveURL(/\/iniciar-sesion$/);
 });
 
 // Sesión de ejemplo solo en el navegador de prueba: sin tokens ni API (las secciones aún no piden datos)
@@ -118,7 +118,7 @@ for (const ancho of ANCHOS) {
 
     for (const ruta of ['/', '/mas', '/no-existe']) {
       test(`${ruta}: accesible, sin desborde y captura`, async ({ page }) => {
-        await page.goto(`/panel${ruta}`);
+        await page.goto(ruta);
         await expect(page.locator('h1')).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
         await sinViolacionesAxe(page);
@@ -137,7 +137,7 @@ for (const ancho of ANCHOS) {
 
     test('sin permiso: accesible, sin desborde y captura', async ({ page }) => {
       await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), { ...USUARIO_EJEMPLO, rol: 'asistente' });
-      await page.goto('/panel/equipo');
+      await page.goto('/equipo');
       await expect(page.getByRole('heading', { level: 1, name: 'No tienes acceso a esta sección' })).toBeVisible();
       await expect(page.getByText('Tu rol no incluye Equipo y usuarios.', { exact: false })).toBeVisible();
       await sinViolacionesAxe(page);
@@ -147,7 +147,7 @@ for (const ancho of ANCHOS) {
 
     test('próximamente: captura', async ({ page }) => {
       await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), USUARIO_EJEMPLO);
-      await page.goto('/panel/ofertas');
+      await page.goto('/ofertas');
       await expect(page.getByRole('heading', { level: 1, name: 'Ofertas y contenido' })).toBeVisible();
       await sinViolacionesAxe(page);
       await expect(page).toHaveScreenshot(`panel-proximamente-${ancho}.png`, { fullPage: true });
@@ -156,7 +156,7 @@ for (const ancho of ANCHOS) {
     test('inactividad: aviso a los 14 min, foco dentro y Esc lo cierra', async ({ page }) => {
       await page.clock.install();
       await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), USUARIO_EJEMPLO);
-      await page.goto('/panel/');
+      await page.goto('/');
       await expect(page.locator('h1')).toBeVisible();
       await page.clock.fastForward('13:59');
       await expect(page.getByRole('dialog')).toHaveCount(0);
