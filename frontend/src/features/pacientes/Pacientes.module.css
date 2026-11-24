@@ -193,3 +193,8 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
+
+/* Teléfonos, fechas y nombres en una línea, como en el diseño (la tabla se desplaza si no cabe) */
+.sinCorte {
+  white-space: nowrap;
+}
