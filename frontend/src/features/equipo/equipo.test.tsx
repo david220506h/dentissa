@@ -6,11 +6,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { sinViolacionesAxe } from '@dentissa/ui/prueba/axe';
 import { Rutas } from '../../app/Rutas';
 import { ProveedorSesion } from '../../app/sesion';
-import type { UsuarioApi } from './Equipo';
+import { ultimoAcceso, type UsuarioApi } from './Equipo';
 
 // Datos de ejemplo del diseño (Equipo.dc.html), con correos .test; no son reales
 const USUARIOS: UsuarioApi[] = [
-  { id: 1, nombre: 'Laura', apellido: 'Mendoza', email: 'laura@ejemplo.test', rol: 'admin', activo: true },
+  { id: 1, nombre: 'Laura', apellido: 'Mendoza', email: 'laura@ejemplo.test', rol: 'admin', activo: true, ultimoAccesoEn: '2026-11-18T14:02:00Z' },
   { id: 2, nombre: 'Mariana', apellido: 'Soto', email: 'mariana@ejemplo.test', rol: 'dentista', activo: true },
   { id: 3, nombre: 'Karla', apellido: 'Reyes', email: 'karla@ejemplo.test', rol: 'asistente', activo: true },
   { id: 4, nombre: 'Jorge', apellido: 'Pineda', email: 'jorge@ejemplo.test', rol: 'asistente', activo: false },
@@ -58,14 +58,14 @@ beforeEach(() => {
 
 const tabla = () => screen.getByRole('region', { name: 'Usuarios de la clínica' });
 const editar = async (nombre: string) => {
-  await userEvent.click(await screen.findByRole('button', { name: `Editar ${nombre}` }));
-  return screen.getByRole('region', { name: 'Editar usuario' });
+  await userEvent.click(await screen.findByRole('button', { name: `Acceso de ${nombre}` }));
+  return screen.getByRole('region', { name: 'Acceso' });
 };
 
 describe('Equipo y usuarios', () => {
   it('lista solo al personal, con rol (nombre neutro) y estado; sin pacientes', async () => {
     montar();
-    await screen.findByRole('button', { name: 'Editar Laura Mendoza' });
+    await screen.findByRole('button', { name: 'Acceso de Laura Mendoza' });
     const filas = within(tabla()).getAllByRole('row').slice(1);
     expect(filas).toHaveLength(4);
     expect(filas[0]).toHaveTextContent('Laura Mendoza');
@@ -74,7 +74,7 @@ describe('Equipo y usuarios', () => {
     expect(within(tabla()).queryByText('Paciente Ejemplo')).toBeNull();
   });
 
-  it('sin controles sin backend: invitar, editar datos, enlace de contraseña ni último acceso', async () => {
+  it('sin controles sin backend: invitar, editar datos ni enlace de contraseña', async () => {
     montar();
     const panel = await editar('Karla Reyes');
     expect(screen.queryByRole('button', { name: /Invitar/ })).toBeNull();
@@ -82,16 +82,16 @@ describe('Equipo y usuarios', () => {
     expect(within(panel).queryByRole('textbox')).toBeNull();
     expect(within(panel).queryByRole('button', { name: /Guardar/ })).toBeNull();
     expect(within(panel).queryByRole('button', { name: /Enviar enlace/ })).toBeNull();
-    expect(screen.queryByText('Último acceso')).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Editar/ })).toBeNull();
   });
 
   it('desactivar llama a PATCH /desactivar y avisa', async () => {
     montar();
     const panel = await editar('Karla Reyes');
-    expect(within(panel).getByRole('heading', { name: 'Editar usuario' })).toHaveFocus();
+    expect(within(panel).getByRole('heading', { name: 'Acceso' })).toHaveFocus();
     await userEvent.click(within(panel).getByRole('button', { name: 'Desactivar usuario' }));
     expect(servicio.authFetch).toHaveBeenCalledWith('/api/usuarios/3/desactivar', { method: 'PATCH' });
-    expect(await screen.findByText('Karla Reyes quedó inactivo. Sus sesiones se cerraron.')).toBeInTheDocument();
+    expect(await screen.findByText('La cuenta de Karla Reyes quedó inactiva. Sus sesiones se cerraron.')).toBeInTheDocument();
   });
 
   it('una cuenta inactiva se puede activar', async () => {
@@ -151,5 +151,26 @@ describe('Equipo y usuarios', () => {
     const { container } = montar();
     await editar('Karla Reyes');
     await sinViolacionesAxe(container);
+  });
+});
+
+describe('último acceso', () => {
+  // "Ahora": miércoles 18 nov 2026, 9:30 en la clínica
+  const AHORA = new Date('2026-11-18T15:30:00Z');
+
+  it('hoy, ayer o la fecha, en la zona de la clínica; sin accesos si nunca entró', () => {
+    expect(ultimoAcceso('2026-11-18T14:02:00Z', AHORA)).toBe('Hoy, 8:02');
+    expect(ultimoAcceso('2026-11-18T00:40:00Z', AHORA)).toBe('Ayer, 18:40');
+    expect(ultimoAcceso('2026-10-02T17:00:00Z', AHORA)).toBe('2 oct 2026');
+    expect(ultimoAcceso(null, AHORA)).toBe('Sin accesos');
+    expect(ultimoAcceso(undefined, AHORA)).toBe('Sin accesos');
+  });
+
+  it('se muestra en la tabla y en el panel de acceso', async () => {
+    montar();
+    const panel = await editar('Laura Mendoza');
+    expect(within(tabla()).getByRole('columnheader', { name: 'Último acceso' })).toBeInTheDocument();
+    expect(within(tabla()).getAllByText('Sin accesos').length).toBeGreaterThan(0);
+    expect(within(panel).getByText('Último acceso')).toBeInTheDocument();
   });
 });

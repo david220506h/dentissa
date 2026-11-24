@@ -2,6 +2,7 @@ import { Aviso, Avatar, Boton, CargandoLista, Insignia, MensajeEstado, Tabla, ty
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { enviarJson, obtenerJson } from '../../app/api';
+import { horaCorta, hoyIsoEnClinica, ZONA_CLINICA } from '../inicio/datos';
 import { esRolPanel, NOMBRE_ROL, type RolPanel } from '../../app/permisos';
 import { useSesion } from '../../app/sesion';
 import estilos from './Equipo.module.css';
@@ -14,16 +15,33 @@ export interface UsuarioApi {
   email: string;
   rol: string;
   activo: boolean;
+  /** Último inicio de sesión, ISO 8601 en UTC; null si nunca ha entrado. */
+  ultimoAccesoEn?: string | null;
 }
 
 // Insignia de cada rol (Equipo.dc.html): color e ícono; el nombre del rol es el neutro del panel
 const ROL: Record<RolPanel, { tono: TonoInsignia; icono: NombreIcono; descripcion: string }> = {
   admin: { tono: 'rosa', icono: 'auditoria', descripcion: 'Todo el panel, usuarios, configuración y auditoría. Consulta el expediente sin editarlo.' },
   asistente: { tono: 'azul', icono: 'equipo', descripcion: 'Agenda, solicitudes y pacientes. Ve alergias, nunca el expediente.' },
-  dentista: { tono: 'verde', icono: 'diente', descripcion: 'Su agenda y el expediente clínico completo.' },
+  // Lo que ve HOY (restricción temporal, plan 14.2): actualizar cuando tenga su agenda y el expediente (plan 14.8)
+  dentista: { tono: 'verde', icono: 'diente', descripcion: 'Su inicio, con sus citas del día.' },
 };
 
 const nombreCompleto = (u: UsuarioApi) => `${u.nombre} ${u.apellido}`.trim();
+
+const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+/** "Hoy, 8:02", "Ayer, 18:40" o "2 oct 2026" (Equipo.dc.html), en la zona de la clínica; "Sin accesos" si nunca entró. */
+export function ultimoAcceso(iso: string | null | undefined, ahora: Date): string {
+  if (!iso) return 'Sin accesos';
+  const instante = new Date(iso);
+  const dia = hoyIsoEnClinica(instante);
+  const hora = horaCorta(new Intl.DateTimeFormat('es-MX', { timeZone: ZONA_CLINICA, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(instante));
+  if (dia === hoyIsoEnClinica(ahora)) return `Hoy, ${hora}`;
+  if (dia === hoyIsoEnClinica(new Date(ahora.getTime() - 86_400_000))) return `Ayer, ${hora}`;
+  const [a, m, d] = dia.split('-').map(Number);
+  return `${d} ${MESES_CORTOS[m! - 1]} ${a}`;
+}
 
 function InsigniaRol({ rol }: { rol: RolPanel }) {
   return (
@@ -40,14 +58,14 @@ function InsigniaEstado({ activo }: { activo: boolean }) {
 /**
  * Equipo y usuarios (Equipo.dc.html), solo administración. Con la API actual: lista del personal
  * (GET /api/usuarios, sin pacientes), desactivar y reactivar (PATCH). No se muestran, por no tener
- * backend: "Invitar usuario", editar nombre, correo y rol, "Enviar enlace para nueva contraseña", ni la
- * columna "Último acceso" (la base lo guarda, pero la API no lo devuelve).
+ * backend: "Invitar usuario", editar nombre, correo y rol, ni "Enviar enlace para nueva contraseña".
  */
 export function Equipo() {
   const queryClient = useQueryClient();
   const { usuario: yo } = useSesion();
   const [elegidoId, setElegidoId] = useState<number | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [ahora] = useState(() => new Date());
   const tituloPanel = useRef<HTMLHeadingElement>(null);
 
   const usuarios = useQuery({ queryKey: ['usuarios'], queryFn: () => obtenerJson<UsuarioApi[]>('/usuarios') });
@@ -58,7 +76,8 @@ export function Equipo() {
   const cambiarAcceso = useMutation({
     mutationFn: (u: UsuarioApi) => enviarJson(`/usuarios/${u.id}/${u.activo ? 'desactivar' : 'activar'}`, 'PATCH'),
     onSuccess: async (_, u) => {
-      setAviso(u.activo ? `${nombreCompleto(u)} quedó inactivo. Sus sesiones se cerraron.` : `${nombreCompleto(u)} quedó activo.`);
+      // Sin género: el mensaje habla de la cuenta, no de la persona
+      setAviso(u.activo ? `La cuenta de ${nombreCompleto(u)} quedó inactiva. Sus sesiones se cerraron.` : `La cuenta de ${nombreCompleto(u)} quedó activa.`);
       await queryClient.invalidateQueries({ queryKey: ['usuarios'] });
     },
   });
@@ -117,7 +136,7 @@ export function Equipo() {
               />
             )}
             {usuarios.data && (
-              <Tabla etiqueta="Usuarios de la clínica" columnas={['Persona', 'Rol', 'Estado', '']} anchoMinimo={560}>
+              <Tabla etiqueta="Usuarios de la clínica" columnas={['Persona', 'Rol', 'Estado', 'Último acceso', '']} anchoMinimo={600}>
                 {personal.map((u) => (
                   <tr key={u.id} className={u.id === elegidoId ? estilos.filaElegida : undefined}>
                     <td>
@@ -125,7 +144,11 @@ export function Equipo() {
                         <Avatar nombre={nombreCompleto(u)} tamano={36} />
                         <div className={estilos.personaDatos}>
                           <div className={estilos.personaNombre}>{nombreCompleto(u)}</div>
-                          <div className={estilos.personaCorreo}>{u.email}</div>
+                          <div className={estilos.personaCorreo}>
+                            {/* Si no cabe junto al panel, el correo solo se parte antes de la arroba */}
+                            {u.email.split('@')[0]}
+                            <wbr />@{u.email.split('@').slice(1).join('@')}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -135,18 +158,19 @@ export function Equipo() {
                     <td>
                       <InsigniaEstado activo={u.activo} />
                     </td>
+                    <td className={estilos.acceso}>{ultimoAcceso(u.ultimoAccesoEn, ahora)}</td>
                     <td className={estilos.accion}>
+                      {/* "Acceso" (no "Editar") mientras no exista el endpoint para editar nombre, correo y rol */}
                       <Boton
                         variante="texto"
-                        icono="editar"
-                        aria-label={`Editar ${nombreCompleto(u)}`}
+                        aria-label={`Acceso de ${nombreCompleto(u)}`}
                         onClick={() => {
                           cambiarAcceso.reset();
                           setAviso(null);
                           setElegidoId(u.id);
                         }}
                       >
-                        Editar
+                        Acceso
                       </Boton>
                     </td>
                   </tr>
@@ -158,10 +182,10 @@ export function Equipo() {
 
         {elegido && (
           <div className={estilos.lateral}>
-            <section className={estilos.tarjeta} aria-labelledby="titulo-editar">
+            <section className={estilos.tarjeta} aria-labelledby="titulo-acceso">
               <div className={estilos.encabezado}>
-                <h2 id="titulo-editar" className={estilos.tituloTarjeta} ref={tituloPanel} tabIndex={-1}>
-                  Editar usuario
+                <h2 id="titulo-acceso" className={estilos.tituloTarjeta} ref={tituloPanel} tabIndex={-1}>
+                  Acceso
                 </h2>
                 <Insignia tono="azul">{nombreCompleto(elegido)}</Insignia>
               </div>
@@ -177,14 +201,17 @@ export function Equipo() {
                   </dd>
                 </div>
                 <div>
+                  <dt>Último acceso</dt>
+                  <dd>{ultimoAcceso(elegido.ultimoAccesoEn, ahora)}</dd>
+                </div>
+                <div>
                   <dt>Estado</dt>
                   <dd>
                     <InsigniaEstado activo={elegido.activo} />
                   </dd>
                 </div>
               </dl>
-              <div className={estilos.acceso}>
-                <h3 className={estilos.accesoTitulo}>Acceso</h3>
+              <div className={estilos.accesoAcciones}>
                 {esUltimoAdmin && (
                   <Aviso tono="advertencia">
                     Es la única cuenta de administración activa. Para desactivarla, primero debe haber otra cuenta de administración activa.

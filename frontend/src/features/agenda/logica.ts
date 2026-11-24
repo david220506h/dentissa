@@ -160,7 +160,7 @@ export const nombreDentista = (d: Dentista) => [d.titulo, d.nombre, d.apellido].
 
 /** Motivos de cancelación de CitaFormularios.dc.html (se guardan en la cita y en su historial). */
 export const MOTIVOS_CANCELACION = [
-  'La paciente avisó que no puede',
+  'La persona avisó que no puede asistir',
   'La clínica debe reprogramar',
   'Duplicada o error de captura',
   'Otro',

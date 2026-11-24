@@ -3,18 +3,20 @@ import { ANCHOS, abrirDiseno, sesionDeEjemplo, sinDesbordeHorizontal, sinViolaci
 
 // Equipo y usuarios con la API simulada y las personas de ejemplo del diseño (correos .test), no reales.
 const USUARIOS = [
-  { id: 11, nombre: 'Laura', apellido: 'Mendoza', email: 'laura.mendoza@example.com', rol: 'admin', activo: true },
-  { id: 12, nombre: 'Mariana', apellido: 'Soto', email: 'mariana.soto@example.com', rol: 'dentista', activo: true },
-  { id: 13, nombre: 'Karla', apellido: 'Reyes', email: 'karla.reyes@example.com', rol: 'asistente', activo: true },
-  { id: 14, nombre: 'Jorge', apellido: 'Pineda', email: 'jorge.pineda@example.com', rol: 'asistente', activo: false },
+  { id: 11, nombre: 'Laura', apellido: 'Mendoza', email: 'laura.mendoza@example.com', rol: 'admin', activo: true, ultimoAccesoEn: '2026-11-18T14:02:00Z' },
+  { id: 12, nombre: 'Mariana', apellido: 'Soto', email: 'mariana.soto@example.com', rol: 'dentista', activo: true, ultimoAccesoEn: '2026-11-18T13:55:00Z' },
+  { id: 13, nombre: 'Karla', apellido: 'Reyes', email: 'karla.reyes@example.com', rol: 'asistente', activo: true, ultimoAccesoEn: '2026-11-18T00:40:00Z' },
+  { id: 14, nombre: 'Jorge', apellido: 'Pineda', email: 'jorge.pineda@example.com', rol: 'asistente', activo: false, ultimoAccesoEn: '2026-10-02T17:00:00Z' },
 ];
 
 async function abrirEquipo(page: Page, ancho: number) {
+  // "Ahora": miércoles 18 nov 2026, 9:30 en la clínica ("Hoy, 8:02" como en el diseño)
+  await page.clock.install({ time: new Date('2026-11-18T15:30:00Z') });
   await page.setViewportSize({ width: ancho, height: 900 });
   // La sesión es de otra cuenta de administración: así Laura es "la única administración activa", como en el diseño
   await sesionDeEjemplo(page, { rol: 'admin', usuarios: USUARIOS });
   await page.goto('/equipo');
-  await page.getByRole('button', { name: 'Editar Laura Mendoza' }).waitFor();
+  await page.getByRole('button', { name: 'Acceso de Laura Mendoza' }).waitFor();
   await page.evaluate(() => document.fonts.ready);
 }
 
@@ -55,7 +57,7 @@ type Caso = { nombre: string; diseno: (p: Page) => Locator; panel: (p: Page) => 
 const filaDiseno = (p: Page, nombre: string) => p.locator('tr', { hasText: nombre });
 const filaPanel = (p: Page, nombre: string) => p.getByRole('region', { name: 'Usuarios de la clínica' }).locator('tr', { hasText: nombre });
 const panelDiseno = (p: Page) => p.getByRole('heading', { name: 'Editar usuario' }).locator('xpath=ancestor::section[1]');
-const panelPanel = (p: Page) => p.getByRole('region', { name: 'Editar usuario' });
+const panelPanel = (p: Page) => p.getByRole('region', { name: 'Acceso' });
 
 const CASOS: Caso[] = [
   { nombre: 'título', diseno: (p) => p.locator('main h1'), panel: (p) => p.locator('main h1'), ignorar: TEXTO },
@@ -126,9 +128,11 @@ const CASOS: Caso[] = [
     panel: (p) => filaPanel(p, 'Jorge Pineda').getByText('Inactivo', { exact: true }),
   },
   {
-    nombre: 'botón Editar',
+    // El panel lo llama "Acceso" mientras no exista la edición; se comparan los estilos del botón
+    nombre: 'botón Acceso (el diseño dice "Editar")',
     diseno: (p) => filaDiseno(p, 'Karla Reyes').getByRole('link', { name: 'Editar' }),
-    panel: (p) => filaPanel(p, 'Karla Reyes').getByRole('button', { name: /Editar/ }),
+    panel: (p) => filaPanel(p, 'Karla Reyes').getByRole('button', { name: /Acceso/ }),
+    ignorar: ANCHO,
   },
   {
     nombre: 'fila elegida',
@@ -145,18 +149,24 @@ const CASOS: Caso[] = [
   },
   { nombre: 'panel: caja', diseno: panelDiseno, panel: panelPanel, ignorar: CAJA, elegir: true },
   {
-    nombre: 'panel: título Acceso',
-    diseno: (p) => panelDiseno(p).getByText('Acceso', { exact: true }),
-    panel: (p) => panelPanel(p).getByText('Acceso', { exact: true }),
+    nombre: 'panel: título (el diseño dice "Editar usuario")',
+    diseno: (p) => panelDiseno(p).getByRole('heading', { name: 'Editar usuario' }),
+    panel: (p) => panelPanel(p).getByRole('heading', { name: 'Acceso' }),
     ignorar: TEXTO,
     elegir: true,
   },
   {
-    nombre: 'panel: separador de Acceso',
+    nombre: 'panel: separador de la sección de acceso',
     diseno: (p) => panelDiseno(p).getByText('Acceso', { exact: true }).locator('xpath=..'),
-    panel: (p) => panelPanel(p).getByText('Acceso', { exact: true }).locator('xpath=..'),
+    panel: (p) => panelPanel(p).getByRole('button', { name: 'Desactivar usuario' }).locator('xpath=..'),
     ignorar: CAJA,
     elegir: true,
+  },
+  {
+    nombre: 'último acceso en la tabla',
+    diseno: (p) => filaDiseno(p, 'Laura Mendoza').getByText('Hoy, 8:02', { exact: true }),
+    panel: (p) => filaPanel(p, 'Laura Mendoza').getByText('Hoy, 8:02', { exact: true }),
+    ignorar: ANCHO,
   },
   {
     nombre: 'panel: Desactivar (deshabilitado por última administración)',
@@ -182,7 +192,7 @@ test.describe('Equipo frente a Equipo.dc.html', () => {
       await abrirDiseno(diseno, 'Equipo.dc.html');
       const esperado = await estilos(caso.diseno(diseno), caso.ignorar);
       await abrirEquipo(page, 1440);
-      if (caso.elegir) await page.getByRole('button', { name: 'Editar Laura Mendoza' }).click();
+      if (caso.elegir) await page.getByRole('button', { name: 'Acceso de Laura Mendoza' }).click();
       expect(await estilos(caso.panel(page), caso.ignorar)).toEqual(esperado);
     });
   }
@@ -191,8 +201,8 @@ test.describe('Equipo frente a Equipo.dc.html', () => {
 for (const ancho of ANCHOS) {
   test(`Equipo a ${ancho} px: accesible, sin desborde, texto ≥ 12.5 px y captura`, async ({ page }) => {
     await abrirEquipo(page, ancho);
-    await page.getByRole('button', { name: 'Editar Laura Mendoza' }).click();
-    await expect(panelPanel(page).getByRole('heading', { name: 'Editar usuario' })).toBeFocused();
+    await page.getByRole('button', { name: 'Acceso de Laura Mendoza' }).click();
+    await expect(panelPanel(page).getByRole('heading', { name: 'Acceso' })).toBeFocused();
     await sinViolacionesAxe(page);
     await sinDesbordeHorizontal(page);
     const menor = await page.evaluate(() => {
@@ -210,7 +220,7 @@ for (const ancho of ANCHOS) {
 
 test('desactivar a una persona: aviso de éxito', async ({ page }) => {
   await abrirEquipo(page, 1440);
-  await page.getByRole('button', { name: 'Editar Karla Reyes' }).click();
+  await page.getByRole('button', { name: 'Acceso de Karla Reyes' }).click();
   await panelPanel(page).getByRole('button', { name: 'Desactivar usuario' }).click();
-  await expect(page.getByText('Karla Reyes quedó inactivo. Sus sesiones se cerraron.')).toBeVisible();
+  await expect(page.getByText('La cuenta de Karla Reyes quedó inactiva. Sus sesiones se cerraron.')).toBeVisible();
 });

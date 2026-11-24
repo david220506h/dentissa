@@ -15,7 +15,7 @@ export const ESTADOS_PIEZA: Record<EstadoPieza, { codigo: string; texto: string 
   ausente: { codigo: 'Au', texto: 'Ausente' },
 };
 
-// Numeración internacional (FDI), vista de frente: la derecha del paciente queda a la izquierda.
+// Numeración internacional (FDI), vista de frente: la derecha de la persona queda a la izquierda.
 const SUPERIOR_DERECHA = [18, 17, 16, 15, 14, 13, 12, 11];
 const SUPERIOR_IZQUIERDA = [21, 22, 23, 24, 25, 26, 27, 28];
 const INFERIOR_DERECHA = [48, 47, 46, 45, 44, 43, 42, 41];
@@ -71,8 +71,8 @@ export function Odontograma({ piezas, seleccionada, alSeleccionar }: Odontograma
 
   const lados = (
     <div className={estilos.lados} aria-hidden="true">
-      <span>Derecha del paciente</span>
-      <span>Izquierda del paciente</span>
+      <span>Derecha de la persona</span>
+      <span>Izquierda de la persona</span>
     </div>
   );
 
@@ -93,14 +93,14 @@ export function Odontograma({ piezas, seleccionada, alSeleccionar }: Odontograma
         <div className={estilos.arcadas}>
           {lados}
           <div className={estilos.arcada}>
-            <div className={estilos.cuadrante} role="group" aria-label="Superior, derecha del paciente">{SUPERIOR_DERECHA.map(pieza)}</div>
+            <div className={estilos.cuadrante} role="group" aria-label="Superior, derecha de la persona">{SUPERIOR_DERECHA.map(pieza)}</div>
             <div className={estilos.separador} aria-hidden="true" />
-            <div className={estilos.cuadrante} role="group" aria-label="Superior, izquierda del paciente">{SUPERIOR_IZQUIERDA.map(pieza)}</div>
+            <div className={estilos.cuadrante} role="group" aria-label="Superior, izquierda de la persona">{SUPERIOR_IZQUIERDA.map(pieza)}</div>
           </div>
           <div className={estilos.arcada}>
-            <div className={estilos.cuadrante} role="group" aria-label="Inferior, derecha del paciente">{INFERIOR_DERECHA.map(pieza)}</div>
+            <div className={estilos.cuadrante} role="group" aria-label="Inferior, derecha de la persona">{INFERIOR_DERECHA.map(pieza)}</div>
             <div className={estilos.separador} aria-hidden="true" />
-            <div className={estilos.cuadrante} role="group" aria-label="Inferior, izquierda del paciente">{INFERIOR_IZQUIERDA.map(pieza)}</div>
+            <div className={estilos.cuadrante} role="group" aria-label="Inferior, izquierda de la persona">{INFERIOR_IZQUIERDA.map(pieza)}</div>
           </div>
           {lados}
         </div>

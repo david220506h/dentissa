@@ -89,9 +89,10 @@ const CASOS: Caso[] = [
     ignorar: ANCHO,
   },
   {
-    nombre: 'hoja: rol',
+    nombre: 'hoja: rol (el diseño dice "Administradora")',
     diseno: (p) => hojaDiseno(p).getByText('Administradora'),
-    catalogo: (p) => hojaCatalogo(p).getByText('Administradora'),
+    // El panel usa el nombre neutro del rol ("Administración"); se comparan los estilos del texto
+    catalogo: (p) => hojaCatalogo(p).getByText('Administración'),
     hoja: true,
     ignorar: ANCHO,
   },

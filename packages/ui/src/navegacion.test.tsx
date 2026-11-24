@@ -42,7 +42,7 @@ describe('MenuLateral', () => {
       <MenuLateral
         grupos={grupos}
         activo="agenda"
-        usuario={{ nombre: 'Laura Mendoza', rol: 'Administradora' }}
+        usuario={{ nombre: 'Laura Mendoza', rol: 'Administración' }}
         alCerrarSesion={alCerrarSesion}
       />,
     );
@@ -187,7 +187,7 @@ describe('accesibilidad (axe)', () => {
         <MenuLateral
           grupos={grupos}
           activo="inicio"
-          usuario={{ nombre: 'Laura Mendoza', rol: 'Administradora' }}
+          usuario={{ nombre: 'Laura Mendoza', rol: 'Administración' }}
           alCerrarSesion={() => {}}
         />
         <main>

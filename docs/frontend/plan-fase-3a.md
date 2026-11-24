@@ -436,6 +436,16 @@ Respondidas por las decisiones del arquitecto: 1 (`CLAUDE.md`), 2 (landing y reg
 - Pruebas (Testcontainers): rango inclusivo en la zona de la clínica, cita a las 23:30 local, filtro por dentista, 400 por rango inválido, y sin parámetros igual que antes.
 - El panel pasa a pedir la semana visible (Agenda) y el día de hoy más las pendientes futuras (Inicio). Commit sugerido: `feat(citas): filtro por fechas y dentista en GET /api/citas`.
 
+### 14.8 Textos que dependen de lo que existe hoy
+
+| Dónde | Texto hoy | Cuándo cambiar | Texto del diseño |
+|---|---|---|---|
+| Equipo · "Qué puede hacer cada rol" · Dentista (`features/equipo/Equipo.tsx`, constante `ROL`) | "Su inicio, con sus citas del día." | Cuando el dentista tenga su agenda (`mi-agenda`) y el expediente en el panel | "Su agenda y el expediente clínico completo." |
+| Equipo · botón de cada fila y título del panel | "Acceso" | Cuando exista el endpoint para editar nombre, correo y rol | "Editar" y "Editar usuario" |
+| Inicio · indicador | "Sin confirmar" | Cuando la API tenga el estado del correo de confirmación | "Por llamar" (celular) y "Citas sin confirmar · Pendientes de llamada" |
+
+**Lenguaje sin género (decisión 2026-11-23):** el panel usa formas neutras: "La persona avisó que no puede asistir", "derecha de la persona" (odontograma), "Administración" como nombre del rol, y los mensajes de Equipo hablan de la cuenta ("La cuenta de … quedó inactiva"). Lo que el diseño escribe con género se reporta al arquitecto.
+
 ### 14.6 Tareas con fecha
 
 | Fecha | Tarea | Motivo |

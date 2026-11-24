@@ -7,7 +7,7 @@ export interface UsuarioPanel extends UsuarioSesion {
   rol: RolPanel;
 }
 
-/** La cuenta existe pero no es del personal (p. ej., un paciente): el panel no la deja entrar. */
+/** La cuenta existe pero no es del personal (p. ej., una cuenta de paciente): el panel no la deja entrar. */
 export class CuentaSinAccesoAlPanel extends Error {
   constructor() {
     super('Acceso solo para el personal de la clínica.');

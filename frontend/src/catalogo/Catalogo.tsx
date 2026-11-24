@@ -134,7 +134,7 @@ const ENLACE_MUESTRA: ComponenteEnlace = ({ href, children, ...resto }) => (
   </a>
 );
 
-/** Hoja "Más" de la administradora (Movil2), con los datos de ejemplo del diseño. */
+/** Hoja "Más" de la cuenta de administración (Movil2), con los datos de ejemplo del diseño. */
 function HojaDeMuestra() {
   const [abierta, setAbierta] = useState(false);
   return (
@@ -145,7 +145,7 @@ function HojaDeMuestra() {
       <HojaMas
         abierta={abierta}
         alCerrar={() => setAbierta(false)}
-        usuario={{ nombre: 'Laura Mendoza', rol: 'Administradora' }}
+        usuario={{ nombre: 'Laura Mendoza', rol: 'Administración' }}
         elementos={[
           { id: 'servicios', etiqueta: 'Servicios', icono: 'servicios', href: '#' },
           { id: 'inventario', etiqueta: 'Inventario', icono: 'inventario', href: '#' },
@@ -406,7 +406,7 @@ export function Catalogo() {
           <MenuLateral
             grupos={GRUPOS}
             activo="inicio"
-            usuario={{ nombre: 'Laura Mendoza', rol: 'Administradora' }}
+            usuario={{ nombre: 'Laura Mendoza', rol: 'Administración' }}
             alCerrarSesion={() => {}}
           />
         </div>

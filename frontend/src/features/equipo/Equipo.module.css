@@ -98,6 +98,11 @@
   text-align: right;
 }
 
+/* "Hoy, 8:02" en una sola línea (Equipo.dc.html) */
+.acceso {
+  white-space: nowrap;
+}
+
 .roles {
   display: flex;
   flex-direction: column;
@@ -135,19 +140,12 @@
   overflow-wrap: anywhere;
 }
 
-.acceso {
+.accesoAcciones {
   display: flex;
   flex-direction: column;
   gap: var(--espacio-10);
   padding-top: var(--espacio-16);
   border-top: 1px solid var(--borde);
-}
-
-.accesoTitulo {
-  margin: 0;
-  font-size: var(--texto-15);
-  font-weight: var(--peso-extranegrita);
-  color: var(--texto);
 }
 
 .nota {

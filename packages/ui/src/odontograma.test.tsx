@@ -16,7 +16,7 @@ describe('Odontograma', () => {
     expect(screen.getAllByRole('button')).toHaveLength(32);
     expect(screen.getByRole('button', { name: 'Diente 36, caries' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Diente 17, sano' })).toBeInTheDocument();
-    const superiorDerecha = screen.getByRole('group', { name: 'Superior, derecha del paciente' });
+    const superiorDerecha = screen.getByRole('group', { name: 'Superior, derecha de la persona' });
     expect(within(superiorDerecha).getAllByRole('button').map((b) => b.textContent?.match(/\d+/)?.[0])).toEqual([
       '18', '17', '16', '15', '14', '13', '12', '11',
     ]);
