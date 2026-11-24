@@ -1,0 +1,36 @@
+# Render (Blueprint): API de Dentissa en el plan gratuito. Guía: docs/DESPLIEGUE.md.
+# Los secretos llevan "sync: false": Render los pide al crear el servicio y NUNCA van en este archivo.
+services:
+  - type: web
+    name: dentissa-api
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    autoDeploy: true
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: BaseDeDatos__AplicarMigracionesAlArrancar
+        value: "true"
+      # Vercel → Render: dos proxies delante de la API (IP real para el límite de intentos y la bitácora)
+      - key: Proxy__Saltos
+        value: "2"
+      # Correo apagado: la bandeja de salida guarda los avisos sin enviarlos
+      - key: Correo__Habilitado
+        value: "false"
+      # Datos ficticios de la demo, solo si la base está vacía
+      - key: DEMO_SEMBRAR
+        value: "true"
+      # Secretos: se pegan en el panel de Render (docs/DESPLIEGUE.md, paso 2)
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: JwtSettings__SecretKey
+        sync: false
+      - key: DEMO_PASSWORD_ADMIN
+        sync: false
+      - key: DEMO_PASSWORD_PERSONAL
+        sync: false

@@ -36,13 +36,23 @@ namespace backend.Services
 
         public sealed record Cuenta(string Rol, string Nombre, string Correo, string Password);
 
-        /// <summary>Siembra y devuelve las cuentas del personal con su contraseña generada.</summary>
-        public async Task<IReadOnlyList<Cuenta>> EjecutarAsync(CancellationToken ct = default)
+/// <summary>Contraseñas fijas (despliegue): administración y una compartida para las otras 4 cuentas.</summary>
+        public sealed record ContrasenasFijas(string Administracion, string Personal);
+
+        /// <summary>¿La base está vacía de cuentas, pacientes y citas?</summary>
+        public async Task<bool> BaseVaciaAsync(CancellationToken ct = default) =>
+            !await _db.Usuarios.IgnoreQueryFilters().AnyAsync(ct) && !await _db.Pacientes.IgnoreQueryFilters().AnyAsync(ct)
+            && !await _db.Citas.AnyAsync(ct);
+
+        /// <summary>
+        /// Siembra y devuelve las cuentas del personal. Sin <paramref name="fijas"/>, las contraseñas se generan
+        /// (demo local, se muestran una vez); con ellas, se usan esas y nadie las imprime (despliegue).
+        /// </summary>
+        public async Task<IReadOnlyList<Cuenta>> EjecutarAsync(ContrasenasFijas? fijas = null, CancellationToken ct = default)
         {
-            if (!_config.GetValue<bool>("Demo:Habilitada"))
+            if (fijas is null && !_config.GetValue<bool>("Demo:Habilitada"))
                 throw new InvalidOperationException("El sembrado de la demo requiere Demo:Habilitada=true.");
-            if (await _db.Usuarios.IgnoreQueryFilters().AnyAsync(ct) || await _db.Pacientes.IgnoreQueryFilters().AnyAsync(ct)
-                || await _db.Citas.AnyAsync(ct))
+            if (!await BaseVaciaAsync(ct))
                 throw new InvalidOperationException(
                     "La base ya tiene cuentas, pacientes o citas: el sembrado de la demo solo corre sobre una base vacía.");
 
@@ -68,7 +78,7 @@ namespace backend.Services
             var cuentas = new List<Cuenta>();
             Usuario Personal(string rol, string nombre, string apellido, string correo)
             {
-                var password = GenerarPassword();
+                var password = fijas is null ? GenerarPassword() : rol == Roles.Admin ? fijas.Administracion : fijas.Personal;
                 cuentas.Add(new Cuenta(rol, $"{nombre} {apellido}", correo, password));
                 var u = new Usuario
                 {
