@@ -465,6 +465,11 @@
   background: var(--sitio-tinte);
 }
 
+/* Dos secciones blancas seguidas no suman su separación */
+.seccion:not(.seccionTinte) + .seccion:not(.seccionTinte) {
+  padding-top: 0;
+}
+
 .cabezaSeccion {
   max-width: 720px;
   margin-bottom: clamp(2rem, 1rem + 3vw, 3.5rem);
@@ -663,7 +668,7 @@
 
 /* Cierre */
 .cierre {
-  padding: 0 0 var(--sitio-seccion);
+  padding: var(--sitio-seccion) 0;
 }
 
 .cierreInterior {
@@ -1046,9 +1051,218 @@
   color: var(--sitio-acento);
 }
 
+/* ── Franja de confianza ─────────────────────────────── */
+.franja {
+  position: relative;
+  z-index: 1;
+  margin-top: calc(var(--sitio-seccion) * -0.5);
+}
+
+.franjaLista {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--espacio-8);
+  margin: 0 auto;
+  list-style: none;
+}
+
+.franjaLista li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-14);
+  padding: var(--espacio-20);
+  border-radius: var(--sitio-radio-tarjeta-chica);
+  background: var(--sitio-blanco);
+  border: 1px solid var(--sitio-borde);
+  box-shadow: var(--sitio-sombra-2);
+  font-size: var(--sitio-pequeno);
+  line-height: 1.5;
+  color: var(--sitio-texto-2);
+}
+
+.franjaLista strong {
+  display: block;
+  margin-bottom: var(--espacio-2);
+  font-size: var(--texto-16);
+  color: var(--sitio-texto);
+}
+
+.franjaIcono {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radio-circulo);
+  background: var(--sitio-tinte);
+  color: var(--sitio-accion);
+}
+
+/* Carta: precio y "Solicitar" */
+.cartaDerecha {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--espacio-2);
+}
+
+.solicitarServicio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-4);
+  min-height: var(--alto-toque);
+  padding: 0 var(--espacio-12);
+  margin-right: calc(var(--espacio-12) * -1);
+  border-radius: var(--sitio-radio-pildora);
+  font-size: var(--sitio-pequeno);
+  font-weight: var(--peso-negrita);
+  color: var(--sitio-accion);
+  text-decoration: none;
+  transition: background-color var(--sitio-dur-corta) var(--sitio-ease);
+}
+
+.solicitarServicio:hover {
+  background: var(--sitio-tinte);
+}
+
+.leyenda {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-8);
+  margin: var(--espacio-24) 0 0;
+  padding: var(--espacio-4) var(--espacio-14);
+  border-radius: var(--sitio-radio-pildora);
+  background: var(--sitio-aviso-fondo);
+  color: var(--sitio-aviso-texto);
+  font-size: var(--sitio-mini);
+  font-weight: var(--peso-negrita);
+}
+
+/* Equipo */
+.equipo {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 0.5rem + 2vw, 2rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.equipo li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(1.75rem, 1rem + 2vw, 2.5rem) var(--espacio-20);
+  border-radius: var(--sitio-radio-tarjeta);
+  background: var(--sitio-tinte-3);
+  border: 1px solid var(--sitio-borde);
+  text-align: center;
+}
+
+.equipo p {
+  margin: var(--espacio-4) 0 0;
+  font-size: var(--sitio-pequeno);
+  color: var(--sitio-texto-2);
+}
+
+.iniciales {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  margin-bottom: var(--espacio-18);
+  border-radius: var(--radio-circulo);
+  background: var(--sitio-tinte-2);
+  box-shadow: inset 0 0 0 3px var(--sitio-blanco), 0 0 0 2px var(--sitio-acento), var(--sitio-sombra-2);
+  font-size: var(--texto-28);
+  font-weight: var(--peso-extranegrita);
+  letter-spacing: var(--sitio-tracking-titulo);
+  color: var(--sitio-accion);
+}
+
+/* Preguntas frecuentes */
+.preguntasRejilla {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: start;
+  gap: clamp(2rem, 1rem + 4vw, 5rem);
+}
+
+.preguntasRejilla .cabezaSeccion {
+  margin-bottom: 0;
+}
+
+.acordeon {
+  display: grid;
+  gap: var(--espacio-10);
+}
+
+.pregunta {
+  border-radius: var(--sitio-radio-tarjeta-chica);
+  background: var(--sitio-blanco);
+  border: 1px solid var(--sitio-borde);
+  transition: box-shadow var(--sitio-dur-corta) var(--sitio-ease);
+}
+
+.pregunta[data-abierta] {
+  box-shadow: var(--sitio-sombra-2);
+}
+
+.pregunta h3 {
+  font-size: var(--texto-17) !important;
+}
+
+.pregunta button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-16);
+  width: 100%;
+  min-height: 60px;
+  padding: var(--espacio-14) var(--espacio-20);
+  border: 0;
+  border-radius: var(--sitio-radio-tarjeta-chica);
+  background: transparent;
+  color: var(--sitio-texto);
+  font: inherit;
+  font-weight: var(--peso-negrita);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pregunta button svg {
+  flex: 0 0 auto;
+  color: var(--sitio-accion);
+  transition: rotate var(--sitio-dur-corta) var(--sitio-ease);
+}
+
+.pregunta[data-abierta] button svg {
+  rotate: 45deg;
+}
+
+.respuesta p {
+  max-width: var(--sitio-medida);
+  margin: 0;
+  padding: 0 var(--espacio-20) var(--espacio-20);
+  color: var(--sitio-texto-2);
+}
+
 /* ── Responsivo ─────────────────────────────────────────── */
 @media (max-width: 960px) {
+  .franja {
+    margin-top: 0;
+    padding-top: var(--espacio-24);
+  }
+
+  .franjaLista {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .heroRejilla,
+  .preguntasRejilla,
   .ubicacion,
   .formularioRejilla {
     grid-template-columns: minmax(0, 1fr);
@@ -1119,7 +1333,8 @@
     font-size: var(--texto-20);
   }
 
-  .carta {
+  .carta,
+  .equipo {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -1176,13 +1391,21 @@
     bottom: 0;
   }
 
-  .pieInterior {
+  .pieInterior,
+  .franjaLista {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .cartaFila {
     flex-direction: column;
     gap: var(--espacio-4);
+  }
+
+  .cartaDerecha {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
   }
 }
 
