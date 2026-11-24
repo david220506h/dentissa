@@ -152,7 +152,7 @@ describe('Nueva cita', () => {
     await userEvent.type(within(dialogo).getByLabelText('Paciente'), 'Rosa');
     await userEvent.click(await within(dialogo).findByRole('button', { name: /Rosa Aguilar/ }));
     expect(within(dialogo).getByText('Alergia: Penicilina')).toBeInTheDocument();
-    await userEvent.click(await within(dialogo).findByRole('radio', { name: '10:00' }));
+    await userEvent.selectOptions(await within(dialogo).findByLabelText('Horario libre'), '10:00');
     await userEvent.selectOptions(within(dialogo).getByLabelText('Dentista'), 'Dr. Luis Lara');
     await userEvent.click(within(dialogo).getByLabelText(/La persona está en la clínica/));
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Guardar cita' }));
@@ -170,12 +170,13 @@ describe('Nueva cita', () => {
     const dialogo = await abrirNuevaCita();
     await userEvent.type(within(dialogo).getByLabelText('Paciente'), 'Rosa');
     await userEvent.click(await within(dialogo).findByRole('button', { name: /Rosa Aguilar/ }));
-    await userEvent.click(await within(dialogo).findByRole('radio', { name: '10:00' }));
+    await userEvent.selectOptions(await within(dialogo).findByLabelText('Horario libre'), '10:00');
     await userEvent.click(within(dialogo).getByLabelText(/Crear ya confirmada/));
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Guardar cita' }));
 
-    expect(await within(dialogo).findByText('Ese horario ya no está libre')).toBeInTheDocument();
-    expect(within(dialogo).getByText(/Tus datos siguen aquí/)).toBeInTheDocument();
+    expect(await within(dialogo).findByText(/Ese horario ya no está libre/)).toBeInTheDocument();
+    expect(within(dialogo).getByText(/Tus datos siguen/)).toBeInTheDocument();
+    expect(within(dialogo).getByLabelText('Elige otro horario libre')).toHaveValue('12:00');
     await userEvent.click(await within(dialogo).findByRole('button', { name: 'Guardar en 12:00' }));
 
     expect(await screen.findByText('Cita creada y confirmada.')).toBeInTheDocument();
@@ -232,7 +233,7 @@ describe('Diálogo «Cita»: acciones según la hora', () => {
     await userEvent.click(within(await screen.findByRole('dialog', { name: 'Cita' })).getByRole('button', { name: 'Reagendar' }));
     const reagendar = await screen.findByRole('dialog', { name: 'Reagendar cita' });
     expect(within(reagendar).getByText('Confirmada')).toBeInTheDocument();
-    await userEvent.click(await within(reagendar).findByRole('radio', { name: '13:00' }));
+    await userEvent.selectOptions(await within(reagendar).findByLabelText('Horario libre'), '13:00');
     await userEvent.click(within(reagendar).getByRole('button', { name: 'Reagendar' }));
     expect(await screen.findByText('Cita reagendada.')).toBeInTheDocument();
     expect(enviados()).toContainEqual({

@@ -1,8 +1,22 @@
-import { Aviso, Boton, CampoAreaTexto, CampoSeleccion, CampoTexto, ChipAlergia, Dialogo, InsigniaEstadoCita } from '@dentissa/ui';
+import {
+  Aviso,
+  Boton,
+  CampoAreaTexto,
+  CampoSeleccion,
+  CampoTexto,
+  ChipAlergia,
+  Dialogo,
+  InsigniaEstadoCita,
+} from '@dentissa/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useId, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { enviarJson, ErrorApi, mensajeDe, obtenerJson } from '../../app/api';
-import { fechaHoraCorta, isoDeApi, MOTIVOS_CANCELACION, type CitaAgenda } from '../agenda/logica';
+import {
+  fechaHoraCorta,
+  isoDeApi,
+  MOTIVOS_CANCELACION,
+  type CitaAgenda,
+} from '../agenda/logica';
 import {
   accionesDe,
   alternativas,
@@ -27,9 +41,16 @@ const invalidarAgenda = async (qc: ReturnType<typeof useQueryClient>) => {
   await qc.invalidateQueries({ queryKey: ['pacientes'] });
 };
 
-const esConflicto = (e: unknown) => e instanceof ErrorApi && e.estado === 409 && e.codigo === 'HORARIO_OCUPADO';
+const esConflicto = (e: unknown) =>
+  e instanceof ErrorApi && e.estado === 409 && e.codigo === 'HORARIO_OCUPADO';
 
-function Resumen({ cita, conDentista = false }: { cita: CitaAgenda; conDentista?: boolean }) {
+function Resumen({
+  cita,
+  conDentista = false,
+}: {
+  cita: CitaAgenda;
+  conDentista?: boolean;
+}) {
   return (
     <div className={estilos.resumen}>
       <b>{cita.paciente}</b> · {cita.servicio}
@@ -43,68 +64,94 @@ function Resumen({ cita, conDentista = false }: { cita: CitaAgenda; conDentista?
 function useDisponibilidad(fecha: string, servicioId: number | null) {
   return useQuery({
     queryKey: ['disponibilidad', fecha, servicioId],
-    queryFn: () => obtenerJson<HorarioLibre[]>(`/agenda/disponibilidad?fecha=${fecha}&servicioId=${servicioId}`),
+    queryFn: () =>
+      obtenerJson<HorarioLibre[]>(
+        `/agenda/disponibilidad?fecha=${fecha}&servicioId=${servicioId}`,
+      ),
     enabled: !!fecha && !!servicioId,
     retry: false,
   });
 }
 
-/** Horarios libres como botones de opción (44 px), con la etiqueta del grupo. */
+const corta = (h: string) => h.replace(/^0(\d)/, '$1');
+
+/** Horario libre (select del diseño). Sin horarios, una nota en lugar del campo. */
 function HorariosLibres({
   libres,
   elegido,
   alElegir,
   cargando,
   error,
+  etiqueta = 'Horario libre',
 }: {
   libres: HorarioLibre[] | undefined;
   elegido: string;
   alElegir: (hora: string) => void;
   cargando: boolean;
   error: unknown;
+  etiqueta?: string;
 }) {
-  const nombre = useId();
+  if (cargando)
+    return <p className={estilos.ayuda}>Buscando horarios libres…</p>;
+  if (error) return <p className={estilos.ayuda}>{mensajeDe(error)}</p>;
+  if (!libres) return null;
+  if (libres.length === 0)
+    return (
+      <p className={estilos.ayuda}>
+        No hay horarios libres ese día. Prueba con otra fecha.
+      </p>
+    );
   return (
-    <fieldset className={estilos.grupo}>
-      <legend className={estilos.etiqueta}>Horario libre</legend>
-      {cargando && <p className={estilos.ayuda}>Buscando horarios libres…</p>}
-      {!!error && <p className={estilos.ayuda}>{mensajeDe(error)}</p>}
-      {libres && libres.length === 0 && <p className={estilos.ayuda}>No hay horarios libres ese día. Prueba con otra fecha.</p>}
-      {libres && libres.length > 0 && (
-        <div className={estilos.horarios}>
-          {libres.map((h) => (
-            <label key={h.hora} className={estilos.horario}>
-              <input type="radio" name={nombre} value={h.hora} checked={elegido === h.hora} onChange={() => alElegir(h.hora)} />
-              <span>{h.hora.replace(/^0(\d)/, '$1')}</span>
-            </label>
-          ))}
-        </div>
-      )}
-    </fieldset>
+    <CampoSeleccion
+      etiqueta={etiqueta}
+      value={elegido}
+      onChange={(e) => alElegir(e.target.value)}
+    >
+      <option value="">Elige un horario</option>
+      {libres.map((h) => (
+        <option key={h.hora} value={h.hora}>
+          {corta(h.hora)}
+        </option>
+      ))}
+    </CampoSeleccion>
   );
 }
 
-/** Aviso del 409 con horarios alternativos (CitaFormularios · "Ese horario ya no está libre"). */
-function Conflicto({ intentado, opciones, alElegir }: { intentado: string; opciones: string[]; alElegir: (h: string) => void }) {
+/** Aviso del 409 (CitaFormularios · "Ese horario ya no está libre"): los datos siguen y se elige otro horario. */
+function Conflicto({
+  intentado,
+  opciones,
+  elegido,
+  alElegir,
+}: {
+  intentado: string;
+  opciones: string[];
+  elegido: string;
+  alElegir: (h: string) => void;
+}) {
   return (
-    <div className={estilos.conflicto} role="alert">
-      <p className={estilos.conflictoTitulo}>Ese horario ya no está libre</p>
-      <p className={estilos.conflictoTexto}>
-        Otra persona tomó el horario de {intentado.replace(/^0(\d)/, '$1')} mientras llenabas el formulario. Tus datos siguen aquí.
-      </p>
+    <div className={estilos.grupo}>
+      <Aviso tono="error" anunciar>
+        <b>Ese horario ya no está libre.</b> Otra persona tomó el horario de{' '}
+        {corta(intentado)} mientras llenabas el formulario. Tus datos siguen
+        aquí.
+      </Aviso>
       {opciones.length > 0 ? (
-        <>
-          <p className={estilos.etiqueta}>Elige otro horario libre</p>
-          <div className={estilos.horarios}>
-            {opciones.map((h) => (
-              <Boton key={h} variante="secundario" onClick={() => alElegir(h)}>
-                {`Guardar en ${h.replace(/^0(\d)/, '$1')}`}
-              </Boton>
-            ))}
-          </div>
-        </>
+        <CampoSeleccion
+          etiqueta="Elige otro horario libre"
+          value={elegido}
+          onChange={(e) => alElegir(e.target.value)}
+        >
+          {opciones.map((h) => (
+            <option key={h} value={h}>
+              {corta(h)}
+            </option>
+          ))}
+        </CampoSeleccion>
       ) : (
-        <p className={estilos.conflictoTexto}>Ya no quedan horarios libres ese día. Elige otra fecha.</p>
+        <p className={estilos.ayuda}>
+          Ya no quedan horarios libres ese día. Elige otra fecha.
+        </p>
       )}
     </div>
   );
@@ -119,16 +166,27 @@ interface PacienteOpcion {
 }
 
 /** Paciente existente (búsqueda por nombre o teléfono) o alta rápida sin salir del formulario. */
-function SelectorPaciente({ elegido, alElegir }: { elegido: PacienteOpcion | null; alElegir: (p: PacienteOpcion | null) => void }) {
+function SelectorPaciente({
+  elegido,
+  alElegir,
+}: {
+  elegido: PacienteOpcion | null;
+  alElegir: (p: PacienteOpcion | null) => void;
+}) {
   const qc = useQueryClient();
   const [texto, setTexto] = useState('');
   const [nuevo, setNuevo] = useState(false);
   const [alta, setAlta] = useState({ nombre: '', apellido: '', telefono: '' });
-  const [errores, setErrores] = useState<ReturnType<typeof erroresAltaRapida>>({});
+  const [errores, setErrores] = useState<ReturnType<typeof erroresAltaRapida>>(
+    {},
+  );
   const buscar = texto.trim();
   const resultados = useQuery({
     queryKey: ['pacientes', 'buscar', buscar],
-    queryFn: () => obtenerJson<{ elementos: PacienteOpcion[] }>(`/pacientes?buscar=${encodeURIComponent(buscar)}&tamano=6`),
+    queryFn: () =>
+      obtenerJson<{ elementos: PacienteOpcion[] }>(
+        `/pacientes?buscar=${encodeURIComponent(buscar)}&tamano=6`,
+      ),
     enabled: buscar.length >= 2 && !elegido,
   });
   const crear = useMutation({
@@ -149,7 +207,9 @@ function SelectorPaciente({ elegido, alElegir }: { elegido: PacienteOpcion | nul
             <b>
               {elegido.nombre} {elegido.apellido}
             </b>
-            {elegido.telefono && <span className={estilos.secundario}> · {elegido.telefono}</span>}
+            {elegido.telefono && (
+              <span className={estilos.secundario}> · {elegido.telefono}</span>
+            )}
           </span>
           <Boton variante="texto" onClick={() => alElegir(null)}>
             Cambiar
@@ -164,10 +224,27 @@ function SelectorPaciente({ elegido, alElegir }: { elegido: PacienteOpcion | nul
       <div className={estilos.grupo}>
         <span className={estilos.etiqueta}>Paciente nuevo</span>
         <div className={estilos.dosColumnas}>
-          <CampoTexto etiqueta="Nombre" value={alta.nombre} error={errores.nombre} onChange={(e) => setAlta({ ...alta, nombre: e.target.value })} />
-          <CampoTexto etiqueta="Apellido" value={alta.apellido} error={errores.apellido} onChange={(e) => setAlta({ ...alta, apellido: e.target.value })} />
+          <CampoTexto
+            etiqueta="Nombre"
+            value={alta.nombre}
+            error={errores.nombre}
+            onChange={(e) => setAlta({ ...alta, nombre: e.target.value })}
+          />
+          <CampoTexto
+            etiqueta="Apellido"
+            value={alta.apellido}
+            error={errores.apellido}
+            onChange={(e) => setAlta({ ...alta, apellido: e.target.value })}
+          />
         </div>
-        <CampoTexto etiqueta="Teléfono" type="tel" inputMode="tel" value={alta.telefono} error={errores.telefono} onChange={(e) => setAlta({ ...alta, telefono: e.target.value })} />
+        <CampoTexto
+          etiqueta="Teléfono"
+          type="tel"
+          inputMode="tel"
+          value={alta.telefono}
+          error={errores.telefono}
+          onChange={(e) => setAlta({ ...alta, telefono: e.target.value })}
+        />
         {crear.isError && <Aviso tono="error">{mensajeDe(crear.error)}</Aviso>}
         <div className={estilos.fila}>
           <Boton variante="secundario" onClick={() => setNuevo(false)}>
@@ -201,7 +278,11 @@ function SelectorPaciente({ elegido, alElegir }: { elegido: PacienteOpcion | nul
         <ul className={estilos.resultados} aria-label="Pacientes encontrados">
           {resultados.data.elementos.map((p) => (
             <li key={p.id}>
-              <button type="button" className={estilos.resultado} onClick={() => alElegir(p)}>
+              <button
+                type="button"
+                className={estilos.resultado}
+                onClick={() => alElegir(p)}
+              >
                 <b>
                   {p.nombre} {p.apellido}
                 </b>
@@ -209,7 +290,9 @@ function SelectorPaciente({ elegido, alElegir }: { elegido: PacienteOpcion | nul
               </button>
             </li>
           ))}
-          {resultados.data.elementos.length === 0 && <li className={estilos.ayuda}>Sin resultados.</li>}
+          {resultados.data.elementos.length === 0 && (
+            <li className={estilos.ayuda}>Sin resultados.</li>
+          )}
         </ul>
       )}
       <div>
@@ -238,7 +321,9 @@ export function DialogoNuevaCita({
   const qc = useQueryClient();
   const [paciente, setPaciente] = useState<PacienteOpcion | null>(null);
   const [servicioId, setServicioId] = useState<number | null>(null);
-  const [fecha, setFecha] = useState(() => (fechaInicial < hoy ? hoy : fechaInicial));
+  const [fecha, setFecha] = useState(() =>
+    fechaInicial < hoy ? hoy : fechaInicial,
+  );
   const [hora, setHora] = useState('');
   const [dentistaId, setDentistaId] = useState<number | ''>('');
   const [motivo, setMotivo] = useState('');
@@ -247,7 +332,12 @@ export function DialogoNuevaCita({
   const [conflicto, setConflicto] = useState<string | null>(null);
   const [errorPaciente, setErrorPaciente] = useState<string | undefined>();
 
-  const servicios = useQuery({ queryKey: ['servicios'], queryFn: () => obtenerJson<Servicio[]>('/citas/servicios'), staleTime: 10 * 60_000, enabled: abierto });
+  const servicios = useQuery({
+    queryKey: ['servicios'],
+    queryFn: () => obtenerJson<Servicio[]>('/citas/servicios'),
+    staleTime: 10 * 60_000,
+    enabled: abierto,
+  });
   const servicio = servicioId ?? servicios.data?.[0]?.id ?? null;
   const libres = useDisponibilidad(fecha, servicio);
   const elegido = libres.data?.find((h) => h.hora === hora);
@@ -272,7 +362,9 @@ export function DialogoNuevaCita({
     onError: async (e, horaIntentada) => {
       if (esConflicto(e)) {
         setConflicto(horaIntentada);
-        await libres.refetch();
+        const nuevos = (await libres.refetch()).data ?? [];
+        setHora(alternativas(nuevos, horaIntentada)[0] ?? '');
+        setDentistaId('');
       }
     },
   });
@@ -294,7 +386,6 @@ export function DialogoNuevaCita({
       return;
     }
     setErrorPaciente(undefined);
-    setConflicto(null);
     setHora(horaGuardar);
     guardar.mutate(horaGuardar);
   };
@@ -320,14 +411,22 @@ export function DialogoNuevaCita({
           >
             Cancelar
           </Boton>
-          <Boton variante="principal" icono="confirmar" disabled={!hora} cargando={guardar.isPending} onClick={() => enviar(hora)}>
-            Guardar cita
+          <Boton
+            variante="principal"
+            icono="confirmar"
+            disabled={!hora}
+            cargando={guardar.isPending}
+            onClick={() => enviar(hora)}
+          >
+            {conflicto && hora ? `Guardar en ${corta(hora)}` : 'Guardar cita'}
           </Boton>
         </>
       }
     >
       <div className={estilos.cuerpo}>
-        <p className={estilos.ayuda}>Los horarios libres ya excluyen descansos y cierres.</p>
+        <p className={estilos.ayuda}>
+          Los horarios libres ya excluyen descansos y cierres.
+        </p>
         <SelectorPaciente
           elegido={paciente}
           alElegir={(p) => {
@@ -352,30 +451,47 @@ export function DialogoNuevaCita({
             </option>
           ))}
         </CampoSeleccion>
-        <CampoTexto
-          etiqueta="Fecha"
-          type="date"
-          min={hoy}
-          value={fecha}
-          onChange={(e) => {
-            setFecha(e.target.value);
-            setHora('');
-            setDentistaId('');
-          }}
-        />
-        <HorariosLibres
-          libres={libres.data}
-          elegido={hora}
-          cargando={libres.isFetching && !libres.data}
-          error={libres.error}
-          alElegir={(h) => {
-            setHora(h);
-            setDentistaId('');
-            setConflicto(null);
-          }}
-        />
+        <div className={estilos.dosColumnas}>
+          <CampoTexto
+            etiqueta="Fecha"
+            type="date"
+            min={hoy}
+            value={fecha}
+            onChange={(e) => {
+              setFecha(e.target.value);
+              setHora('');
+              setDentistaId('');
+            }}
+          />
+          {!conflicto && (
+            <HorariosLibres
+              libres={libres.data}
+              elegido={hora}
+              cargando={libres.isFetching && !libres.data}
+              error={libres.error}
+              alElegir={(h) => {
+                setHora(h);
+                setDentistaId('');
+              }}
+            />
+          )}
+        </div>
+        {conflicto && (
+          <Conflicto
+            intentado={conflicto}
+            opciones={alternativas(libres.data ?? [], conflicto, 6)}
+            elegido={hora}
+            alElegir={setHora}
+          />
+        )}
         {elegido && (
-          <CampoSeleccion etiqueta="Dentista" value={dentistaId} onChange={(e) => setDentistaId(e.target.value === '' ? '' : Number(e.target.value))}>
+          <CampoSeleccion
+            etiqueta="Dentista"
+            value={dentistaId}
+            onChange={(e) =>
+              setDentistaId(e.target.value === '' ? '' : Number(e.target.value))
+            }
+          >
             <option value="">Que la clínica asigne</option>
             {elegido.dentistasLibres.map((d) => (
               <option key={d.id} value={d.id}>
@@ -395,26 +511,50 @@ export function DialogoNuevaCita({
           Crear ya confirmada (la persona aceptó por teléfono o en persona)
         </Casilla>
         <Casilla marcada={presente} alCambiar={setPresente}>
-          La persona está en la clínica (sin la anticipación mínima; hasta 15 min después del inicio)
+          La persona está en la clínica (sin la anticipación mínima; hasta 15
+          min después del inicio)
         </Casilla>
-        {conflicto && <Conflicto intentado={conflicto} opciones={alternativas(libres.data ?? [], conflicto)} alElegir={enviar} />}
-        {guardar.isError && !esConflicto(guardar.error) && <Aviso tono="error">{mensajeDe(guardar.error)}</Aviso>}
+        {guardar.isError && !esConflicto(guardar.error) && (
+          <Aviso tono="error">{mensajeDe(guardar.error)}</Aviso>
+        )}
       </div>
     </Dialogo>
   );
 }
 
-function Casilla({ marcada, alCambiar, children }: { marcada: boolean; alCambiar: (v: boolean) => void; children: ReactNode }) {
+function Casilla({
+  marcada,
+  alCambiar,
+  children,
+}: {
+  marcada: boolean;
+  alCambiar: (v: boolean) => void;
+  children: ReactNode;
+}) {
   return (
     <label className={estilos.casilla}>
-      <input type="checkbox" checked={marcada} onChange={(e) => alCambiar(e.target.checked)} />
+      <input
+        type="checkbox"
+        checked={marcada}
+        onChange={(e) => alCambiar(e.target.checked)}
+      />
       <span>{children}</span>
     </label>
   );
 }
 
 /** Reagendar cita (CitaFormularios · "Reagendar cita"): conserva el estado; el precio no cambia. */
-export function DialogoReagendar({ cita, hoy, alCerrar, alListo }: { cita: CitaAgenda | null; hoy: string; alCerrar: () => void; alListo: (m: string) => void }) {
+export function DialogoReagendar({
+  cita,
+  hoy,
+  alCerrar,
+  alListo,
+}: {
+  cita: CitaAgenda | null;
+  hoy: string;
+  alCerrar: () => void;
+  alListo: (m: string) => void;
+}) {
   const qc = useQueryClient();
   // Se monta por cita (key): el estado empieza en la fecha actual de la cita, o en hoy si ya pasó
   const [fecha, setFecha] = useState(() => {
@@ -427,7 +567,12 @@ export function DialogoReagendar({ cita, hoy, alCerrar, alListo }: { cita: CitaA
   const estado = cita?.estado === 'pendiente' ? 'pendiente' : 'confirmada';
   const reagendar = useMutation({
     mutationFn: (h: string) =>
-      enviarJson(`/citas/${cita!.id}/reagendar`, 'PATCH', { fecha, hora: horaApi(h), estadoResultante: estado, version: cita!.version }),
+      enviarJson(`/citas/${cita!.id}/reagendar`, 'PATCH', {
+        fecha,
+        hora: horaApi(h),
+        estadoResultante: estado,
+        version: cita!.version,
+      }),
     onSuccess: async () => {
       await invalidarAgenda(qc);
       alListo('Cita reagendada.');
@@ -435,12 +580,12 @@ export function DialogoReagendar({ cita, hoy, alCerrar, alListo }: { cita: CitaA
     onError: async (e, h) => {
       if (esConflicto(e)) {
         setConflicto(h);
-        await libres.refetch();
+        const nuevos = (await libres.refetch()).data ?? [];
+        setHora(alternativas(nuevos, h)[0] ?? '');
       }
     },
   });
   const enviar = (h: string) => {
-    setConflicto(null);
     setHora(h);
     reagendar.mutate(h);
   };
@@ -456,25 +601,60 @@ export function DialogoReagendar({ cita, hoy, alCerrar, alListo }: { cita: CitaA
           <Boton variante="secundario" onClick={alCerrar}>
             Cancelar
           </Boton>
-          <Boton variante="principal" icono="confirmar" disabled={!hora} cargando={reagendar.isPending} onClick={() => enviar(hora)}>
-            Reagendar
+          <Boton
+            variante="principal"
+            icono="confirmar"
+            disabled={!hora}
+            cargando={reagendar.isPending}
+            onClick={() => enviar(hora)}
+          >
+            {conflicto && hora ? `Guardar en ${corta(hora)}` : 'Reagendar'}
           </Boton>
         </>
       }
     >
       {cita && (
         <div className={estilos.cuerpo}>
-          <p className={estilos.ayuda}>Si estaba confirmada, sigue confirmada.</p>
+          <p className={estilos.ayuda}>
+            Si estaba confirmada, sigue confirmada.
+          </p>
           <div className={estilos.resumen}>
-            Ahora: {fechaHoraCorta(isoDeApi(cita.fecha), cita.hora)} · {cita.dentista}
+            Ahora: {fechaHoraCorta(isoDeApi(cita.fecha), cita.hora)} ·{' '}
+            {cita.dentista}
           </div>
-          <CampoTexto etiqueta="Nueva fecha" type="date" min={hoy} value={fecha} onChange={(e) => { setFecha(e.target.value); setHora(''); }} />
-          <HorariosLibres libres={libres.data} elegido={hora} cargando={libres.isFetching && !libres.data} error={libres.error} alElegir={setHora} />
+          <CampoTexto
+            etiqueta="Nueva fecha"
+            type="date"
+            min={hoy}
+            value={fecha}
+            onChange={(e) => {
+              setFecha(e.target.value);
+              setHora('');
+            }}
+          />
+          {!conflicto && (
+            <HorariosLibres
+              libres={libres.data}
+              elegido={hora}
+              cargando={libres.isFetching && !libres.data}
+              error={libres.error}
+              alElegir={setHora}
+            />
+          )}
+          {conflicto && (
+            <Conflicto
+              intentado={conflicto}
+              opciones={alternativas(libres.data ?? [], conflicto, 6)}
+              elegido={hora}
+              alElegir={setHora}
+            />
+          )}
           <p className={estilos.ayuda}>
             Quedará: <b>{ESTADO_TRAS_REAGENDAR[estado]}</b>
           </p>
-          {conflicto && <Conflicto intentado={conflicto} opciones={alternativas(libres.data ?? [], conflicto)} alElegir={enviar} />}
-          {reagendar.isError && !esConflicto(reagendar.error) && <Aviso tono="error">{mensajeDe(reagendar.error)}</Aviso>}
+          {reagendar.isError && !esConflicto(reagendar.error) && (
+            <Aviso tono="error">{mensajeDe(reagendar.error)}</Aviso>
+          )}
         </div>
       )}
     </Dialogo>
@@ -482,14 +662,31 @@ export function DialogoReagendar({ cita, hoy, alCerrar, alListo }: { cita: CitaA
 }
 
 /** Cambiar de dentista en el mismo horario (CitaFormularios · "Cambiar de dentista"). */
-export function DialogoCambiarDentista({ cita, alCerrar, alListo }: { cita: CitaAgenda | null; alCerrar: () => void; alListo: (m: string) => void }) {
+export function DialogoCambiarDentista({
+  cita,
+  alCerrar,
+  alListo,
+}: {
+  cita: CitaAgenda | null;
+  alCerrar: () => void;
+  alListo: (m: string) => void;
+}) {
   const qc = useQueryClient();
   const [dentistaId, setDentistaId] = useState<number | ''>('');
-  const libres = useDisponibilidad(cita ? isoDeApi(cita.fecha) : '', cita?.servicioId ?? null);
-  const opciones = (libres.data?.find((h) => h.hora === cita?.hora)?.dentistasLibres ?? []).filter((d) => d.id !== cita?.dentistaId);
+  const libres = useDisponibilidad(
+    cita ? isoDeApi(cita.fecha) : '',
+    cita?.servicioId ?? null,
+  );
+  const opciones = (
+    libres.data?.find((h) => h.hora === cita?.hora)?.dentistasLibres ?? []
+  ).filter((d) => d.id !== cita?.dentistaId);
   const cambiar = useMutation({
     mutationFn: () =>
-      enviarJson(`/citas/${cita!.id}/dentista`, 'PATCH', { dentistaId, motivo: 'Cambio de dentista desde el panel', version: cita!.version }),
+      enviarJson(`/citas/${cita!.id}/dentista`, 'PATCH', {
+        dentistaId,
+        motivo: 'Cambio de dentista desde el panel',
+        version: cita!.version,
+      }),
     onSuccess: async () => {
       await invalidarAgenda(qc);
       alListo('Dentista cambiado.');
@@ -507,7 +704,13 @@ export function DialogoCambiarDentista({ cita, alCerrar, alListo }: { cita: Cita
           <Boton variante="secundario" onClick={alCerrar}>
             Cancelar
           </Boton>
-          <Boton variante="principal" icono="confirmar" disabled={dentistaId === ''} cargando={cambiar.isPending} onClick={() => cambiar.mutate()}>
+          <Boton
+            variante="principal"
+            icono="confirmar"
+            disabled={dentistaId === ''}
+            cargando={cambiar.isPending}
+            onClick={() => cambiar.mutate()}
+          >
             Cambiar dentista
           </Boton>
         </>
@@ -516,12 +719,25 @@ export function DialogoCambiarDentista({ cita, alCerrar, alListo }: { cita: Cita
       {cita && (
         <div className={estilos.cuerpo}>
           <Resumen cita={cita} conDentista />
-          {libres.isFetching && !libres.data && <p className={estilos.ayuda}>Buscando dentistas libres…</p>}
+          {libres.isFetching && !libres.data && (
+            <p className={estilos.ayuda}>Buscando dentistas libres…</p>
+          )}
           {libres.data && opciones.length === 0 && (
-            <p className={estilos.ayuda}>Ningún otro dentista está libre en ese horario. Puedes reagendar la cita.</p>
+            <p className={estilos.ayuda}>
+              Ningún otro dentista está libre en ese horario. Puedes reagendar
+              la cita.
+            </p>
           )}
           {opciones.length > 0 && (
-            <CampoSeleccion etiqueta="Dentista" value={dentistaId} onChange={(e) => setDentistaId(e.target.value === '' ? '' : Number(e.target.value))}>
+            <CampoSeleccion
+              etiqueta="Dentista"
+              value={dentistaId}
+              onChange={(e) =>
+                setDentistaId(
+                  e.target.value === '' ? '' : Number(e.target.value),
+                )
+              }
+            >
               <option value="">Elige un dentista</option>
               {opciones.map((d) => (
                 <option key={d.id} value={d.id}>
@@ -530,7 +746,9 @@ export function DialogoCambiarDentista({ cita, alCerrar, alListo }: { cita: Cita
               ))}
             </CampoSeleccion>
           )}
-          {cambiar.isError && <Aviso tono="error">{mensajeDe(cambiar.error)}</Aviso>}
+          {cambiar.isError && (
+            <Aviso tono="error">{mensajeDe(cambiar.error)}</Aviso>
+          )}
         </div>
       )}
     </Dialogo>
@@ -538,12 +756,24 @@ export function DialogoCambiarDentista({ cita, alCerrar, alListo }: { cita: Cita
 }
 
 /** Cancelar cita (CitaFormularios · "Cancelar cita"): motivo neutro y nota opcional, que solo vive en la cita. */
-export function DialogoCancelar({ cita, alCerrar, alListo }: { cita: CitaAgenda | null; alCerrar: () => void; alListo: (m: string) => void }) {
+export function DialogoCancelar({
+  cita,
+  alCerrar,
+  alListo,
+}: {
+  cita: CitaAgenda | null;
+  alCerrar: () => void;
+  alListo: (m: string) => void;
+}) {
   const qc = useQueryClient();
   const [motivo, setMotivo] = useState<string>(MOTIVOS_CANCELACION[0]);
   const [nota, setNota] = useState('');
   const cancelar = useMutation({
-    mutationFn: () => enviarJson(`/citas/${cita!.id}/cancelar`, 'PATCH', { motivo: motivoCancelacion(motivo, nota), version: cita!.version }),
+    mutationFn: () =>
+      enviarJson(`/citas/${cita!.id}/cancelar`, 'PATCH', {
+        motivo: motivoCancelacion(motivo, nota),
+        version: cita!.version,
+      }),
     onSuccess: async () => {
       await invalidarAgenda(qc);
       alListo('Cita cancelada.');
@@ -561,7 +791,13 @@ export function DialogoCancelar({ cita, alCerrar, alListo }: { cita: CitaAgenda 
           <Boton variante="secundario" onClick={alCerrar}>
             Conservar cita
           </Boton>
-          <Boton variante="principal" icono="cerrar" onClick={() => cancelar.mutate()} cargando={cancelar.isPending} textoCargando="Cancelando…">
+          <Boton
+            variante="principal"
+            icono="cerrar"
+            onClick={() => cancelar.mutate()}
+            cargando={cancelar.isPending}
+            textoCargando="Cancelando…"
+          >
             Cancelar cita
           </Boton>
         </>
@@ -570,7 +806,12 @@ export function DialogoCancelar({ cita, alCerrar, alListo }: { cita: CitaAgenda 
       {cita && (
         <div className={estilos.cuerpo}>
           <Resumen cita={cita} />
-          <CampoSeleccion id="motivo-cancelacion" etiqueta="Motivo de la cancelación" value={motivo} onChange={(e) => setMotivo(e.target.value)}>
+          <CampoSeleccion
+            id="motivo-cancelacion"
+            etiqueta="Motivo de la cancelación"
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value)}
+          >
             {MOTIVOS_CANCELACION.map((m) => (
               <option key={m} value={m}>
                 {m}
@@ -620,7 +861,10 @@ export function DialogoCita({
 }) {
   const qc = useQueryClient();
   const accion = useMutation({
-    mutationFn: ({ ruta }: { ruta: string; mensaje: string }) => enviarJson(`/citas/${cita!.id}/${ruta}`, 'PATCH', { version: cita!.version }),
+    mutationFn: ({ ruta }: { ruta: string; mensaje: string }) =>
+      enviarJson(`/citas/${cita!.id}/${ruta}`, 'PATCH', {
+        version: cita!.version,
+      }),
     onSuccess: async (_d, { mensaje }) => {
       await invalidarAgenda(qc);
       alListo(mensaje);
@@ -643,12 +887,30 @@ export function DialogoCita({
               </Boton>
             )}
             {a.noAsistio && (
-              <Boton variante="secundario" onClick={() => accion.mutate({ ruta: 'no-asistio', mensaje: 'Inasistencia registrada.' })}>
+              <Boton
+                variante="secundario"
+                onClick={() =>
+                  accion.mutate({
+                    ruta: 'no-asistio',
+                    mensaje: 'Inasistencia registrada.',
+                  })
+                }
+              >
                 No asistió
               </Boton>
             )}
             {a.completar && (
-              <Boton variante={a.confirmar ? 'secundario' : 'principal'} icono="confirmar" cargando={accion.isPending} onClick={() => accion.mutate({ ruta: 'completar', mensaje: 'Cita completada.' })}>
+              <Boton
+                variante={a.confirmar ? 'secundario' : 'principal'}
+                icono="confirmar"
+                cargando={accion.isPending}
+                onClick={() =>
+                  accion.mutate({
+                    ruta: 'completar',
+                    mensaje: 'Cita completada.',
+                  })
+                }
+              >
                 Completar
               </Boton>
             )}
@@ -658,7 +920,12 @@ export function DialogoCita({
                 icono="confirmar"
                 cargando={accion.isPending}
                 textoCargando="Confirmando…"
-                onClick={() => accion.mutate({ ruta: 'confirmar', mensaje: 'Cita confirmada.' })}
+                onClick={() =>
+                  accion.mutate({
+                    ruta: 'confirmar',
+                    mensaje: 'Cita confirmada.',
+                  })
+                }
               >
                 Confirmar cita
               </Boton>
@@ -672,7 +939,11 @@ export function DialogoCita({
           <Resumen cita={cita} conDentista />
           <div className={estilos.fila}>
             <InsigniaEstadoCita estado={cita.estado} />
-            {cita.pacientePresente && <span className={estilos.secundario}>Agendada con la persona en la clínica</span>}
+            {cita.pacientePresente && (
+              <span className={estilos.secundario}>
+                Agendada con la persona en la clínica
+              </span>
+            )}
           </div>
           {(a.reagendar || a.cambiarDentista) && (
             <div className={estilos.fila}>
@@ -682,7 +953,11 @@ export function DialogoCita({
                 </Boton>
               )}
               {a.cambiarDentista && (
-                <Boton variante="texto" icono="equipo" onClick={alCambiarDentista}>
+                <Boton
+                  variante="texto"
+                  icono="equipo"
+                  onClick={alCambiarDentista}
+                >
                   Cambiar de dentista
                 </Boton>
               )}
