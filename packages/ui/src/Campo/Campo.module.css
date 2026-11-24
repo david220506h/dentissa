@@ -26,10 +26,11 @@
   color: var(--estado-cancelada-texto);
 }
 
+/* --campo-relleno: relleno horizontal; los formularios de cita usan 12 px (CitaFormularios.dc.html) */
 .control {
   width: 100%;
   height: var(--alto-toque);
-  padding: 0 var(--espacio-14);
+  padding: 0 var(--campo-relleno, var(--espacio-14));
   border: 1px solid var(--borde-campo);
   border-radius: var(--radio-10);
   background: var(--superficie);
@@ -50,12 +51,12 @@
   outline: none;
   border: var(--campo-foco-borde);
   box-shadow: var(--campo-foco-halo);
-  padding-left: calc(var(--espacio-14) - 1px);
+  padding-left: calc(var(--campo-relleno, var(--espacio-14)) - 1px);
 }
 
 .control[aria-invalid='true'] {
   border: var(--campo-error-borde);
-  padding-left: calc(var(--espacio-14) - 1px);
+  padding-left: calc(var(--campo-relleno, var(--espacio-14)) - 1px);
 }
 
 .control:disabled {

@@ -138,6 +138,20 @@
   min-width: 900px;
 }
 
+/* Vista Día en escritorio: la misma cuadrícula con una columna */
+.cuadriculaDia {
+  grid-template-columns: 72px minmax(0, 1fr);
+  min-width: 0;
+}
+
+.encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--espacio-12);
+}
+
 .esquina {
   border-bottom: 1px solid var(--borde);
 }
@@ -334,7 +348,8 @@
 }
 
 .horaDia {
-  flex: 0 0 52px;
+  /* Ancho para un rango: "12:00 a 14:00" */
+  flex: 0 0 104px;
   padding-top: var(--espacio-12);
   font-size: var(--texto-13-5);
   font-weight: var(--peso-extranegrita);

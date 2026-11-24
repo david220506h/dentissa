@@ -1,7 +1,10 @@
 import { Aviso, Boton, CargandoLista, GrupoVista, Icono, InsigniaEstadoCita, MensajeEstado, ESTADOS_CITA } from '@dentissa/ui';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
-import { enviarJson, obtenerJson } from '../../app/api';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { obtenerJson } from '../../app/api';
+import { useSesion } from '../../app/sesion';
+import { DialogoCambiarDentista, DialogoCancelar, DialogoCita, DialogoNuevaCita, DialogoReagendar } from '../citas/FormulariosCita';
+import { rangoHoras } from '../citas/logica';
 import { hoyIsoEnClinica, horaCorta } from '../inicio/datos';
 import {
   citasDelDia,
@@ -21,7 +24,6 @@ import {
   type CitaAgenda,
   type Dentista,
 } from './logica';
-import { DialogoCancelar, DialogoCita } from './DialogosCita';
 import estilos from './Agenda.module.css';
 
 type Vista = 'semana' | 'dia';
@@ -29,16 +31,31 @@ type Vista = 'semana' | 'dia';
 // Días que se consultan para deducir el horario (TEMPORAL; ver deducirHorario)
 const DIAS_MUESTRA = 7;
 
-const mensajeDe = (e: unknown) => (e instanceof Error ? e.message : 'No se pudo completar la acción. Inténtalo de nuevo.');
+/** ¿Pantalla de celular? (menos de 768 px, el mismo corte que Agenda.module.css). */
+function useCelular(): boolean {
+  const consulta = '(max-width: 767.98px)';
+  const [celular, setCelular] = useState(() => typeof window !== 'undefined' && !!window.matchMedia?.(consulta).matches);
+  useEffect(() => {
+    const mq = window.matchMedia?.(consulta);
+    if (!mq) return;
+    const cambio = () => setCelular(mq.matches);
+    mq.addEventListener('change', cambio);
+    return () => mq.removeEventListener('change', cambio);
+  }, []);
+  return celular;
+}
 
 /**
- * Agenda (Agenda.dc.html en escritorio; Movil.dc.html · Agenda del día en celular y en la vista Día).
- * Con la API actual: citas (GET /api/citas, filtradas por fecha en el cliente), dentistas, horarios libres,
- * confirmar y cancelar. Los descansos se deducen (TEMPORAL). Sin "Nueva cita", "Agendar", "Mes", buscador
- * ni notificaciones; completar, no asistió, reagendar e historial llegan con la Fase 2.
+ * Agenda (Agenda.dc.html en escritorio; Movil.dc.html · Agenda del día en celular). En escritorio, la vista Día
+ * es la misma cuadrícula con una sola columna. Citas de la semana visible (GET /api/citas?desde&hasta), nueva
+ * cita, y el diálogo «Cita» con sus acciones por rol (CitaFormularios.dc.html). Los descansos se deducen
+ * (TEMPORAL). Sin "Mes", buscador ni notificaciones.
  */
 export function Agenda() {
-  const queryClient = useQueryClient();
+  const { usuario } = useSesion();
+  const rol = usuario?.rol ?? 'asistente';
+  const recepcion = rol === 'admin' || rol === 'asistente';
+  const celular = useCelular();
   const [ahora] = useState(() => new Date());
   const hoy = hoyIsoEnClinica(ahora);
   const [vista, setVista] = useState<Vista>('semana');
@@ -46,9 +63,17 @@ export function Agenda() {
   const [dentistaElegido, setDentistaElegido] = useState<number | null>(null);
   const [citaAbierta, setCitaAbierta] = useState<CitaAgenda | null>(null);
   const [citaACancelar, setCitaACancelar] = useState<CitaAgenda | null>(null);
+  const [citaAReagendar, setCitaAReagendar] = useState<CitaAgenda | null>(null);
+  const [citaACambiar, setCitaACambiar] = useState<CitaAgenda | null>(null);
+  const [nuevaAbierta, setNuevaAbierta] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
 
-  const citas = useQuery({ queryKey: ['citas'], queryFn: () => obtenerJson<CitaAgenda[]>('/citas') });
+  const semana = semanaDe(fecha);
+  // Solo la semana visible (filtro de GET /api/citas, plan 3a, 14.7)
+  const citas = useQuery({
+    queryKey: ['citas', semana[0], semana[semana.length - 1]],
+    queryFn: () => obtenerJson<CitaAgenda[]>(`/citas?desde=${semana[0]}&hasta=${semana[semana.length - 1]}`),
+  });
   const dentistas = useQuery({ queryKey: ['dentistas'], queryFn: () => obtenerJson<Dentista[]>('/citas/dentistas'), staleTime: 10 * 60_000 });
   // TEMPORAL: muestra de horarios libres desde mañana para deducir horarios y descansos (Fase 2 lo reemplaza)
   const muestra = useQuery({
@@ -72,39 +97,35 @@ export function Agenda() {
 
   const horario = useMemo(() => (muestra.data && citas.data ? deducirHorario(muestra.data, citas.data) : null), [muestra.data, citas.data]);
 
-  const confirmar = useMutation({
-    mutationFn: (c: CitaAgenda) => enviarJson(`/citas/${c.id}/confirmar`, 'PATCH'),
-    onSuccess: async () => {
-      setCitaAbierta(null);
-      setAviso('Cita confirmada.');
-      await queryClient.invalidateQueries({ queryKey: ['citas'] });
-    },
-  });
-  const cancelar = useMutation({
-    mutationFn: ({ cita, motivo }: { cita: CitaAgenda; motivo: string }) => enviarJson(`/citas/${cita.id}/cancelar`, 'PATCH', { motivo }),
-    onSuccess: async () => {
-      setCitaACancelar(null);
-      setCitaAbierta(null);
-      setAviso('Cita cancelada.');
-      await queryClient.invalidateQueries({ queryKey: ['citas'] });
-      await queryClient.invalidateQueries({ queryKey: ['libres'] });
-    },
-  });
+  const listo = (mensaje: string) => {
+    setCitaAbierta(null);
+    setCitaACancelar(null);
+    setCitaAReagendar(null);
+    setCitaACambiar(null);
+    setNuevaAbierta(false);
+    setAviso(mensaje);
+  };
 
-  const semana = semanaDe(fecha);
-  const paso = vista === 'dia' ? 1 : 7;
+  // En celular las flechas mueven la semana (la lista del día tiene sus chips); en escritorio, según la vista
+  const paso = !celular && vista === 'dia' ? 1 : 7;
   const mover = (dias: number) => setFecha((f) => sumarDias(f, dias));
   const abrir = (c: CitaAgenda) => {
-    confirmar.reset();
     setAviso(null);
     setCitaAbierta(c);
   };
 
   return (
     <div className={estilos.pagina}>
-      <header>
-        <h1 className={estilos.titulo}>Agenda</h1>
-        <p className={estilos.subtitulo}>{vista === 'dia' ? diaLargo(fecha) : rangoLargo(semana)}</p>
+      <header className={estilos.encabezado}>
+        <div>
+          <h1 className={estilos.titulo}>Agenda</h1>
+          <p className={estilos.subtitulo}>{vista === 'dia' ? diaLargo(fecha) : rangoLargo(semana)}</p>
+        </div>
+        {recepcion && (
+          <Boton variante="principal" icono="agregar" onClick={() => setNuevaAbierta(true)}>
+            Nueva cita
+          </Boton>
+        )}
       </header>
 
       {aviso && (
@@ -184,12 +205,10 @@ export function Agenda() {
 
       {citas.data && (
         <>
-          {vista === 'semana' && (
-            <div className={estilos.soloEscritorio}>
-              <Semana dias={semana} hoy={hoy} citas={citas.data} dentistaId={dentistaId} horario={horario} alAbrir={abrir} />
-            </div>
-          )}
-          <div className={vista === 'semana' ? estilos.soloCelular : undefined}>
+          <div className={estilos.soloEscritorio}>
+            <Semana dias={vista === 'dia' ? [fecha] : semana} hoy={hoy} citas={citas.data} dentistaId={dentistaId} horario={horario} alAbrir={abrir} />
+          </div>
+          <div className={estilos.soloCelular}>
             <Dia
               dias={semana}
               fecha={fecha}
@@ -206,24 +225,25 @@ export function Agenda() {
       )}
 
       <DialogoCita
+        key={`cita-${citaAbierta?.id ?? 0}`}
         cita={citaAbierta}
+        rol={rol}
+        ahora={ahora}
         alCerrar={() => setCitaAbierta(null)}
-        alConfirmar={() => citaAbierta && confirmar.mutate(citaAbierta)}
-        alPedirCancelacion={() => {
-          cancelar.reset();
-          setCitaACancelar(citaAbierta);
-        }}
-        confirmando={confirmar.isPending}
-        error={confirmar.isError ? mensajeDe(confirmar.error) : null}
+        alReagendar={() => setCitaAReagendar(citaAbierta)}
+        alCambiarDentista={() => setCitaACambiar(citaAbierta)}
+        alCancelar={() => setCitaACancelar(citaAbierta)}
+        alListo={listo}
       />
-      <DialogoCancelar
-        key={citaACancelar?.id ?? 0}
-        cita={citaACancelar}
-        alCerrar={() => setCitaACancelar(null)}
-        alCancelar={(motivo) => citaACancelar && cancelar.mutate({ cita: citaACancelar, motivo })}
-        cancelando={cancelar.isPending}
-        error={cancelar.isError ? mensajeDe(cancelar.error) : null}
-      />
+      {/* Cada formulario se monta al abrirse, con su propia key: su estado empieza limpio */}
+      {citaACancelar && <DialogoCancelar key={`cancelar-${citaACancelar.id}`} cita={citaACancelar} alCerrar={() => setCitaACancelar(null)} alListo={listo} />}
+      {citaAReagendar && (
+        <DialogoReagendar key={`reagendar-${citaAReagendar.id}`} cita={citaAReagendar} hoy={hoy} alCerrar={() => setCitaAReagendar(null)} alListo={listo} />
+      )}
+      {citaACambiar && (
+        <DialogoCambiarDentista key={`dentista-${citaACambiar.id}`} cita={citaACambiar} alCerrar={() => setCitaACambiar(null)} alListo={listo} />
+      )}
+      {recepcion && nuevaAbierta && <DialogoNuevaCita abierto fechaInicial={fecha} hoy={hoy} alCerrar={() => setNuevaAbierta(false)} alCreada={listo} />}
     </div>
   );
 }
@@ -259,7 +279,7 @@ function Semana({
   const plantilla = ['64px', ...filas.map((f) => (f.tipo === 'descanso' ? '44px' : '84px'))].join(' ');
 
   return (
-    <section className={estilos.tarjeta} aria-label="Semana">
+    <section className={estilos.tarjeta} aria-label={dias.length === 1 ? 'Día' : 'Semana'}>
       <div className={estilos.leyenda}>
         Estados:
         {(['confirmada', 'pendiente', 'completada', 'no_asistio'] as const).map((e) => (
@@ -270,8 +290,8 @@ function Semana({
       {filas.length === 0 ? (
         <MensajeEstado nivel={2} icono="agenda" titulo="No hay citas esta semana" texto="Es una semana sin citas." />
       ) : (
-        <div className={estilos.desplazable} role="region" aria-label="Citas de la semana" tabIndex={0}>
-          <div className={estilos.cuadricula} style={{ gridTemplateRows: plantilla }}>
+        <div className={estilos.desplazable} role="region" aria-label={dias.length === 1 ? 'Citas del día' : 'Citas de la semana'} tabIndex={0}>
+          <div className={`${estilos.cuadricula} ${dias.length === 1 ? estilos.cuadriculaDia : ''}`} style={{ gridTemplateRows: plantilla }}>
             <div className={estilos.esquina} style={{ gridColumn: 1, gridRow: 1 }} />
             {dias.map((d, i) => (
               <div key={d} className={`${estilos.cabeceraDia} ${d === hoy ? estilos.hoy : ''}`} style={{ gridColumn: i + 2, gridRow: 1 }}>
@@ -385,7 +405,7 @@ function Dia({
             const c = delDia.find((x) => x.hora === f.hora);
             return (
               <li key={f.hora} className={estilos.filaDia}>
-                <span className={estilos.horaDia}>{horaCorta(f.hora)}</span>
+                <span className={estilos.horaDia}>{c && duracionMinutos(c) > 60 ? rangoHoras(c.hora, duracionMinutos(c)) : horaCorta(f.hora)}</span>
                 <span className={estilos.contenidoDia}>
                   {f.tipo === 'descanso' ? (
                     <span className={estilos.descansoDia}>Descanso</span>
