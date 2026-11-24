@@ -30,6 +30,9 @@ public interface ICitasEstadoService
     Task<Cita> CambiarCostosAsync(int id, decimal costoExtra, string? motivoExtra, uint? version = null, CancellationToken ct = default);
     Task<Cita> ReagendarAsync(int id, SolicitudReagenda s, CancellationToken ct = default);
 
+    /// <summary>Reasignación en el mismo horario a otro dentista elegible y libre (3.4).</summary>
+    Task<Cita> ReasignarAsync(int id, int dentistaId, string? motivo, uint? version = null, CancellationToken ct = default);
+
     /// <summary>Estado actual leído de la base, sin seguimiento.</summary>
     Task<string> EstadoAsync(int id, CancellationToken ct = default);
 }
@@ -92,6 +95,49 @@ public class CitasEstadoService : ICitasEstadoService
 
     private static string ValidarMotivo(string? motivo, string mensaje) =>
         string.IsNullOrWhiteSpace(motivo) ? throw new ArgumentException(mensaje) : motivo.Trim();
+
+    private static async Task ValidarElegibleAsync(IServiceProvider sp, DentissaDbContext db, int servicioId, int dentista, CancellationToken ct)
+    {
+        var servicio = await db.Servicios.IgnoreQueryFilters().AsNoTracking().SingleAsync(x => x.Id == servicioId, ct);
+        if (!(await sp.GetRequiredService<IDisponibilidadService>().DentistasElegiblesAsync(servicio, ct)).Contains(dentista))
+            throw new DentistaNoElegibleException();
+    }
+
+    public Task<Cita> ReasignarAsync(int id, int dentistaId, string? motivo, uint? version = null, CancellationToken ct = default)
+    {
+        var motivoLimpio = ValidarMotivo(motivo, "El motivo de la reasignación es obligatorio");
+        return _reservas.EjecutarReservaAsync(async (sp, db, token) =>
+        {
+            var cita = await CargarAsync(db, id, version, token);
+            TransicionesCita.ValidarReasignacion(cita, dentistaId);
+            await ValidarElegibleAsync(sp, db, cita.ServicioId, dentistaId, token);
+
+            var horario = await sp.GetRequiredService<ICalendarioAtencion>().ObtenerHorarioAsync(token);
+            await ReservasService.TomarCandadosAsync(db, [horario.FechaLocal(cita.Inicio)], token);
+            var ahora = sp.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            if (await ReservasService.OcupadoAsync(db, dentistaId, cita.Inicio, cita.Fin, ahora, token, excluir: cita.Id))
+                throw new HorarioOcupadoException();
+            var historial = sp.GetRequiredService<ICitaHistorialService>();
+            if (await ReservasService.HayVencidasAsync(db, [dentistaId], cita.Inicio, cita.Fin, ahora, token, excluir: cita.Id))
+                await ReservasService.LiberarVencidasAsync(db, historial, sp.GetRequiredService<ContextoAuditoria>(), [dentistaId], cita.Inicio, cita.Fin, ahora,
+                    new { citaId = cita.Id, usuarioId = sp.GetRequiredService<IActorActual>().UsuarioId }, token, excluir: cita.Id);
+
+            var antes = cita.DentistaId;
+            cita.DentistaId = dentistaId;
+            cita.MotivoCambio = motivoLimpio;
+            historial.Registrar(cita, AccionesCitaHistorial.Reasignacion, "Dentista reasignado por recepción",
+                new { antes = new { dentistaId = antes }, despues = new { dentistaId } });
+            try
+            {
+                await db.SaveChangesAsync(token);
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                throw new CitaModificadaException(ex);
+            }
+            return cita;
+        }, ct);
+    }
 
     public async Task<string> EstadoAsync(int id, CancellationToken ct = default) =>
         await _db.Citas.AsNoTracking().Where(c => c.Id == id).Select(c => c.Estado).SingleAsync(ct);
@@ -190,8 +236,8 @@ public class CitasEstadoService : ICitasEstadoService
             TransicionesCita.ValidarReagenda(cita, s.EstadoResultante);
 
             var dentista = s.DentistaId ?? cita.DentistaId;
-            if (dentista != cita.DentistaId && !await db.Dentistas.AnyAsync(d => d.Id == dentista && d.Activo, token))
-                throw new ArgumentException("Dentista no encontrado o inactivo");
+            if (dentista != cita.DentistaId)
+                await ValidarElegibleAsync(sp, db, cita.ServicioId, dentista, token);
             var duracion = await db.Servicios.IgnoreQueryFilters().Where(x => x.Id == cita.ServicioId).Select(x => x.DuracionSlots).SingleAsync(token);
             var config = await db.ConfiguracionAgenda.AsNoTracking().FirstOrDefaultAsync(c => c.Id == ConfiguracionAgenda.IdUnico, token)
                 ?? throw new AgendaNoConfiguradaException();

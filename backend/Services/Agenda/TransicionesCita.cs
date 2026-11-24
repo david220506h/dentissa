@@ -87,6 +87,14 @@ public static class TransicionesCita
             throw new TransicionInvalidaException("Una cita reagendada queda confirmada o pendiente.");
     }
 
+    public static void ValidarReasignacion(Cita c, int dentistaNuevo)
+    {
+        if (!Activa(c))
+            throw new TransicionInvalidaException("Solo se reasigna una cita pendiente o confirmada.");
+        if (c.DentistaId == dentistaNuevo)
+            throw new TransicionInvalidaException("La cita ya está asignada a ese dentista.");
+    }
+
     public static void ValidarCostos(Cita c)
     {
         if (c.Estado == EstadosCita.Cancelada)

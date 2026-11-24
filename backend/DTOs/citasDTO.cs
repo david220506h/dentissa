@@ -7,7 +7,8 @@ namespace backend.DTOs
     public class CitaDto
     {
         [Range(1, int.MaxValue)] public int PacienteId { get; set; }
-        [Range(1, int.MaxValue)] public int DentistaId { get; set; }
+        // Opcional: sin él, la clínica asigna (diseño, 3.3)
+        [Range(1, int.MaxValue)] public int? DentistaId { get; set; }
         [Range(1, int.MaxValue)] public int ServicioId { get; set; }
         public DateOnly Fecha       { get; set; }
         public TimeOnly Hora        { get; set; }
@@ -82,6 +83,14 @@ namespace backend.DTOs
     {
         // Solo confirmar: "llamada" (por defecto) o "panel"
         [MaxLength(20)] public string? Canal { get; set; }
+        public uint? Version { get; set; }
+    }
+
+    public class ReasignarDentistaDto
+    {
+        [Range(1, int.MaxValue)] public int DentistaId { get; set; }
+        [Required(ErrorMessage = "El motivo de la reasignación es obligatorio")]
+        [MaxLength(500)] public string? Motivo { get; set; }
         public uint? Version { get; set; }
     }
 

@@ -41,10 +41,13 @@ namespace backend.Controllers
         }
 
         // ── GET: api/Citas ────────────────────────────────────
+        // ?dentistaInactivo=true: citas futuras activas de dentistas desactivados o eliminados (diseño, 3.5)
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] bool dentistaInactivo, [FromServices] TimeProvider tiempo)
         {
-            var citas = await _repo.GetAllAsync();
+            var citas = dentistaInactivo
+                ? await _repo.GetConDentistaInactivoAsync(tiempo.GetUtcNow().UtcDateTime)
+                : await _repo.GetAllAsync();
             return Ok(citas.Select(ToRespuestaDto));
         }
 
@@ -130,7 +133,7 @@ namespace backend.Controllers
             if (await _repo.GetPacienteAsync(dto.PacienteId) == null)
                 return BadRequest(new { mensaje = "Paciente no encontrado" });
 
-            if (await _repo.GetDentistaActivoAsync(dto.DentistaId) == null)
+            if (dto.DentistaId is { } dentistaId && await _repo.GetDentistaActivoAsync(dentistaId) == null)
                 return BadRequest(new { mensaje = "Dentista no encontrado o inactivo" });
 
             return await this.EjecutarAsync(async () =>
@@ -141,7 +144,7 @@ namespace backend.Controllers
                     dto.PacientePresente ? "Cita creada desde el panel con el paciente presente" : "Cita creada desde el panel",
                     dto.Motivo, dto.CostoExtra, dto.MotivoExtra, dto.ConfirmarAlCrear));
                 return CreatedAtAction(nameof(GetById), new { id = cita.Id },
-                    new { cita.Id, mensaje = "Cita creada correctamente", estado = cita.Estado, version = cita.Version });
+                    new { cita.Id, mensaje = "Cita creada correctamente", estado = cita.Estado, dentistaId = cita.DentistaId, version = cita.Version });
             });
         }
 
@@ -237,6 +240,16 @@ namespace backend.Controllers
                     dto.Fecha, dto.Hora, dto.DentistaId, dto.Motivo,
                     dto.EstadoResultante?.Trim().ToLowerInvariant() ?? EstadosCita.Confirmada, dto.Version));
                 return Ok(new { mensaje = "Cita reagendada", estado = cita.Estado, version = cita.Version });
+            });
+
+        // ── PATCH: api/Citas/5/dentista ──────────────────────
+        // Reasignación en el mismo horario (diseño, 3.4); sin correo al paciente (decisión 14)
+        [HttpPatch("{id}/dentista")]
+        public Task<IActionResult> Reasignar(int id, [FromBody] ReasignarDentistaDto dto) =>
+            this.EjecutarAsync(async () =>
+            {
+                var cita = await _estados.ReasignarAsync(id, dto.DentistaId, dto.Motivo, dto.Version);
+                return Ok(new { mensaje = "Dentista reasignado", dentistaId = cita.DentistaId, version = cita.Version });
             });
 
         // ── PATCH: api/Citas/5/costos ────────────────────────

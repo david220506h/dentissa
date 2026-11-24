@@ -34,6 +34,9 @@ public interface IDisponibilidadService
     /// anterior, previa autorización (diseño, 9.4).
     /// </summary>
     Task<IReadOnlyList<HorarioDisponible>> CalcularSinServicioAsync(DateOnly fecha, int? dentistaId, CancellationToken ct = default);
+
+    /// <summary>Activos y ligados al servicio; sin ligados, cualquier dentista activo (con aviso a la administración).</summary>
+    Task<List<int>> DentistasElegiblesAsync(Servicio servicio, CancellationToken ct = default);
 }
 
 public class DisponibilidadService : IDisponibilidadService
@@ -117,7 +120,7 @@ public class DisponibilidadService : IDisponibilidadService
     /// Activos y ligados al servicio. Si el servicio no tiene ningún dentista ligado, lo atiende cualquier dentista
     /// activo y se avisa a la administración (decisión 4).
     /// </summary>
-    private async Task<List<int>> DentistasElegiblesAsync(Servicio servicio, CancellationToken ct)
+    public async Task<List<int>> DentistasElegiblesAsync(Servicio servicio, CancellationToken ct = default)
     {
         var ligados = await _db.DentistaServicios.AsNoTracking()
             .Where(ds => ds.ServicioId == servicio.Id)

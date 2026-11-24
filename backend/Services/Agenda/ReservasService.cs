@@ -9,10 +9,10 @@ using Npgsql;
 
 namespace backend.Services.Agenda;
 
-/// <summary>Datos de una cita nueva. El dentista lo indica recepción; la asignación automática es del commit 8.</summary>
+/// <summary>Datos de una cita nueva. Sin dentista, la reserva lo asigna (diseño, 3.3); con él, debe ser elegible.</summary>
 public sealed record SolicitudReserva(
     int PacienteId,
-    int DentistaId,
+    int? DentistaId,
     int ServicioId,
     DateOnly Fecha,
     TimeOnly Hora,
@@ -23,6 +23,12 @@ public sealed record SolicitudReserva(
     decimal? CostoExtra = null,
     string? MotivoExtra = null,
     bool ConfirmarAlCrear = false);
+
+/// <summary>El dentista indicado no está activo o no atiende el servicio (400).</summary>
+public class DentistaNoElegibleException : ArgumentException
+{
+    public DentistaNoElegibleException() : base("El dentista no está activo o no atiende ese servicio") { }
+}
 
 /// <summary>La hora pedida no es un inicio válido del horario de esa fecha para la duración del servicio.</summary>
 public class HoraFueraDeHorarioException : InvalidOperationException
@@ -129,6 +135,14 @@ public class ReservasService : IReservasService
                 throw new HoraFueraDeHorarioException();
             var (_, inicio, fin) = opcion[0];
 
+            // Dentistas elegibles para el servicio (activos y ligados; sin ligados, cualquiera activo con aviso)
+            var elegibles = await sp.GetRequiredService<IDisponibilidadService>().DentistasElegiblesAsync(servicio, token);
+            List<int> candidatos;
+            if (s.DentistaId is { } pedido)
+                candidatos = elegibles.Contains(pedido) ? [pedido] : throw new DentistaNoElegibleException();
+            else
+                candidatos = elegibles;
+
             // 1. Candado de la fecha local: las reservas del mismo día se ordenan una tras otra
             await TomarCandadosAsync(db, [s.Fecha], token);
             // El instante se toma después del candado: la espera no debe adelantar el reloj de la regla
@@ -139,18 +153,24 @@ public class ReservasService : IReservasService
             if (!regla.Aceptada)
                 throw new ReservaRechazadaException(regla.Motivo!.Value, MensajeRechazo(regla.Motivo.Value, s.Canal));
 
-            if (await OcupadoAsync(db, s.DentistaId, inicio, fin, ahora, token))
-                throw new HorarioOcupadoException();
+            // 3. Asignación entre los candidatos libres (3.3)
+            var libres = new List<int>();
+            foreach (var id in candidatos)
+                if (!await OcupadoAsync(db, id, inicio, fin, ahora, token))
+                    libres.Add(id);
+            if (libres.Count == 0)
+                throw s.DentistaId is null ? new HorarioOcupadoException(HorarioOcupadoException.MensajeSinDentistas) : new HorarioOcupadoException();
+            var dentista = libres.Count == 1 ? libres[0] : await ElegirDentistaAsync(db, libres, s.PacienteId, s.Fecha, horario, ahora, token);
 
             // 3. Liberación de las vencidas que se traslapan (6.1), a nombre del sistema. El id de la cita nueva se
             // reserva antes para que la bitácora diga qué reserva la provocó.
             int? idReservado = null;
-            if (await HayVencidasAsync(db, [s.DentistaId], inicio, fin, ahora, token))
+            if (await HayVencidasAsync(db, [dentista], inicio, fin, ahora, token))
             {
                 idReservado = (int)await db.Database
                     .SqlQueryRaw<long>("SELECT nextval(pg_get_serial_sequence('citas', 'id')) AS \"Value\"")
                     .SingleAsync(token);
-                await LiberarVencidasAsync(db, historial, sp.GetRequiredService<ContextoAuditoria>(), [s.DentistaId], inicio, fin, ahora,
+                await LiberarVencidasAsync(db, historial, sp.GetRequiredService<ContextoAuditoria>(), [dentista], inicio, fin, ahora,
                     new { citaId = idReservado, usuarioId = actor.UsuarioId }, token);
             }
 
@@ -165,7 +185,7 @@ public class ReservasService : IReservasService
             {
                 Id                = idReservado ?? 0,
                 PacienteId        = s.PacienteId,
-                DentistaId        = s.DentistaId,
+                DentistaId        = dentista,
                 ServicioId        = s.ServicioId,
                 OfertaId          = oferta?.Id,
                 Inicio            = inicio,
@@ -198,6 +218,35 @@ public class ReservasService : IReservasService
             await db.SaveChangesAsync(token);
             return cita;
         }, ct);
+
+    /// <summary>
+    /// Orden determinista entre varios dentistas libres (diseño, 3.3): continuidad con el paciente, menor carga del
+    /// día, menor carga de la semana (lunes a domingo, fecha local) e id menor.
+    /// </summary>
+    public static async Task<int> ElegirDentistaAsync(
+        DentissaDbContext db, IReadOnlyCollection<int> libres, int pacienteId, DateOnly fecha, HorarioAtencion horario, DateTime ahora, CancellationToken ct)
+    {
+        var continuidad = await db.Citas.AsNoTracking()
+            .Where(c => c.PacienteId == pacienteId && libres.Contains(c.DentistaId)
+                        && (c.Estado == EstadosCita.Completada || c.Estado == EstadosCita.Confirmada || c.Estado == EstadosCita.Pendiente))
+            .Select(c => c.DentistaId).Distinct().ToListAsync(ct);
+
+        var lunes = fecha.AddDays(-(((int)fecha.DayOfWeek + 6) % 7));
+        var (diaDesde, diaHasta) = (horario.AUtc(fecha, TimeOnly.MinValue), horario.AUtc(fecha.AddDays(1), TimeOnly.MinValue));
+        var (semDesde, semHasta) = (horario.AUtc(lunes, TimeOnly.MinValue), horario.AUtc(lunes.AddDays(7), TimeOnly.MinValue));
+        var activas = await db.Citas.AsNoTracking()
+            .Where(c => libres.Contains(c.DentistaId) && c.Inicio >= semDesde && c.Inicio < semHasta
+                        && EstadosCita.Activos.Contains(c.Estado)
+                        && !(c.Estado == EstadosCita.Pendiente && c.BloqueoExpiraEn != null && c.BloqueoExpiraEn <= ahora))
+            .Select(c => new { c.DentistaId, c.Inicio }).ToListAsync(ct);
+
+        return libres
+            .OrderBy(id => continuidad.Contains(id) ? 0 : 1)
+            .ThenBy(id => activas.Count(c => c.DentistaId == id && c.Inicio >= diaDesde && c.Inicio < diaHasta))
+            .ThenBy(id => activas.Count(c => c.DentistaId == id))
+            .ThenBy(id => id)
+            .First();
+    }
 
     private static IQueryable<Cita> Vencidas(DentissaDbContext db, IReadOnlyCollection<int> dentistas, DateTime inicio, DateTime fin, DateTime ahora, int? excluir = null) =>
         db.Citas.Where(c => dentistas.Contains(c.DentistaId) && c.Inicio < fin && inicio < c.Fin && c.Id != excluir
