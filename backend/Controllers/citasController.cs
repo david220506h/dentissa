@@ -4,6 +4,7 @@ using backend.DTOs;
 using backend.Entities;
 using backend.Repositories;
 using backend.Services;
+using backend.Services.Agenda;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,13 +23,15 @@ namespace backend.Controllers
         private readonly IAgendaService _agenda;
         private readonly IRelojClinica _reloj;
         private readonly ICitaHistorialService _historial;
+        private readonly IDisponibilidadService _disponibilidad;
 
-        public CitasController(ICitasRepository repo, IAgendaService agenda, IRelojClinica reloj, ICitaHistorialService historial)
+        public CitasController(ICitasRepository repo, IAgendaService agenda, IRelojClinica reloj, ICitaHistorialService historial, IDisponibilidadService disponibilidad)
         {
             _repo = repo;
             _agenda = agenda;
             _reloj = reloj;
             _historial = historial;
+            _disponibilidad = disponibilidad;
         }
 
         // ── GET: api/Citas ────────────────────────────────────
@@ -49,6 +52,8 @@ namespace backend.Controllers
         }
 
         // ── GET: api/Citas/horarios-disponibles?fecha=2026-11-27&dentistaId=3
+        // OBSOLETO (compatibilidad, diseño 9.4): delega en el motor de disponibilidad con las reglas de
+        // recepción y servicios de un horario. Usar GET api/agenda/disponibilidad. Se retira con autorización.
         [HttpGet("horarios-disponibles")]
         public async Task<IActionResult> GetHorariosDisponibles([FromQuery] string fecha, [FromQuery] int? dentistaId)
         {
@@ -57,7 +62,8 @@ namespace backend.Controllers
 
             try
             {
-                return Ok(await _agenda.HorariosDisponiblesAsync(fechaParsed, dentistaId));
+                var horarios = await _disponibilidad.CalcularSinServicioAsync(fechaParsed, dentistaId);
+                return Ok(horarios.Select(h => h.Hora.ToString("HH:mm")).ToList());
             }
             catch (AgendaNoConfiguradaException ex)
             {

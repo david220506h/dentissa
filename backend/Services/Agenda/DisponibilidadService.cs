@@ -27,6 +27,13 @@ public interface IDisponibilidadService
 {
     Task<IReadOnlyList<HorarioDisponible>> CalcularAsync(
         DateOnly desde, DateOnly hasta, int servicioId, CanalReserva canal, int? dentistaId = null, int maxDias = 92, CancellationToken ct = default);
+
+    /// <summary>
+    /// Compatibilidad de GET /api/citas/horarios-disponibles (sin servicio): horarios de un espacio en que queda
+    /// libre algún dentista activo (o el indicado), con las reglas de recepción. Obsoleto: se retira con el panel
+    /// anterior, previa autorización (diseño, 9.4).
+    /// </summary>
+    Task<IReadOnlyList<HorarioDisponible>> CalcularSinServicioAsync(DateOnly fecha, int? dentistaId, CancellationToken ct = default);
 }
 
 public class DisponibilidadService : IDisponibilidadService
@@ -54,18 +61,33 @@ public class DisponibilidadService : IDisponibilidadService
 
         var servicio = await _db.Servicios.AsNoTracking().FirstOrDefaultAsync(s => s.Id == servicioId && s.Activo, ct)
             ?? throw new ServicioNoDisponibleException();
+        var elegibles = await DentistasElegiblesAsync(servicio, ct);
+        if (dentistaId is { } elegido)
+            elegibles = elegibles.Where(id => id == elegido).ToList();
+        return await CalcularParaAsync(desde, hasta, servicio.DuracionSlots, canal, elegibles, ct);
+    }
+
+    public async Task<IReadOnlyList<HorarioDisponible>> CalcularSinServicioAsync(DateOnly fecha, int? dentistaId, CancellationToken ct = default)
+    {
+        var elegibles = await _db.Dentistas.AsNoTracking()
+            .Where(d => d.Activo && (dentistaId == null || d.Id == dentistaId))
+            .Select(d => d.Id)
+            .ToListAsync(ct);
+        return await CalcularParaAsync(fecha, fecha, 1, CanalReserva.Recepcion, elegibles, ct);
+    }
+
+    // Núcleo común: inicios posibles, regla de anticipación y horizonte, y ocupación de los dentistas elegibles
+    private async Task<IReadOnlyList<HorarioDisponible>> CalcularParaAsync(
+        DateOnly desde, DateOnly hasta, short espacios, CanalReserva canal, List<int> elegibles, CancellationToken ct)
+    {
+        if (elegibles.Count == 0)
+            return Array.Empty<HorarioDisponible>();
         var config = await _db.ConfiguracionAgenda.AsNoTracking().FirstOrDefaultAsync(c => c.Id == ConfiguracionAgenda.IdUnico, ct)
             ?? throw new AgendaNoConfiguradaException();
         var horario = await _calendario.ObtenerHorarioAsync(ct);
         var parametros = await _calendario.ObtenerParametrosAsync(ct);
         var reloj = new RelojAtencion(horario);
         var ahora = _tiempo.GetUtcNow().UtcDateTime;
-
-        var elegibles = await DentistasElegiblesAsync(servicio, ct);
-        if (dentistaId is { } elegido)
-            elegibles = elegibles.Where(id => id == elegido).ToList();
-        if (elegibles.Count == 0)
-            return Array.Empty<HorarioDisponible>();
 
         // Una consulta por rango; el resto en memoria (diseño, 1.4)
         var desdeUtc = horario.AUtc(desde, TimeOnly.MinValue);
@@ -79,7 +101,7 @@ public class DisponibilidadService : IDisponibilidadService
 
         var resultado = new List<HorarioDisponible>();
         for (var fecha = desde; fecha <= hasta; fecha = fecha.AddDays(1))
-            foreach (var (hora, inicio, fin) in horario.InicioPosibles(fecha, config.DuracionSlotMinutos, servicio.DuracionSlots))
+            foreach (var (hora, inicio, fin) in horario.InicioPosibles(fecha, config.DuracionSlotMinutos, espacios))
             {
                 if (!ReglaBloqueo.CalcularBloqueo(ahora, inicio, canal, reloj, parametros).Aceptada) continue;
                 var libres = elegibles

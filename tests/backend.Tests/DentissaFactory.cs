@@ -51,6 +51,7 @@ public class DentissaFactory : WebApplicationFactory<Program>
         builder.UseSetting("RateLimiting:Login:PorIpYCorreo:PermitLimit", LimiteLogin.ToString());
         builder.UseSetting("RateLimiting:Login:PorIp:PermitLimit", (LimiteLogin * 6).ToString());
         builder.UseSetting("RateLimiting:Registro:PorIp:PermitLimit", LimiteLogin.ToString());
+        builder.UseSetting("RateLimiting:Publico:PorIp:PermitLimit", LimiteLogin.ToString());
         builder.UseSetting("CatalogoImagenes:Ruta", _carpetaImagenes);
         if (Tiempo is { } tiempo)
             builder.ConfigureServices(s => s.AddSingleton(tiempo));
