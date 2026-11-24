@@ -36,6 +36,7 @@ public class DentissaDbContext : DbContext
     public DbSet<AgendaCierre> AgendaCierres => Set<AgendaCierre>();
     public DbSet<Cita> Citas => Set<Cita>();
     public DbSet<CitaHistorial> CitaHistorial => Set<CitaHistorial>();
+    public DbSet<CitaToken> CitaTokens => Set<CitaToken>();
 
     // Notificaciones y auditoría
     public DbSet<Notificacion> Notificaciones => Set<Notificacion>();

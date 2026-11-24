@@ -482,6 +482,64 @@ namespace backend.Migrations
                         });
                 });
 
+            modelBuilder.Entity("backend.Entities.CitaToken", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("CitaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("cita_id");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creado_en");
+
+                    b.Property<DateTime>("ExpiraEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expira_en");
+
+                    b.Property<DateTime?>("InvalidadoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("invalidado_en");
+
+                    b.Property<string>("Proposito")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("proposito");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("char(64)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<DateTime?>("UsadoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("usado_en");
+
+                    b.HasKey("Id")
+                        .HasName("pk_cita_tokens");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_cita_tokens_token_hash");
+
+                    b.HasIndex("CitaId", "Proposito")
+                        .HasDatabaseName("ix_cita_tokens_cita_id_proposito");
+
+                    b.ToTable("cita_tokens", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_cita_tokens_hash", "token_hash ~ '^[0-9a-f]{64}$'");
+
+                            t.HasCheckConstraint("ck_cita_tokens_proposito", "proposito IN ('confirmar','gestionar')");
+                        });
+                });
+
             modelBuilder.Entity("backend.Entities.ConfiguracionAgenda", b =>
                 {
                     b.Property<int>("Id")
@@ -1683,6 +1741,18 @@ namespace backend.Migrations
                     b.Navigation("Cita");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("backend.Entities.CitaToken", b =>
+                {
+                    b.HasOne("backend.Entities.Cita", "Cita")
+                        .WithMany()
+                        .HasForeignKey("CitaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_cita_tokens_citas_cita_id");
+
+                    b.Navigation("Cita");
                 });
 
             modelBuilder.Entity("backend.Entities.ConfiguracionAgenda", b =>
