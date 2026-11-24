@@ -1,0 +1,66 @@
+/*
+  Tokens del SITIO PÚBLICO (prefijo --sitio-*). Mismo lenguaje que el panel (Nunito, rosas de marca), más
+  expresivo: títulos fluidos, píldoras, sombras con tinte rosado y espacios generosos.
+  El panel NO los usa: sus valores siguen en tokens.css y se comparan contra docs/design/panel/.
+  Solo modo claro. Contraste: texto #2a2326 sobre blanco 15:1; acción #b22f56 con blanco 6.1:1;
+  texto secundario #5c4f55 sobre #fdecef 7.0:1.
+*/
+:root {
+  /* Color */
+  --sitio-acento: #d75078; /* Rosa de marca: acentos, íconos, subrayados (no texto pequeño sobre blanco) */
+  --sitio-accion: #b22f56; /* Botones y enlaces de acción (AA con blanco) */
+  --sitio-accion-hover: #9b294b;
+  --sitio-tinte: #fdecef; /* Fondo de secciones alternas */
+  --sitio-tinte-2: #fce7f3; /* Fondo de detalles, chips */
+  --sitio-tinte-3: #fff7f9; /* Fondo muy suave (página) */
+  --sitio-blanco: #ffffff;
+  --sitio-texto: #2a2326; /* Texto principal: neutro oscuro con un punto cálido */
+  --sitio-texto-2: #5c4f55; /* Texto secundario */
+  --sitio-borde: #f1dde3; /* Bordes de tarjetas y separadores */
+  --sitio-borde-campo: #8a7a81; /* Borde de campos (3:1 sobre blanco) */
+  --sitio-exito: #1f7a4d;
+  --sitio-exito-fondo: #e6f4ec;
+  --sitio-aviso-fondo: #fff4d6;
+  --sitio-aviso-texto: #6b4a00;
+  --sitio-seleccion: #f9c9d7; /* Texto seleccionado */
+  --sitio-degradado-hero: radial-gradient(120% 90% at 85% 0%, #fce7f3 0%, #fdecef 38%, #fff7f9 72%);
+  --sitio-velo-barra: rgba(255, 247, 249, 0.86); /* Barra superior al desplazarse */
+
+  /* Sombras con tinte de marca */
+  --sitio-sombra-1: 0 1px 2px rgba(178, 47, 86, 0.06), 0 2px 8px rgba(178, 47, 86, 0.05);
+  --sitio-sombra-2: 0 2px 6px rgba(178, 47, 86, 0.07), 0 14px 32px -8px rgba(178, 47, 86, 0.16);
+  --sitio-sombra-3: 0 4px 10px rgba(178, 47, 86, 0.08), 0 30px 60px -16px rgba(178, 47, 86, 0.26);
+  --sitio-sombra-cta: 0 6px 16px -4px rgba(178, 47, 86, 0.45);
+
+  /* Tipografía (Nunito) */
+  --sitio-h1: clamp(2.25rem, 1.6rem + 2.9vw, 3.75rem); /* 36 → 60 px */
+  --sitio-h2: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem); /* 28 → 40 px */
+  --sitio-h3: 1.25rem; /* 20 px */
+  --sitio-cuerpo: clamp(1.0625rem, 1rem + 0.25vw, 1.125rem); /* 17 → 18 px */
+  --sitio-pequeno: 0.9375rem; /* 15 px */
+  --sitio-mini: 0.8125rem; /* 13 px: eyebrow y notas */
+  --sitio-precio: 1.125rem;
+  --sitio-interlineado: 1.7;
+  --sitio-interlineado-titulo: 1.1;
+  --sitio-tracking-eyebrow: 0.12em;
+  --sitio-tracking-titulo: -0.02em;
+
+  /* Forma */
+  --sitio-radio-tarjeta: 20px;
+  --sitio-radio-tarjeta-chica: 16px;
+  --sitio-radio-campo: 12px;
+  --sitio-radio-pildora: 999px;
+
+  /* Espacio y medida */
+  --sitio-contenedor: 1200px;
+  --sitio-medida: 65ch;
+  --sitio-seccion: clamp(3.5rem, 2rem + 6vw, 7.5rem); /* 56 → 120 px */
+  --sitio-margen: clamp(1.25rem, 0.6rem + 3vw, 2.5rem);
+  --sitio-alto-barra: 72px;
+  --sitio-alto-cta: 52px;
+
+  /* Movimiento */
+  --sitio-ease: cubic-bezier(0.16, 1, 0.3, 1); /* exponencial de salida */
+  --sitio-dur: 700ms;
+  --sitio-dur-corta: 180ms;
+}
