@@ -26,3 +26,14 @@ dist/
 .idea/
 .DS_Store
 Thumbs.db
+!.env.*.example
+
+# Pruebas de extremo a extremo (Playwright)
+playwright-report/
+test-results/
+blob-report/
+
+# Archivos comprimidos
+*.rar
+*.zip
+*.7z
