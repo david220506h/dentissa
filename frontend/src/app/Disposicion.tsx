@@ -8,7 +8,9 @@ import {
   type ElementoMenu,
   type GrupoMenu,
 } from '@dentissa/ui';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { obtenerJson } from './api';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AvisoInactividad } from './AvisoInactividad';
 import { useConexion } from './conexion';
@@ -26,12 +28,23 @@ export const EnlaceRouter: ComponenteEnlace = ({ href, children, ...resto }) => 
 // Menú inferior del celular (Movil.dc.html): cuatro secciones principales; el resto va en la hoja "Más" (Movil2)
 const INFERIOR: IdSeccion[] = ['inicio', 'agenda', 'solicitudes', 'pacientes'];
 
-const aElemento = (s: Seccion): ElementoMenu => ({ id: s.id, etiqueta: s.etiqueta, icono: s.icono, href: s.ruta });
+type Contadores = Partial<Record<IdSeccion, number>>;
 
-export function agrupar(secciones: Seccion[]): GrupoMenu[] {
+const aElemento = (s: Seccion, contadores: Contadores = {}): ElementoMenu => {
+  const n = contadores[s.id];
+  return {
+    id: s.id,
+    etiqueta: s.etiqueta,
+    icono: s.icono,
+    href: s.ruta,
+    ...(n ? { contador: { valor: n, descripcion: n === 1 ? '1 solicitud por revisar' : `${n} solicitudes por revisar` } } : {}),
+  };
+};
+
+export function agrupar(secciones: Seccion[], contadores: Contadores = {}): GrupoMenu[] {
   return (['Principal', 'Clínica', 'Administración'] as const).map((titulo) => ({
     titulo,
-    elementos: secciones.filter((s) => s.grupo === titulo).map(aElemento),
+    elementos: secciones.filter((s) => s.grupo === titulo).map((s) => aElemento(s, contadores)),
   }));
 }
 
@@ -46,6 +59,15 @@ export function Disposicion() {
   const ubicacion = useLocation();
   const navegar = useNavigate();
   const [masAbierta, setMasAbierta] = useState(false);
+  // Contador de Solicitudes: pendientes del sitio por revisar (solo recepción); se actualiza cada minuto
+  const veSolicitudes = !!usuario && seccionesDe(usuario.rol).some((s) => s.id === 'solicitudes');
+  const solicitudes = useQuery({
+    queryKey: ['solicitudes'],
+    queryFn: () => obtenerJson<unknown[]>('/solicitudes'),
+    enabled: veSolicitudes,
+    refetchInterval: 60_000,
+  });
+  const contadores: Contadores = { solicitudes: solicitudes.data?.length ?? 0 };
 
   // La hoja solo existe con el menú inferior: si la ventana pasa a 1024 px o más, se cierra
   useEffect(() => {
@@ -68,9 +90,9 @@ export function Disposicion() {
     navegar('/iniciar-sesion', { replace: true });
   };
 
-  const inferior = permitidas.filter((s) => INFERIOR.includes(s.id)).map(aElemento);
+  const inferior = permitidas.filter((s) => INFERIOR.includes(s.id)).map((s) => aElemento(s, contadores));
   // Hoja "Más": lo que el rol puede ver según la matriz de Main y no cabe en el menú inferior
-  const enHoja: ElementoMenu[] = permitidas.filter((s) => !INFERIOR.includes(s.id)).map(aElemento);
+  const enHoja: ElementoMenu[] = permitidas.filter((s) => !INFERIOR.includes(s.id)).map((s) => aElemento(s, contadores));
 
   return (
     <div className={estilos.raiz}>
@@ -79,7 +101,7 @@ export function Disposicion() {
       </a>
       <div className={estilos.lateral}>
         <MenuLateral
-          grupos={agrupar(permitidas)}
+          grupos={agrupar(permitidas, contadores)}
           usuario={{ nombre, rol: NOMBRE_ROL[usuario.rol] }}
           alCerrarSesion={alCerrarSesion}
           enlace={EnlaceRouter}
