@@ -267,5 +267,7 @@ namespace backend.Services
         public const string InicioSesion        = "inicio_sesion";
         public const string InicioSesionFallido = "inicio_sesion_fallido";
         public const string CierreSesion        = "cierre_sesion";
+        // Lectura de datos de salud (alergias): solo campos e ids, nunca valores (Fase 2b)
+        public const string LecturaSensible     = "lectura_sensible";
     }
 }

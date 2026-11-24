@@ -47,6 +47,7 @@ builder.Services.AddScoped<backend.Services.Agenda.IDisponibilidadService, backe
 builder.Services.AddScoped<backend.Services.Agenda.IReservasService, backend.Services.Agenda.ReservasService>();
 builder.Services.AddScoped<backend.Services.Agenda.ICitasEstadoService, backend.Services.Agenda.CitasEstadoService>();
 builder.Services.AddScoped<backend.Services.Agenda.IConfiguracionAgendaService, backend.Services.Agenda.ConfiguracionAgendaService>();
+builder.Services.AddScoped<backend.Services.Pacientes.IPacientesPanelService, backend.Services.Pacientes.PacientesPanelService>();
 builder.Services.AddSingleton<backend.Services.Agenda.ITokensCitaService, backend.Services.Agenda.TokensCitaService>();
 
 // Correo (diseño de la agenda, sección 7): bandeja de salida y envío por SMTP (Mailpit en desarrollo).
