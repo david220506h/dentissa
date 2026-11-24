@@ -5,12 +5,12 @@ import estilos from './Aviso.module.css';
 
 export type TonoAviso = 'info' | 'exito' | 'advertencia' | 'error';
 
-// Íconos del diseño para cada aviso (Main · Avisos). En Estados, una advertencia lleva el triángulo de
-// alerta: cuando el contenido lo pide, el ícono se cambia con la propiedad `icono`.
+// Íconos de cada aviso. Advertencia: triángulo de alerta por defecto; el reloj solo para avisos de
+// tiempo ("Horario bloqueado", "Se libera…"), con `icono="reloj"` (decisión del arquitecto).
 const ICONO: Record<TonoAviso, NombreIcono> = {
   info: 'informacion',
   exito: 'confirmar',
-  advertencia: 'reloj',
+  advertencia: 'alerta',
   error: 'alerta',
 };
 

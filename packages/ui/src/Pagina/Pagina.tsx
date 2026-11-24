@@ -182,7 +182,7 @@ export function SinConexion({ alReintentar }: SinConexionProps) {
           Dentissa no guarda datos de pacientes en este teléfono, así que no puedes ver ni cambiar citas hasta recuperar
           la conexión.
         </p>
-        <Boton variante="principal" icono="reloj" anchoCompleto className={estilos.reintentar} onClick={alReintentar}>
+        <Boton variante="principal" icono="reintentar" anchoCompleto className={estilos.reintentar} onClick={alReintentar}>
           Reintentar
         </Boton>
         <p className={estilos.sinConexionNota}>Revisa que estés en el wifi de la clínica o que tengas datos móviles.</p>

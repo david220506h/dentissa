@@ -100,6 +100,12 @@ for (const ancho of ANCHOS) {
   });
 }
 
+test('la raíz / sin sesión abre el inicio de sesión nuevo', async ({ page }) => {
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/iniciar-sesion$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
+});
+
 test('sin sesión, una ruta del panel lleva al inicio de sesión', async ({ page }) => {
   await page.goto('/agenda');
   await expect(page).toHaveURL(/\/iniciar-sesion$/);

@@ -220,7 +220,7 @@ describe('Aviso', () => {
 
   it('las advertencias tras una acción se anuncian como alert; sin título es un solo mensaje', () => {
     render(
-      <Aviso tono="advertencia" anunciar icono="alerta">
+      <Aviso tono="advertencia" anunciar>
         Hay 2 solicitudes por vencer en menos de 2 horas.
       </Aviso>,
     );

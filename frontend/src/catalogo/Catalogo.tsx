@@ -197,7 +197,7 @@ export function Catalogo() {
           <Aviso tono="exito" titulo="Cita confirmada" anunciar>
             Se registró la confirmación por llamada.
           </Aviso>
-          <Aviso tono="advertencia" titulo="Horario bloqueado">
+          <Aviso tono="advertencia" titulo="Horario bloqueado" icono="reloj">
             Se libera mañana a las 10:42.
           </Aviso>
           <Aviso tono="error" titulo="No se pudo guardar" anunciar>
@@ -229,7 +229,7 @@ export function Catalogo() {
               titulo="No pudimos cargar las citas"
               texto="Revisa tu conexión con la clínica e inténtalo de nuevo. No se perdió ningún dato."
               accion={
-                <Boton variante="principal" icono="reloj">
+                <Boton variante="principal" icono="reintentar">
                   Reintentar
                 </Boton>
               }
@@ -255,10 +255,10 @@ export function Catalogo() {
           <Aviso tono="info" alCerrar={() => {}}>
             El horario de las 15:00 se liberará hoy a las 13:00.
           </Aviso>
-          <Aviso tono="advertencia" icono="alerta">
+          <Aviso tono="advertencia">
             Hay 2 solicitudes por vencer en menos de 2 horas.
           </Aviso>
-          <Aviso tono="error">No se pudo enviar el correo. Reintentaremos en 5 minutos; puedes llamar a la paciente.</Aviso>
+          <Aviso tono="error">No se pudo enviar el correo. Reintentaremos en 5 minutos; puedes llamar para avisar.</Aviso>
         </div>
         <div className={estilos.muestra}>
           <DialogoDeMuestra />

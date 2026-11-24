@@ -97,6 +97,11 @@ const CASOS: Caso[] = [
     catalogo: (p) => enEstados(p).getByRole('button', { name: 'Nueva cita' }),
   },
   {
+    nombre: 'error: botón Reintentar (sin el ícono, ver la excepción)',
+    diseno: (p) => p.getByRole('button', { name: 'Reintentar' }),
+    catalogo: (p) => enEstados(p).getByRole('button', { name: 'Reintentar' }),
+  },
+  {
     nombre: 'sin permiso: botón Volver al inicio',
     diseno: (p) => p.getByRole('button', { name: 'Volver al inicio' }),
     catalogo: (p) => enEstados(p).getByRole('button', { name: 'Volver al inicio' }),
@@ -193,6 +198,18 @@ const CASOS: Caso[] = [
     dialogo: true,
   },
 ];
+
+// Excepción aprobada: "Reintentar" lleva la flecha circular; Estados.dc.html aún dibuja un reloj y el
+// próximo zip lo corrige. Si el diseño ya trae la flecha, esta prueba falla para retirar la excepción.
+test('excepción: "Reintentar" con flecha circular en lugar del reloj del diseño', async ({ page, context }) => {
+  const disenoPage = await context.newPage();
+  await abrirDiseno(disenoPage, 'Estados.dc.html');
+  const trazoDiseno = await disenoPage.getByRole('button', { name: 'Reintentar' }).locator('svg path').first().getAttribute('d');
+  expect(trazoDiseno, 'el diseño todavía dibuja el reloj').toBe('M12 6v6l4 2');
+  await page.goto('/catalogo.html');
+  const trazo = await page.locator('section[aria-labelledby="sec-Estados"]').getByRole('button', { name: 'Reintentar' }).locator('svg path').first().getAttribute('d');
+  expect(trazo).toBe('M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8');
+});
 
 test.describe('Estados: catálogo frente al diseño', () => {
   test.use({ viewport: { width: 1440, height: 900 } });

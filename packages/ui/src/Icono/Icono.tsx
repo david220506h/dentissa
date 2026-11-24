@@ -102,6 +102,13 @@ const TRAZOS = {
       <path d="M12 6v6l4 2" />
     </>
   ),
+  // Flecha circular para "Reintentar" (decisión del arquitecto; Estados.dc.html aún dibuja un reloj)
+  reintentar: (
+    <>
+      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+    </>
+  ),
   ver: (
     <>
       <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
