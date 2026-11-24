@@ -421,6 +421,21 @@ Respondidas por las decisiones del arquitecto: 1 (`CLAUDE.md`), 2 (landing y reg
 - Landing, menú, inicio de sesión de pacientes y registro se movieron con `git mv` a `frontend/src/migrar-a-sitio/` (ver su `LEEME.md`, con la imagen externa de `decogaleria.mx` pendiente).
 - **Mientras no existan Agenda y Equipo y usuarios en el panel nuevo, las citas y los usuarios solo se manejan por la API** (`/api/citas`, `/api/usuarios`). El panel no tiene, por ahora, forma de crear, confirmar o cancelar citas, ni de crear o desactivar usuarios.
 
+### 14.7 Agenda con la API actual: filtrado en el cliente y propuesta de backend
+
+**Hoy.** Agenda (bloque d) e Inicio piden `GET /api/citas`, que devuelve **todas** las citas sin paginar, y filtran por fecha y dentista en el navegador. Con el volumen esperado de una sucursal (un dentista, 6 horarios al día: unas 1 800 citas al año) la respuesta tarda poco al inicio, pero **crece sin límite** y además entrega citas pasadas que la pantalla no muestra.
+
+**Cuándo actuar.** Si `GET /api/citas` pasa de ~2 000 citas o tarda más de 1 s en la red de la clínica, o en cuanto se integre la Fase 2 (lo que ocurra primero).
+
+**Propuesta (sin implementar): un commit chico de backend**, compatible con lo que existe:
+
+- `GET /api/citas?desde=YYYY-MM-DD&hasta=YYYY-MM-DD&dentistaId=N`, todos opcionales. Sin parámetros responde como hoy (compatibilidad).
+- Fechas **locales de la clínica**, inclusivas, convertidas a UTC con `IRelojClinica` (igual que `mi-agenda`). Rango máximo de 92 días (el mismo límite de `mi-agenda`); `hasta < desde` → 400.
+- Filtro en la consulta (`WHERE inicio >= @desde AND inicio < @hasta+1`), apoyado en el índice de `citas (inicio)` o `(dentista_id, inicio)`; se verifica si existe y, si no, va en una migración nueva.
+- Autorización igual que hoy (`Roles.Panel`). DTO sin cambios.
+- Pruebas (Testcontainers): rango inclusivo en la zona de la clínica, cita a las 23:30 local, filtro por dentista, 400 por rango inválido, y sin parámetros igual que antes.
+- El panel pasa a pedir la semana visible (Agenda) y el día de hoy más las pendientes futuras (Inicio). Commit sugerido: `feat(citas): filtro por fechas y dentista en GET /api/citas`.
+
 ### 14.6 Tareas con fecha
 
 | Fecha | Tarea | Motivo |

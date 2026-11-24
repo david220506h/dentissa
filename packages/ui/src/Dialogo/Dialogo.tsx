@@ -20,6 +20,8 @@ export interface DialogoProps {
   cerrarFuera?: boolean;
   /** Etiqueta del botón de la esquina (Estados: "Cerrar"). */
   etiquetaCerrar?: string;
+  /** Formularios de cita: en celular (menos de 768 px) ocupan toda la pantalla (CitaFormularios.dc.html). */
+  completoEnCelular?: boolean;
 }
 
 /**
@@ -38,6 +40,7 @@ export function Dialogo({
   tamano = 'normal',
   cerrarFuera = false,
   etiquetaCerrar = 'Cerrar',
+  completoEnCelular = false,
 }: DialogoProps) {
   const idCuerpo = useId();
   return (
@@ -45,9 +48,9 @@ export function Dialogo({
       isOpen={abierto}
       onOpenChange={(abrir) => !abrir && alCerrar()}
       isDismissable={cerrarFuera}
-      className={estilos.velo}
+      className={clases(estilos.velo, completoEnCelular && estilos.veloCompleto)}
     >
-      <Modal className={clases(estilos.modal, estilos[tamano])}>
+      <Modal className={clases(estilos.modal, estilos[tamano], completoEnCelular && estilos.completo)}>
         <Dialog className={estilos.dialogo} aria-describedby={idCuerpo}>
           <div className={estilos.encabezado}>
             <div className={estilos.tituloGrupo}>

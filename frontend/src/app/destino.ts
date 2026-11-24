@@ -6,7 +6,6 @@
 export function destinoSeguro(valor: unknown): string {
   if (typeof valor !== 'string' || valor.length === 0 || valor.length > 512) return '/';
   // Debe empezar con una sola "/" y no llevar barras invertidas ni caracteres de control
-  // eslint-disable-next-line no-control-regex
   if (!valor.startsWith('/') || valor.startsWith('//') || /[\\\u0000-\u001f\u007f]/.test(valor)) return '/';
   // Comprobación final: resuelta contra una base cualquiera, debe seguir en el mismo origen
   const base = 'https://panel.invalid';

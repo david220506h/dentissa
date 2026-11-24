@@ -143,3 +143,48 @@
     animation: aparecer var(--dur-rapida) ease reverse;
   }
 }
+
+/* Pantalla completa en celular (formularios de cita). Movimiento de "pantalla completa de detalle"
+   (plan, sección 4): entra desde la derecha, 280 ms --ease-drawer; con reduced-motion, solo opacidad. */
+@media (max-width: 767px) {
+  .veloCompleto {
+    padding: 0;
+  }
+
+  .completo {
+    max-width: none;
+    height: 100dvh;
+  }
+
+  .completo .dialogo {
+    height: 100%;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .completo[data-entering] {
+    animation: entrarDerecha var(--dur-hoja) var(--ease-drawer);
+  }
+
+  .completo[data-exiting] {
+    animation: entrarDerecha var(--dur-hoja) var(--ease-drawer) reverse;
+  }
+}
+
+@keyframes entrarDerecha {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .completo[data-entering] {
+    animation: aparecer var(--dur-rapida) ease;
+  }
+
+  .completo[data-exiting] {
+    animation: aparecer var(--dur-rapida) ease reverse;
+  }
+}

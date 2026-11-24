@@ -61,12 +61,17 @@ export const USUARIO_DE_EJEMPLO = { id: 1, nombre: 'Ana', apellido: 'Ejemplo', e
 
 /**
  * Sesión de ejemplo solo en el navegador de prueba: usuario, un token falso que no caduca y la API
- * simulada. Nada sale a un backend real. /api/citas responde con `citas` (vacío por defecto) y
- * cerrar sesión responde 204.
+ * simulada. Nada sale a un backend real: /api/citas responde con `citas`, /api/citas/dentistas con
+ * `dentistas`, los horarios libres con `libres(fecha)` y cerrar sesión con 204.
  */
 export async function sesionDeEjemplo(
   page: Page,
-  { rol = 'admin', citas = [] as unknown[] }: { rol?: string; citas?: unknown[] } = {},
+  {
+    rol = 'admin',
+    citas = [] as unknown[],
+    dentistas = [] as unknown[],
+    libres = () => [] as string[],
+  }: { rol?: string; citas?: unknown[]; dentistas?: unknown[]; libres?: (fecha: string) => string[] } = {},
 ): Promise<void> {
   await page.addInitScript((u) => {
     localStorage.setItem('usuario', JSON.stringify(u));
@@ -75,6 +80,8 @@ export async function sesionDeEjemplo(
   }, { ...USUARIO_DE_EJEMPLO, rol });
   await page.route('**/api/**', (ruta) => {
     const url = new URL(ruta.request().url());
+    if (url.pathname === '/api/citas/dentistas') return ruta.fulfill({ status: 200, json: dentistas });
+    if (url.pathname === '/api/citas/horarios-disponibles') return ruta.fulfill({ status: 200, json: libres(url.searchParams.get('fecha') ?? '') });
     if (url.pathname.startsWith('/api/citas')) return ruta.fulfill({ status: 200, json: citas });
     if (url.pathname === '/api/auth/logout') return ruta.fulfill({ status: 204 });
     return ruta.fulfill({ status: 404, json: { mensaje: 'Sin simulación en la prueba' } });
