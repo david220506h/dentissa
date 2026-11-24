@@ -220,7 +220,7 @@ namespace backend.Services
         private static Dictionary<string, object?> DetalleAlta(EntityEntry entrada)
         {
             var valores = new Dictionary<string, object?>();
-            foreach (var p in entrada.Properties.Where(p => !Ignoradas.Contains(p.Metadata.Name)))
+            foreach (var p in entrada.Properties.Where(p => !Ignoradas.Contains(p.Metadata.Name) && !p.Metadata.IsConcurrencyToken))
             {
                 if (p.CurrentValue == null) continue;
                 valores[Columna(p)] = EsSensible(p) ? Cambio : p.CurrentValue;
@@ -232,7 +232,7 @@ namespace backend.Services
         private static Dictionary<string, object?>? DetalleCambios(EntityEntry entrada)
         {
             var modificadas = entrada.Properties
-                .Where(p => p.IsModified && !Ignoradas.Contains(p.Metadata.Name)
+                .Where(p => p.IsModified && !Ignoradas.Contains(p.Metadata.Name) && !p.Metadata.IsConcurrencyToken
                             && !Equals(p.OriginalValue, p.CurrentValue))
                 .ToList();
 

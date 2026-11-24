@@ -1,4 +1,4 @@
-# PostgreSQL para desarrollo local. No usar en producción (ver docs/database/modelo-datos.md, sección 10).
+# PostgreSQL y Mailpit para desarrollo local. No usar en producción (ver docs/database/modelo-datos.md, sección 10).
 #
 #   1. Copia .env.example como .env y define POSTGRES_PASSWORD (.env no se versiona).
 #   2. docker compose up -d
@@ -22,6 +22,16 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    restart: unless-stopped
+
+  # Correo de desarrollo (diseño de la agenda, 7.1): atrapa todo lo que envía el backend; nada sale a internet.
+  # Bandeja web en http://127.0.0.1:8025. Configuración del backend: docs/correo/desarrollo.md.
+  mailpit:
+    image: axllent/mailpit:v1.33.1
+    container_name: dentissa-mailpit
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
     restart: unless-stopped
 
 volumes:

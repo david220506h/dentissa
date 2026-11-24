@@ -89,6 +89,43 @@ internal static class SqlFase2
         $$;
         """;
 
+    // Commit 9 (5.2): los tokens de cita no se borran físicamente; se usan, vencen o se invalidan
+    public const string CitaTokensSinBorrado = """
+        CREATE FUNCTION impedir_borrado_cita_tokens() RETURNS trigger
+        LANGUAGE plpgsql AS $$
+        BEGIN
+          RAISE EXCEPTION 'Los enlaces de cita no se borran: se usan, vencen o se invalidan (operación % rechazada)', TG_OP
+            USING ERRCODE = 'restrict_violation';
+        END;
+        $$;
+
+        CREATE TRIGGER cita_tokens_sin_borrado BEFORE DELETE ON cita_tokens
+          FOR EACH ROW EXECUTE FUNCTION impedir_borrado_cita_tokens();
+        CREATE TRIGGER cita_tokens_sin_truncate BEFORE TRUNCATE ON cita_tokens
+          FOR EACH STATEMENT EXECUTE FUNCTION impedir_borrado_cita_tokens();
+        """;
+
+    public const string QuitarCitaTokensSinBorrado = """
+        DROP TRIGGER IF EXISTS cita_tokens_sin_truncate ON cita_tokens;
+        DROP TRIGGER IF EXISTS cita_tokens_sin_borrado ON cita_tokens;
+        DROP FUNCTION IF EXISTS impedir_borrado_cita_tokens();
+        """;
+
+    // Commit 10 (7.3): las filas de correo anteriores a la bandeja de salida reciben estado y plantilla. Las no
+    // enviadas quedan "descartada": la bandeja nueva no debe mandar correos viejos.
+    public const string BandejaCorreoDatos = """
+        UPDATE notificaciones SET
+          estado = CASE WHEN enviada THEN 'enviada' ELSE 'descartada' END,
+          plantilla = CASE tipo
+            WHEN 'solicitud_nueva' THEN 'solicitud_recibida'
+            WHEN 'solicitud_cambio' THEN 'solicitud_cambio_recibida'
+            WHEN 'recordatorio' THEN 'recordatorio'
+            WHEN 'cambio' THEN 'cambio'
+            WHEN 'cancelacion' THEN 'cancelacion'
+            ELSE 'confirmacion' END
+        WHERE canal = 'correo';
+        """;
+
     // Reversa del commit 2: minutos → horas, redondeando hacia arriba
     public const string ConvertirConfiguracionAHoras = """
         UPDATE configuracion_agenda SET

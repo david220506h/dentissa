@@ -59,14 +59,14 @@ No avances a una etapa posterior sin que se indique expresamente.
 - Nunca devolver entidades de EF con datos sensibles (hashes, tokens): siempre DTOs.
 - Registro de auditoría para acciones críticas.
 - Los eliminados son lógicos; nada clínico ni financiero se borra físicamente.
-- **No hay borrado físico de datos clínicos ni de citas.** Las citas se cancelan con motivo; los usuarios se desactivan. (En la base lo impiden triggers en las tablas del expediente, `auditoria`, `cita_historial` y `citas`.)
+- **No hay borrado físico de datos clínicos ni de citas.** Las citas se cancelan con motivo; los usuarios se desactivan. (En la base lo impiden triggers en las tablas del expediente, `auditoria`, `cita_historial`, `citas` y `cita_tokens`.)
 - **El administrador inicial y las contraseñas** vienen de user-secrets (`Seed:AdminEmail`, `Seed:AdminPassword`) o de variables de entorno, y **nunca se imprimen** en consola, logs ni respuestas.
 - **El token de acceso dura 15 minutos** (`JwtSettings:ExpirationMinutes`, configurable).
 - **Regla del último administrador:** no se puede desactivar, eliminar ni cambiar de rol al último administrador activo (lo valida el backend).
 - **BLOQUEANTE del primer despliegue** (no de la Fase 3a): hoy el frontend guarda los tokens en `localStorage`. Antes de desplegar, el refresh token pasa a una cookie `HttpOnly` y el access token vive solo en memoria. Requiere cambios de backend; se hace en la fase que lo indique.
 - **Requisitos del primer despliegue real:** la lista completa (cuenta de administración con contraseña nueva, tokens en cookie, hosting, correo y dominio, revisión legal) está en `docs/requisitos-despliegue.md`. No se despliega con ninguno pendiente.
 - **Cierre por inactividad:** 15 minutos para todos los roles, con aviso a los 14 y opción de "Mantener sesión". En la Fase 3a solo el frontend, con el tiempo fijo; que la administración lo configure y que el servidor también expire la sesión por inactividad va en la fase de Configuración.
-- **La bitácora enmascara las columnas sensibles** (`[DatoSensible]`): se registran como `"[cambió]"`, nunca con su valor. Hoy: `password_hash`, `refresh_token`, `confirmacion_token_hash`, `alergias`, `condiciones_medicas`, `curp` y `direccion`.
+- **La bitácora enmascara las columnas sensibles** (`[DatoSensible]`): se registran como `"[cambió]"`, nunca con su valor. Hoy: `password_hash`, `refresh_token`, `confirmacion_token_hash`, `alergias`, `condiciones_medicas`, `curp`, `direccion` y los motivos de las citas (`motivo`, `motivo_cancelacion`, `motivo_cambio`, `solicitud_cambio_motivo`).
 - Legislación mexicana aplicable: protección de datos personales en posesión de particulares y NOM-004-SSA3-2012 (expediente clínico). Se valida con un especialista; no la interpretes por tu cuenta.
 
 ## 6. Convenciones

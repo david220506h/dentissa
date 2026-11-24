@@ -5,6 +5,12 @@ namespace backend.Repositories
     public interface ICitasRepository
     {
         Task<List<Cita>> GetAllAsync();
+
+        // Filtro opcional por instante de inicio [desde, hasta), dentista y estado (plan 3a, 14.7)
+        Task<List<Cita>> GetFiltradasAsync(DateTime? desdeUtc, DateTime? hastaUtc, int? dentistaId, string? estado);
+
+        // Citas futuras activas cuyo dentista está inactivo o eliminado (diseño, 3.5)
+        Task<List<Cita>> GetConDentistaInactivoAsync(DateTime desdeUtc);
         Task<Cita?> GetByIdAsync(int id);
         Task<Cita> CreateAsync(Cita cita);
         Task UpdateAsync(Cita cita);
@@ -26,6 +32,8 @@ namespace backend.Repositories
 
         public HorarioOcupadoException(Exception interna) : base(Mensaje, interna) { }
 
-        public HorarioOcupadoException() : base(Mensaje) { }
+        public const string MensajeSinDentistas = "No hay dentistas libres en ese horario.";
+
+        public HorarioOcupadoException(string mensaje = Mensaje) : base(mensaje) { }
     }
 }

@@ -306,6 +306,11 @@ namespace backend.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("motivo");
 
+                    b.Property<string>("MotivoCambio")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("motivo_cambio");
+
                     b.Property<string>("MotivoCancelacion")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
@@ -352,6 +357,12 @@ namespace backend.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("solicitud_cambio_tipo");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id")
                         .HasName("pk_citas");
 
@@ -369,6 +380,9 @@ namespace backend.Migrations
 
                     b.HasIndex("CreadoPor")
                         .HasDatabaseName("ix_citas_creado_por");
+
+                    b.HasIndex("Inicio")
+                        .HasDatabaseName("ix_citas_inicio");
 
                     b.HasIndex("OfertaId")
                         .HasDatabaseName("ix_citas_oferta_id");
@@ -393,7 +407,7 @@ namespace backend.Migrations
 
                             t.HasCheckConstraint("ck_citas_cancelacion_con_motivo", "estado <> 'cancelada' OR motivo_cancelacion IS NOT NULL");
 
-                            t.HasCheckConstraint("ck_citas_confirmacion_canal", "confirmacion_canal IN ('correo','portal','llamada')");
+                            t.HasCheckConstraint("ck_citas_confirmacion_canal", "confirmacion_canal IN ('correo','portal','llamada','panel')");
 
                             t.HasCheckConstraint("ck_citas_costos", "costo_base >= 0 AND costo_extra >= 0 AND costo_total >= 0");
 
@@ -465,7 +479,67 @@ namespace backend.Migrations
 
                     b.ToTable("cita_historial", null, t =>
                         {
-                            t.HasCheckConstraint("ck_cita_historial_accion", "accion IN ('creacion','modificacion','reagenda','cambio_estado','confirmacion','cancelacion','solicitud_cambio','resolucion_solicitud','vencimiento')");
+                            t.HasCheckConstraint("ck_cita_historial_accion", "accion IN ('creacion','modificacion','reagenda','cambio_estado','confirmacion','cancelacion','solicitud_cambio','resolucion_solicitud','vencimiento','reasignacion','reenvio_enlace','correccion_estado')");
+
+                            t.HasCheckConstraint("ck_cita_historial_canal", "canal IS NULL OR canal IN ('panel','llamada','correo','portal','web','sistema')");
+                        });
+                });
+
+            modelBuilder.Entity("backend.Entities.CitaToken", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("CitaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("cita_id");
+
+                    b.Property<DateTime>("CreadoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creado_en");
+
+                    b.Property<DateTime>("ExpiraEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expira_en");
+
+                    b.Property<DateTime?>("InvalidadoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("invalidado_en");
+
+                    b.Property<string>("Proposito")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("proposito");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("char(64)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<DateTime?>("UsadoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("usado_en");
+
+                    b.HasKey("Id")
+                        .HasName("pk_cita_tokens");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_cita_tokens_token_hash");
+
+                    b.HasIndex("CitaId", "Proposito")
+                        .HasDatabaseName("ix_cita_tokens_cita_id_proposito");
+
+                    b.ToTable("cita_tokens", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_cita_tokens_hash", "token_hash ~ '^[0-9a-f]{64}$'");
+
+                            t.HasCheckConstraint("ck_cita_tokens_proposito", "proposito IN ('confirmar','gestionar')");
                         });
                 });
 
@@ -1103,6 +1177,17 @@ namespace backend.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("error_envio");
 
+                    b.Property<string>("Estado")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("estado");
+
+                    b.Property<int>("Intentos")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("intentos");
+
                     b.Property<bool>("Leida")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -1123,6 +1208,19 @@ namespace backend.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("paciente_id");
 
+                    b.Property<string>("Plantilla")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("plantilla");
+
+                    b.Property<DateTime?>("ProcesandoDesde")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("procesando_desde");
+
+                    b.Property<DateTime?>("ProximoIntentoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("proximo_intento_en");
+
                     b.Property<string>("Tipo")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -1136,22 +1234,37 @@ namespace backend.Migrations
                     b.HasKey("Id")
                         .HasName("pk_notificaciones");
 
-                    b.HasIndex("CitaId")
-                        .HasDatabaseName("ix_notificaciones_cita_id");
-
                     b.HasIndex("PacienteId")
                         .HasDatabaseName("ix_notificaciones_paciente_id");
+
+                    b.HasIndex("ProximoIntentoEn")
+                        .HasDatabaseName("ix_notificaciones_bandeja_pendientes")
+                        .HasFilter("estado = 'pendiente'");
 
                     b.HasIndex("UsuarioId")
                         .HasDatabaseName("ix_notificaciones_usuario_id");
 
+                    b.HasIndex(new[] { "CitaId" }, "PorCita")
+                        .HasDatabaseName("ix_notificaciones_cita_id");
+
+                    b.HasIndex(new[] { "CitaId" }, "RecordatorioUnico")
+                        .IsUnique()
+                        .HasDatabaseName("ux_notificaciones_recordatorio_cita")
+                        .HasFilter("tipo = 'recordatorio' AND canal = 'correo'");
+
                     b.ToTable("notificaciones", null, t =>
                         {
+                            t.HasCheckConstraint("ck_notificaciones_bandeja", "(canal = 'correo') = (estado IS NOT NULL AND plantilla IS NOT NULL)");
+
                             t.HasCheckConstraint("ck_notificaciones_canal", "canal IN ('interna','correo')");
 
                             t.HasCheckConstraint("ck_notificaciones_destinatario", "num_nonnulls(usuario_id, paciente_id) = 1");
 
-                            t.HasCheckConstraint("ck_notificaciones_tipo", "tipo IN ('solicitud_nueva','confirmacion','recordatorio','cambio','cancelacion','solicitud_cambio','aviso_configuracion')");
+                            t.HasCheckConstraint("ck_notificaciones_estado", "estado IS NULL OR estado IN ('pendiente','procesando','enviada','fallida','descartada')");
+
+                            t.HasCheckConstraint("ck_notificaciones_plantilla", "plantilla IS NULL OR plantilla IN ('solicitud_recibida','confirmacion','recordatorio','cambio','cancelacion','solicitud_cambio_recibida','vencimiento','tope_pendientes','intento_registro')");
+
+                            t.HasCheckConstraint("ck_notificaciones_tipo", "tipo IN ('solicitud_nueva','confirmacion','recordatorio','cambio','cancelacion','solicitud_cambio','aviso_configuracion','vencimiento','reasignacion','envio_fallido','tope_pendientes','intento_registro','configuracion')");
                         });
                 });
 
@@ -1670,6 +1783,18 @@ namespace backend.Migrations
                     b.Navigation("Cita");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("backend.Entities.CitaToken", b =>
+                {
+                    b.HasOne("backend.Entities.Cita", "Cita")
+                        .WithMany()
+                        .HasForeignKey("CitaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_cita_tokens_citas_cita_id");
+
+                    b.Navigation("Cita");
                 });
 
             modelBuilder.Entity("backend.Entities.ConfiguracionAgenda", b =>

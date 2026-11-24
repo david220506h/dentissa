@@ -22,6 +22,7 @@ namespace backend.DTOs
                 Estado            = c.Estado,
                 Origen            = c.Origen,
                 PacientePresente  = c.PacientePresente,
+                Version           = c.Version,
                 Motivo            = c.Motivo,
                 MotivoCancelacion = c.MotivoCancelacion,
                 SolicitudCambio   = c.SolicitudCambioTipo == null ? null : new SolicitudCambioDto
