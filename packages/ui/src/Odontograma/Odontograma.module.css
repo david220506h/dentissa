@@ -27,8 +27,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--espacio-8);
-  /* El diseño declara 30 px sin border-box: se dibuja de 32 px con el borde */
-  height: 32px;
+  /* 30 px reales con el borde (decisión del arquitecto: el diseño dibujaba 32 por no usar border-box) */
+  box-sizing: border-box;
+  height: 30px;
   padding: 0 var(--espacio-10);
   border: 1px solid;
   border-radius: var(--radio-8);

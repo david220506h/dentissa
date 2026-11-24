@@ -45,7 +45,8 @@ async function estiloDe(page: Page, texto: string, ancestro: string, indice = 0)
         propiedades.map((p) => {
           if (p === 'fontFamily') return [p, cs.fontFamily.split(',')[0]!.replace(/['"]/g, '').trim()];
           // Alto dibujado, no la propiedad CSS: el diseño no fija box-sizing y el panel usa border-box
-          if (p === 'height') return [p, `${el.getBoundingClientRect().height}px`];
+          // Redondeo a centésimas: el navegador a veces mide 62.0001 px por subpíxeles
+          if (p === 'height') return [p, `${Math.round(el.getBoundingClientRect().height * 100) / 100}px`];
           return [p, cs[p]];
         }),
       ) as Estilo;
@@ -119,6 +120,8 @@ const CASOS: Caso[] = [
     archivo: 'Expediente.dc.html',
     diseno: [t, 'li'],
     catalogo: [t, 'li'],
+    // El diseño declara 30 px sin border-box y se dibuja de 32; el arquitecto aprobó 30 reales
+    excepciones: { height: '30px' },
   })),
 ];
 
