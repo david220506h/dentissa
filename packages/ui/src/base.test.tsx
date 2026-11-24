@@ -75,6 +75,13 @@ describe('Boton', () => {
     expect(boton).toHaveAttribute('aria-busy', 'true');
   });
 
+  it('al cargar conserva su variante (no se ve como deshabilitado)', () => {
+    render(<Boton variante="principal" cargando>Guardar cambios</Boton>);
+    const boton = screen.getByRole('button', { name: 'Guardando…' });
+    expect(boton.className).toMatch(/principal/);
+    expect(boton).toHaveAttribute('aria-busy', 'true');
+  });
+
   it('deshabilitado no ejecuta la acción', async () => {
     const alPulsar = vi.fn();
     render(
@@ -114,7 +121,7 @@ describe('Insignias', () => {
 describe('Contador y Avatar', () => {
   it('el contador se lee con su descripción completa', () => {
     render(<Contador valor={5} descripcion="5 solicitudes por revisar" />);
-    expect(screen.getByText('5 solicitudes por revisar')).toBeInTheDocument();
+    expect(screen.getByText(', 5 solicitudes por revisar')).toBeInTheDocument();
   });
 
   it('las iniciales salen del primer nombre y el primer apellido', () => {

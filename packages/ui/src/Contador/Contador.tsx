@@ -14,7 +14,7 @@ export function Contador({ valor, descripcion, className }: ContadorProps) {
   return (
     <span className={clases(estilos.contador, className)}>
       <span aria-hidden="true">{valor}</span>
-      <SoloLector>{descripcion}</SoloLector>
+      <SoloLector>{`, ${descripcion}`}</SoloLector>
     </span>
   );
 }

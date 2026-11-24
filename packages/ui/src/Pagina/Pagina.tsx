@@ -41,9 +41,9 @@ export interface TablaProps {
 /** Tabla dentro de una tarjeta, con desplazamiento horizontal propio en pantallas angostas. */
 export function Tabla({ etiqueta, columnas, anchoMinimo = 640, children, pie }: TablaProps) {
   return (
-    <section className={estilos.tablaTarjeta} aria-label={etiqueta}>
+    <div className={estilos.tablaTarjeta}>
       {/* Región desplazable con foco para que se pueda recorrer con el teclado */}
-      <div className={estilos.tablaDesplazable} role="region" aria-label={`${etiqueta} (desplazable)`} tabIndex={0}>
+      <div className={estilos.tablaDesplazable} role="region" aria-label={etiqueta} tabIndex={0}>
         <table className={estilos.tabla} style={{ minWidth: anchoMinimo }}>
           <caption>
             <SoloLector>{etiqueta}</SoloLector>
@@ -61,7 +61,7 @@ export function Tabla({ etiqueta, columnas, anchoMinimo = 640, children, pie }: 
         </table>
       </div>
       {pie}
-    </section>
+    </div>
   );
 }
 
@@ -98,6 +98,8 @@ export interface PestanaDef {
   id: string;
   etiqueta: string;
   contador?: number;
+  /** Qué cuenta el contador, para lectores de pantalla (p. ej., "solicitudes"). */
+  descripcionContador?: string;
   contenido: ReactNode;
 }
 
@@ -119,7 +121,12 @@ export function Pestanas({ etiqueta, pestanas, seleccionada, alCambiar }: Pestan
         {pestanas.map((p) => (
           <Tab key={p.id} id={p.id} className={estilos.pestana}>
             {p.etiqueta}
-            {p.contador !== undefined && <span className={estilos.contadorPestana}>{p.contador}</span>}
+            {p.contador !== undefined && (
+              <span className={estilos.contadorPestana}>
+                <span aria-hidden="true">{p.contador}</span>
+                <SoloLector>{`, ${p.contador} ${p.descripcionContador ?? 'elementos'}`}</SoloLector>
+              </span>
+            )}
           </Tab>
         ))}
       </TabList>

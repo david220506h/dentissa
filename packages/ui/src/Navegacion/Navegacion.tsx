@@ -137,7 +137,7 @@ export function MenuInferior({ elementos, activo, enlace: Enlace = EnlaceNativo 
           {e.contador && (
             <span className={estilos.inferiorContador}>
               <span aria-hidden="true">{e.contador.valor}</span>
-              <SoloLector>{e.contador.descripcion}</SoloLector>
+              <SoloLector>{`, ${e.contador.descripcion}`}</SoloLector>
             </span>
           )}
         </Enlace>

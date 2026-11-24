@@ -57,12 +57,17 @@
 }
 
 /* Deshabilitado ("Sin teléfono" en Main) */
-.boton:disabled,
+.boton:disabled:not([aria-busy='true']),
 .boton[aria-disabled='true'] {
   background: var(--deshabilitado-fondo);
   border-color: var(--deshabilitado-borde);
   color: var(--texto-terciario);
   cursor: not-allowed;
+}
+
+/* Cargando: conserva el color de su variante (no es lo mismo que deshabilitado) y solo bloquea la acción */
+.boton[aria-busy='true'] {
+  cursor: progress;
 }
 
 /* Hover solo con puntero fino: en táctil el "hover" queda pegado tras tocar */

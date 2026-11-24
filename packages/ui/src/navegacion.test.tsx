@@ -31,6 +31,11 @@ const grupos: GrupoMenu[] = [
 ];
 
 describe('MenuLateral', () => {
+  it('el contador del menú lateral se lee separado del nombre', () => {
+    render(<MenuLateral grupos={[{ titulo: 'Principal', elementos: [{ id: 's', etiqueta: 'Solicitudes', icono: 'solicitudes', href: '/s', contador: { valor: 5, descripcion: '5 por revisar' } }] }]} usuario={{ nombre: 'Ana', rol: 'Asistente' }} alCerrarSesion={() => {}} />);
+    expect(screen.getByRole('link', { name: 'Solicitudes, 5 por revisar' })).toBeInTheDocument();
+  });
+
   it('marca la sección actual, oculta grupos vacíos y cierra sesión', async () => {
     const alCerrarSesion = vi.fn();
     render(
@@ -83,7 +88,7 @@ describe('MenuInferior', () => {
     );
     const nav = screen.getByRole('navigation', { name: 'Menú móvil' });
     expect(within(nav).getByRole('link', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page');
-    expect(within(nav).getByRole('link', { name: /Solicitudes/ })).toHaveAccessibleName('Solicitudes3 por revisar');
+    expect(within(nav).getByRole('link', { name: /Solicitudes/ })).toHaveAccessibleName('Solicitudes, 3 por revisar');
   });
 });
 
@@ -108,7 +113,7 @@ describe('Encabezado y tabla', () => {
     expect(screen.getByRole('table', { name: 'Pacientes' })).toBeInTheDocument();
     expect(screen.getAllByRole('columnheader')).toHaveLength(3);
     expect(screen.getByRole('columnheader', { name: 'Acciones' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Pacientes (desplazable)' })).toHaveAttribute('tabindex', '0');
+    expect(screen.getByRole('region', { name: 'Pacientes' })).toHaveAttribute('tabindex', '0');
   });
 
   it('la paginación deshabilita lo que no aplica', async () => {
@@ -129,12 +134,12 @@ describe('Pestañas y grupo de vista', () => {
       <Pestanas
         etiqueta="Tipo de solicitud"
         pestanas={[
-          { id: 'pendientes', etiqueta: 'Pendientes', contador: 5, contenido: <p>Lista de pendientes</p> },
+          { id: 'pendientes', etiqueta: 'Pendientes', contador: 5, descripcionContador: 'solicitudes', contenido: <p>Lista de pendientes</p> },
           { id: 'historial', etiqueta: 'Historial', contenido: <p>Lista del historial</p> },
         ]}
       />,
     );
-    expect(screen.getByRole('tab', { name: /Pendientes/ })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: 'Pendientes, 5 solicitudes' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByText('Lista de pendientes')).toBeInTheDocument();
     await userEvent.tab();
     await userEvent.keyboard('{ArrowRight}');

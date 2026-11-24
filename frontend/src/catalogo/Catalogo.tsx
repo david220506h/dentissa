@@ -186,8 +186,8 @@ export function Catalogo() {
           <Pestanas
             etiqueta="Tipo de solicitud"
             pestanas={[
-              { id: 'pendientes', etiqueta: 'Pendientes', contador: 5, contenido: null },
-              { id: 'cambios', etiqueta: 'Cambios solicitados', contador: 1, contenido: null },
+              { id: 'pendientes', etiqueta: 'Pendientes', contador: 5, descripcionContador: 'solicitudes', contenido: null },
+              { id: 'cambios', etiqueta: 'Cambios solicitados', contador: 1, descripcionContador: 'cambio', contenido: null },
               { id: 'historial', etiqueta: 'Historial', contenido: null },
             ]}
           />
@@ -209,7 +209,7 @@ export function Catalogo() {
             </td>
             <td>Sin registro</td>
             <td>
-              <Boton variante="texto" icono="siguiente">
+              <Boton variante="texto" icono="siguiente" aria-label="Ver ficha de Rosa Aguilar">
                 Ver ficha
               </Boton>
             </td>
@@ -226,7 +226,7 @@ export function Catalogo() {
               </Insignia>
             </td>
             <td>
-              <Boton variante="texto" icono="siguiente">
+              <Boton variante="texto" icono="siguiente" aria-label="Ver ficha de Ernesto Vega">
                 Ver ficha
               </Boton>
             </td>

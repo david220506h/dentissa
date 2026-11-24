@@ -151,6 +151,9 @@
 
 /* ── Grupo de vista Día / Semana (Agenda) ── */
 .grupoVista {
+  /* Compacto como en Agenda: no se estira aunque el contenedor sea flex en columna */
+  align-self: flex-start;
+  width: max-content;
   display: inline-flex;
   border: 1px solid var(--borde-control);
   border-radius: var(--radio-10);
