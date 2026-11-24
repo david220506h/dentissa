@@ -21,9 +21,17 @@ public class Cita : IConMarcasDeTiempo
 
     public string Origen { get; set; } = null!;
 
+    // Motivos: texto libre que puede traer datos de salud. Solo viven en la cita; la bitácora registra "[cambió]"
+    // y el historial usa textos genéricos (diseño de la agenda, 4.6).
+    [DatoSensible]
     public string? Motivo { get; set; }
 
+    [DatoSensible]
     public string? MotivoCancelacion { get; set; }
+
+    // Último motivo de una reagenda, reasignación o corrección de estado
+    [DatoSensible]
+    public string? MotivoCambio { get; set; }
 
     public DateTime? CanceladaEn { get; set; }
 
@@ -58,6 +66,7 @@ public class Cita : IConMarcasDeTiempo
 
     public string? SolicitudCambioTipo { get; set; }
 
+    [DatoSensible]
     public string? SolicitudCambioMotivo { get; set; }
 
     public DateTime? SolicitudCambioEn { get; set; }
@@ -65,6 +74,9 @@ public class Cita : IConMarcasDeTiempo
     public DateTime CreadoEn { get; set; }
 
     public DateTime ActualizadoEn { get; set; }
+
+    // Columna de sistema xmin de PostgreSQL: concurrencia optimista sin cambio de esquema (4.2)
+    public uint Version { get; set; }
 
     public virtual Paciente Paciente { get; set; } = null!;
 

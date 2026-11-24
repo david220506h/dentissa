@@ -7,6 +7,8 @@ using backend.Services;
 using backend.Services.Agenda;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers
 {
@@ -25,10 +27,12 @@ namespace backend.Controllers
         private readonly ICitaHistorialService _historial;
         private readonly IDisponibilidadService _disponibilidad;
         private readonly IReservasService _reservas;
+        private readonly ICitasEstadoService _estados;
 
-        public CitasController(ICitasRepository repo, IAgendaService agenda, IRelojClinica reloj, ICitaHistorialService historial, IDisponibilidadService disponibilidad, IReservasService reservas)
+        public CitasController(ICitasRepository repo, IAgendaService agenda, IRelojClinica reloj, ICitaHistorialService historial, IDisponibilidadService disponibilidad, IReservasService reservas, ICitasEstadoService estados)
         {
             _reservas = reservas;
+            _estados = estados;
             _repo = repo;
             _agenda = agenda;
             _reloj = reloj;
@@ -116,11 +120,11 @@ namespace backend.Controllers
         }
 
         // ── POST: api/Citas ───────────────────────────────────
+        // Candado por fecha, liberación de vencidas, regla de recepción y reintentos (diseño, sección 6)
         [HttpPost]
         public async Task<IActionResult> Crear([FromBody] CitaDto dto)
         {
-            var servicio = await _repo.GetServicioActivoAsync(dto.ServicioId);
-            if (servicio == null)
+            if (await _repo.GetServicioActivoAsync(dto.ServicioId) == null)
                 return BadRequest(new { mensaje = "Servicio no encontrado o inactivo" });
 
             if (await _repo.GetPacienteAsync(dto.PacienteId) == null)
@@ -129,46 +133,39 @@ namespace backend.Controllers
             if (await _repo.GetDentistaActivoAsync(dto.DentistaId) == null)
                 return BadRequest(new { mensaje = "Dentista no encontrado o inactivo" });
 
-            // Candado por fecha, liberación de vencidas, regla de recepción y reintentos (diseño, sección 6)
-            try
+            return await this.EjecutarAsync(async () =>
             {
                 var cita = await _reservas.ReservarAsync(new SolicitudReserva(
                     dto.PacienteId, dto.DentistaId, dto.ServicioId, dto.Fecha, dto.Hora,
                     dto.PacientePresente ? CanalReserva.PacientePresente : CanalReserva.Recepcion, OrigenesCita.Recepcion,
                     dto.PacientePresente ? "Cita creada desde el panel con el paciente presente" : "Cita creada desde el panel",
-                    dto.Motivo, dto.CostoExtra, dto.MotivoExtra));
-                return CreatedAtAction(nameof(GetById), new { id = cita.Id }, new { cita.Id, mensaje = "Cita creada correctamente" });
-            }
-            catch (AgendaNoConfiguradaException ex)
-            {
-                return Problem(ex.Message, statusCode: StatusCodes.Status503ServiceUnavailable);
-            }
-            catch (ServicioNoDisponibleException)
-            {
-                return BadRequest(new { mensaje = "Servicio no encontrado o inactivo" });
-            }
-            catch (HoraFueraDeHorarioException ex)
-            {
-                return BadRequest(new { mensaje = ex.Message, codigo = "HORA_FUERA_DE_HORARIO" });
-            }
-            catch (ReservaRechazadaException ex)
-            {
-                return BadRequest(new { mensaje = ex.Message, codigo = CodigoRechazo(ex.Motivo) });
-            }
-            catch (HorarioOcupadoException ex)
-            {
-                return Conflict(new { mensaje = ex.Message, codigo = "HORARIO_OCUPADO" });
-            }
+                    dto.Motivo, dto.CostoExtra, dto.MotivoExtra, dto.ConfirmarAlCrear));
+                return CreatedAtAction(nameof(GetById), new { id = cita.Id },
+                    new { cita.Id, mensaje = "Cita creada correctamente", estado = cita.Estado, version = cita.Version });
+            });
         }
 
-        private static string CodigoRechazo(MotivoRechazo motivo) => motivo switch
+        // ── GET: api/Citas/5/historial ────────────────────────
+        // Textos genéricos: los motivos libres no están en el historial (4.6)
+        [HttpGet("{id}/historial")]
+        public async Task<IActionResult> Historial(int id, [FromServices] DentissaDbContext db)
         {
-            MotivoRechazo.EnElPasado => "HORARIO_PASADO",
-            MotivoRechazo.FueraDeHorizonte => "FUERA_DE_HORIZONTE",
-            _ => "ANTICIPACION_INSUFICIENTE",
-        };
+            if (!await db.Citas.AnyAsync(c => c.Id == id)) return NotFound(new { mensaje = "Cita no encontrada" });
+            var filas = await db.CitaHistorial.AsNoTracking()
+                .Where(h => h.CitaId == id)
+                .OrderBy(h => h.CreadoEn).ThenBy(h => h.Id)
+                .Select(h => new
+                {
+                    h.Accion, h.Canal, h.Detalle, h.CreadoEn, h.UsuarioId,
+                    Usuario = h.Usuario == null ? null : h.Usuario.Nombre + " " + h.Usuario.Apellido
+                })
+                .ToListAsync();
+            return Ok(filas);
+        }
 
         // ── PUT: api/Citas/5 ──────────────────────────────────
+        // OBSOLETO (compatibilidad, diseño 9.4): delega en la reagenda, los costos y las transiciones. Cada parte
+        // se valida con TransicionesCita y se guarda por separado. Se retira con el panel nuevo, con autorización.
         [HttpPut("{id}")]
         public async Task<IActionResult> Editar(int id, [FromBody] CitaEditDto dto)
         {
@@ -184,102 +181,83 @@ namespace backend.Controllers
             if (!EstadosEditables.Contains(estado))
                 return BadRequest(new { mensaje = "Estado inválido" });
 
-            try
+            return await this.EjecutarAsync(async () =>
             {
-                var antes = new { cita.DentistaId, cita.Inicio, cita.Fin, cita.Estado, cita.CostoExtra, cita.MotivoExtra };
                 var (fechaActual, horaActual) = _reloj.ALocal(cita.Inicio);
-                var cambioHorario = fechaActual != dto.Fecha || horaActual != dto.Hora || cita.DentistaId != dto.DentistaId;
-
-                if (cambioHorario)
+                if (fechaActual != dto.Fecha || horaActual != dto.Hora || cita.DentistaId != dto.DentistaId)
                 {
-                    if (cita.DentistaId != dto.DentistaId && await _repo.GetDentistaActivoAsync(dto.DentistaId) == null)
-                        return BadRequest(new { mensaje = "Dentista no encontrado o inactivo" });
-
-                    if ((fechaActual != dto.Fecha || horaActual != dto.Hora) &&
-                        !(await _agenda.HorariosDelDiaAsync(dto.Fecha)).Contains(dto.Hora))
-                        return BadRequest(new { mensaje = "La hora no corresponde a un horario de la clínica" });
-
-                    var (inicio, fin) = await _agenda.CalcularIntervaloAsync(dto.Fecha, dto.Hora, cita.Servicio.DuracionSlots);
-                    cita.DentistaId = dto.DentistaId;
-                    cita.Inicio     = inicio;
-                    cita.Fin        = fin;
+                    var resultante = EstadosCita.Activos.Contains(estado) ? estado : cita.Estado;
+                    await _estados.ReagendarAsync(id, new SolicitudReagenda(dto.Fecha, dto.Hora, dto.DentistaId, null, resultante));
                 }
 
-                cita.Estado      = estado;
-                cita.CostoExtra  = dto.CostoExtra ?? 0;
-                cita.MotivoExtra = dto.MotivoExtra;
-                cita.CostoTotal  = CostosCita.Total(cita.CostoBase, cita.DescuentoAplicado, cita.CostoExtra);
+                if ((dto.CostoExtra ?? 0) != cita.CostoExtra || dto.MotivoExtra != cita.MotivoExtra)
+                    await _estados.CambiarCostosAsync(id, dto.CostoExtra ?? 0, dto.MotivoExtra);
 
-                var despues = new { cita.DentistaId, cita.Inicio, cita.Fin, cita.Estado, cita.CostoExtra, cita.MotivoExtra };
-                var datos = new { antes, despues };
-                if (cambioHorario)
-                    _historial.Registrar(cita, AccionesCitaHistorial.Reagenda, "Cambio de fecha, hora o dentista", datos);
-                if (antes.Estado != cita.Estado)
-                    _historial.Registrar(cita, AccionesCitaHistorial.CambioEstado, $"{antes.Estado} → {cita.Estado}", datos);
-                if (!cambioHorario && antes.Estado == cita.Estado && !Equals(antes, despues))
-                    _historial.Registrar(cita, AccionesCitaHistorial.Modificacion, "Cambio de costos", datos);
-
-                await _repo.UpdateAsync(cita);
+                var actual = await _estados.EstadoAsync(id);
+                if (estado != actual)
+                {
+                    _ = estado switch
+                    {
+                        EstadosCita.Confirmada => await _estados.ConfirmarAsync(id, CanalesCitaHistorial.Llamada),
+                        EstadosCita.Completada => await _estados.CompletarAsync(id, null),
+                        EstadosCita.NoAsistio  => await _estados.NoAsistioAsync(id, null),
+                        _ => throw new TransicionInvalidaException("Una cita confirmada no vuelve a pendiente; reagéndala como pendiente."),
+                    };
+                }
                 return Ok(new { mensaje = "Cita actualizada correctamente" });
-            }
-            catch (AgendaNoConfiguradaException ex)
-            {
-                return Problem(ex.Message, statusCode: StatusCodes.Status503ServiceUnavailable);
-            }
-            catch (HorarioOcupadoException ex)
-            {
-                return Conflict(new { mensaje = ex.Message });
-            }
+            });
         }
 
         // ── PATCH: api/Citas/5/cancelar ──────────────────────
-        // Una cita no se borra nunca: se cancela con motivo (RN-02)
+        // Una cita no se borra nunca: se cancela con motivo (RN-02); el motivo solo queda en la cita
         [HttpPatch("{id}/cancelar")]
-        public async Task<IActionResult> Cancelar(int id, [FromBody] CancelarCitaDto dto)
-        {
-            var motivo = dto.Motivo?.Trim();
-            if (string.IsNullOrEmpty(motivo))
-                return BadRequest(new { mensaje = "El motivo de cancelación es obligatorio" });
-
-            var cita = await _repo.GetByIdAsync(id);
-            if (cita == null) return NotFound(new { mensaje = "Cita no encontrada" });
-
-            if (!EstadosCita.Activos.Contains(cita.Estado))
-                return BadRequest(new { mensaje = "Solo se puede cancelar una cita pendiente o confirmada" });
-
-            cita.Estado            = EstadosCita.Cancelada;
-            cita.MotivoCancelacion = motivo;
-            cita.CanceladaEn       = DateTime.UtcNow;
-            _historial.Registrar(cita, AccionesCitaHistorial.Cancelacion, motivo);
-            await _repo.UpdateAsync(cita);
-            return Ok(new { mensaje = "Cita cancelada", estado = cita.Estado });
-        }
+        public Task<IActionResult> Cancelar(int id, [FromBody] CancelarCitaDto dto) =>
+            this.EjecutarAsync(async () =>
+            {
+                var cita = await _estados.CancelarAsync(id, dto.Motivo, dto.Canal, dto.Version);
+                return Ok(new { mensaje = "Cita cancelada", estado = cita.Estado, version = cita.Version });
+            });
 
         // ── PATCH: api/Citas/5/confirmar ─────────────────────
-        // Confirmación desde el panel: recepción llamó al paciente
+        // Confirmación desde el panel: "llamada" (por defecto) o "panel"; también una vencida aún no cancelada
         [HttpPatch("{id}/confirmar")]
-        public async Task<IActionResult> Confirmar(int id)
-        {
-            var cita = await _repo.GetByIdAsync(id);
-            if (cita == null) return NotFound(new { mensaje = "Cita no encontrada" });
-
-            if (cita.Estado != EstadosCita.Pendiente && cita.Estado != EstadosCita.Confirmada)
-                return BadRequest(new { mensaje = "Solo se puede confirmar una cita pendiente" });
-
-            if (cita.Estado == EstadosCita.Pendiente)
+        public Task<IActionResult> Confirmar(int id, [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] AccionCitaDto? dto) =>
+            this.EjecutarAsync(async () =>
             {
-                cita.Estado            = EstadosCita.Confirmada;
-                cita.ConfirmadaEn      = DateTime.UtcNow;
-                cita.ConfirmadaPor     = UsuarioActualId();
-                cita.ConfirmacionCanal = "llamada";
-                _historial.Registrar(cita, AccionesCitaHistorial.Confirmacion, "Confirmada por recepción (llamada)");
-                await _repo.UpdateAsync(cita);
-            }
-            return Ok(new { mensaje = "Cita confirmada", estado = cita.Estado });
-        }
+                var cita = await _estados.ConfirmarAsync(id, dto?.Canal, dto?.Version);
+                return Ok(new { mensaje = "Cita confirmada", estado = cita.Estado, version = cita.Version });
+            });
 
-        private int? UsuarioActualId()
-            => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
+        // ── PATCH: api/Citas/5/reagendar ─────────────────────
+        [HttpPatch("{id}/reagendar")]
+        public Task<IActionResult> Reagendar(int id, [FromBody] ReagendarCitaDto dto) =>
+            this.EjecutarAsync(async () =>
+            {
+                var cita = await _estados.ReagendarAsync(id, new SolicitudReagenda(
+                    dto.Fecha, dto.Hora, dto.DentistaId, dto.Motivo,
+                    dto.EstadoResultante?.Trim().ToLowerInvariant() ?? EstadosCita.Confirmada, dto.Version));
+                return Ok(new { mensaje = "Cita reagendada", estado = cita.Estado, version = cita.Version });
+            });
+
+        // ── PATCH: api/Citas/5/costos ────────────────────────
+        [HttpPatch("{id}/costos")]
+        public Task<IActionResult> Costos(int id, [FromBody] CostosCitaDto dto) =>
+            this.EjecutarAsync(async () =>
+            {
+                var cita = await _estados.CambiarCostosAsync(id, dto.CostoExtra, dto.MotivoExtra, dto.Version);
+                return Ok(new { mensaje = "Costos actualizados", costoTotal = cita.CostoTotal, version = cita.Version });
+            });
+
+        // ── PATCH: api/Citas/5/corregir-estado ───────────────
+        // Solo administración: completada ↔ no asistió, con motivo, hasta 7 días (decisión 7)
+        [HttpPatch("{id}/corregir-estado")]
+        [Authorize(Roles = Roles.Admin)]
+        public Task<IActionResult> CorregirEstado(int id, [FromBody] CorregirEstadoDto dto) =>
+            this.EjecutarAsync(async () =>
+            {
+                var cita = await _estados.CorregirEstadoAsync(id, dto.Estado, dto.Motivo, dto.Version);
+                return Ok(new { mensaje = "Estado corregido", estado = cita.Estado, version = cita.Version });
+            });
 
         private CitaRespuestaDto ToRespuestaDto(Cita c) => CitaMapper.ARespuesta(c, _reloj);
     }

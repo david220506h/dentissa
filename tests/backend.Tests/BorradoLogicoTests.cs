@@ -144,9 +144,9 @@ public class CancelacionYDesactivacionTests : IClassFixture<DentissaFactory>
         Assert.Equal("El paciente llamó para cancelar", cita.MotivoCancelacion);
         Assert.NotNull(cita.CanceladaEn);
 
-        // Una cita cancelada ya no se edita ni se vuelve a cancelar
+        // Una cita cancelada es final: volver a cancelarla es una transición inválida (diseño 4.2)
         var otra = await client.PatchAsJsonAsync($"/api/Citas/{citaId}/cancelar", new { motivo = "otra vez" });
-        Assert.Equal(HttpStatusCode.BadRequest, otra.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, otra.StatusCode);
     }
 
     [Fact]

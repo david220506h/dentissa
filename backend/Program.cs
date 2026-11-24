@@ -45,6 +45,7 @@ builder.Services.AddScoped<IAgendaService, AgendaService>();
 builder.Services.AddScoped<backend.Services.Agenda.ICalendarioAtencion, backend.Services.Agenda.CalendarioAtencion>();
 builder.Services.AddScoped<backend.Services.Agenda.IDisponibilidadService, backend.Services.Agenda.DisponibilidadService>();
 builder.Services.AddScoped<backend.Services.Agenda.IReservasService, backend.Services.Agenda.ReservasService>();
+builder.Services.AddScoped<backend.Services.Agenda.ICitasEstadoService, backend.Services.Agenda.CitasEstadoService>();
 builder.Services.AddScoped<IPacientesService, PacientesService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IRelojClinica, RelojClinica>();

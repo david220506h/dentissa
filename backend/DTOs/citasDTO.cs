@@ -16,6 +16,8 @@ namespace backend.DTOs
         [MaxLength(500)] public string? Motivo      { get; set; }
         // Solo recepción (admin y asistente): el paciente está en la clínica; sin la anticipación de 60 minutos
         public bool PacientePresente { get; set; }
+        // Recepción la crea ya confirmada (decisión 6; sesiones de un tratamiento, decisión 9)
+        public bool ConfirmarAlCrear { get; set; }
     }
 
     public class CitaEditDto
@@ -61,6 +63,8 @@ namespace backend.DTOs
         public int      DentistaId        { get; set; }
         public int      ServicioId        { get; set; }
         public decimal? Oferta            { get; set; }
+        // xmin: se devuelve en las acciones para la concurrencia optimista (409 CITA_MODIFICADA)
+        public uint     Version           { get; set; }
     }
 
     public class CancelarCitaDto
@@ -68,6 +72,43 @@ namespace backend.DTOs
         [Required(ErrorMessage = "El motivo de cancelación es obligatorio")]
         [MaxLength(500)]
         public string? Motivo { get; set; }
+        // "panel" (por defecto) o "llamada"
+        [MaxLength(20)] public string? Canal { get; set; }
+        public uint? Version { get; set; }
+    }
+
+    // Cuerpo opcional de las acciones sin datos (confirmar, completar, no asistió)
+    public class AccionCitaDto
+    {
+        // Solo confirmar: "llamada" (por defecto) o "panel"
+        [MaxLength(20)] public string? Canal { get; set; }
+        public uint? Version { get; set; }
+    }
+
+    public class CorregirEstadoDto
+    {
+        [Required] public string Estado { get; set; } = string.Empty;
+        [Required(ErrorMessage = "El motivo de la corrección es obligatorio")]
+        [MaxLength(500)] public string? Motivo { get; set; }
+        public uint? Version { get; set; }
+    }
+
+    public class CostosCitaDto
+    {
+        [Range(0, 999999)] public decimal CostoExtra { get; set; }
+        [MaxLength(300)] public string? MotivoExtra { get; set; }
+        public uint? Version { get; set; }
+    }
+
+    public class ReagendarCitaDto
+    {
+        public DateOnly Fecha { get; set; }
+        public TimeOnly Hora { get; set; }
+        [Range(1, int.MaxValue)] public int? DentistaId { get; set; }
+        [MaxLength(500)] public string? Motivo { get; set; }
+        // "confirmada" (por defecto, decisión 8) o "pendiente"
+        public string? EstadoResultante { get; set; }
+        public uint? Version { get; set; }
     }
 
     public class SolicitudCambioDto

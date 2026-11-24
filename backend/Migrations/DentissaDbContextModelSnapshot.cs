@@ -306,6 +306,11 @@ namespace backend.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("motivo");
 
+                    b.Property<string>("MotivoCambio")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("motivo_cambio");
+
                     b.Property<string>("MotivoCancelacion")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
@@ -352,6 +357,12 @@ namespace backend.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("solicitud_cambio_tipo");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id")
                         .HasName("pk_citas");
 
@@ -393,7 +404,7 @@ namespace backend.Migrations
 
                             t.HasCheckConstraint("ck_citas_cancelacion_con_motivo", "estado <> 'cancelada' OR motivo_cancelacion IS NOT NULL");
 
-                            t.HasCheckConstraint("ck_citas_confirmacion_canal", "confirmacion_canal IN ('correo','portal','llamada')");
+                            t.HasCheckConstraint("ck_citas_confirmacion_canal", "confirmacion_canal IN ('correo','portal','llamada','panel')");
 
                             t.HasCheckConstraint("ck_citas_costos", "costo_base >= 0 AND costo_extra >= 0 AND costo_total >= 0");
 
@@ -465,7 +476,9 @@ namespace backend.Migrations
 
                     b.ToTable("cita_historial", null, t =>
                         {
-                            t.HasCheckConstraint("ck_cita_historial_accion", "accion IN ('creacion','modificacion','reagenda','cambio_estado','confirmacion','cancelacion','solicitud_cambio','resolucion_solicitud','vencimiento')");
+                            t.HasCheckConstraint("ck_cita_historial_accion", "accion IN ('creacion','modificacion','reagenda','cambio_estado','confirmacion','cancelacion','solicitud_cambio','resolucion_solicitud','vencimiento','reasignacion','reenvio_enlace','correccion_estado')");
+
+                            t.HasCheckConstraint("ck_cita_historial_canal", "canal IS NULL OR canal IN ('panel','llamada','correo','portal','web','sistema')");
                         });
                 });
 

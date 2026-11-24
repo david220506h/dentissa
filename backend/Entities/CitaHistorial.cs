@@ -38,10 +38,26 @@ public static class AccionesCitaHistorial
     public const string ResolucionSolicitud = "resolucion_solicitud";
     // Fase 2 (6.1): una solicitud pendiente que nadie confirmó a tiempo se cancela al reservar su horario
     public const string Vencimiento         = "vencimiento";
+    public const string Reasignacion        = "reasignacion";
+    public const string ReenvioEnlace       = "reenvio_enlace";
+    public const string CorreccionEstado    = "correccion_estado";
 
     public static readonly string[] Todas =
     {
-        Creacion, Modificacion, Reagenda, CambioEstado, Confirmacion,
-        Cancelacion, SolicitudCambio, ResolucionSolicitud
+        Creacion, Modificacion, Reagenda, CambioEstado, Confirmacion, Cancelacion, SolicitudCambio,
+        ResolucionSolicitud, Vencimiento, Reasignacion, ReenvioEnlace, CorreccionEstado
     };
+}
+
+// Canales del historial (diseño de la agenda, 4.6)
+public static class CanalesCitaHistorial
+{
+    public const string Panel   = "panel";
+    public const string Llamada = "llamada";
+    public const string Correo  = "correo";
+    public const string Portal  = "portal";
+    public const string Web     = "web";
+    public const string Sistema = "sistema";
+
+    public static readonly string[] Todos = { Panel, Llamada, Correo, Portal, Web, Sistema };
 }

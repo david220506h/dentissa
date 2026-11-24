@@ -21,7 +21,8 @@ public sealed record SolicitudReserva(
     string DetalleHistorial,
     string? Motivo = null,
     decimal? CostoExtra = null,
-    string? MotivoExtra = null);
+    string? MotivoExtra = null,
+    bool ConfirmarAlCrear = false);
 
 /// <summary>La hora pedida no es un inicio válido del horario de esa fecha para la duración del servicio.</summary>
 public class HoraFueraDeHorarioException : InvalidOperationException
@@ -138,10 +139,7 @@ public class ReservasService : IReservasService
             if (!regla.Aceptada)
                 throw new ReservaRechazadaException(regla.Motivo!.Value, MensajeRechazo(regla.Motivo.Value, s.Canal));
 
-            var ocupado = await db.Citas.AnyAsync(c => c.DentistaId == s.DentistaId && c.Inicio < fin && inicio < c.Fin
-                                                       && EstadosCita.Activos.Contains(c.Estado)
-                                                       && !(c.Estado == EstadosCita.Pendiente && c.BloqueoExpiraEn != null && c.BloqueoExpiraEn <= ahora), token);
-            if (ocupado)
+            if (await OcupadoAsync(db, s.DentistaId, inicio, fin, ahora, token))
                 throw new HorarioOcupadoException();
 
             // 3. Liberación de las vencidas que se traslapan (6.1), a nombre del sistema. El id de la cita nueva se
@@ -184,19 +182,35 @@ public class ReservasService : IReservasService
                 BloqueoExpiraEn   = regla.BloqueoExpiraEn,
                 PacientePresente  = s.Canal == CanalReserva.PacientePresente,
             };
+            // Recepción puede crearla ya confirmada (decisión 6; sesiones de tratamiento, decisión 9)
+            if (s.ConfirmarAlCrear)
+            {
+                cita.Estado            = EstadosCita.Confirmada;
+                cita.ConfirmadaEn      = ahora;
+                cita.ConfirmadaPor     = actor.UsuarioId;
+                cita.ConfirmacionCanal = CanalesCitaHistorial.Panel;
+            }
             db.Citas.Add(cita);
             historial.Registrar(cita, AccionesCitaHistorial.Creacion, s.DetalleHistorial,
-                cita.PacientePresente ? new { pacientePresente = true } : null);
+                cita.PacientePresente || s.ConfirmarAlCrear ? new { pacientePresente = cita.PacientePresente, estado = cita.Estado } : null);
+            if (s.ConfirmarAlCrear)
+                historial.Registrar(cita, AccionesCitaHistorial.Confirmacion, "Confirmada al crearla en recepción");
             await db.SaveChangesAsync(token);
             return cita;
         }, ct);
 
-    private static IQueryable<Cita> Vencidas(DentissaDbContext db, IReadOnlyCollection<int> dentistas, DateTime inicio, DateTime fin, DateTime ahora) =>
-        db.Citas.Where(c => dentistas.Contains(c.DentistaId) && c.Inicio < fin && inicio < c.Fin
+    private static IQueryable<Cita> Vencidas(DentissaDbContext db, IReadOnlyCollection<int> dentistas, DateTime inicio, DateTime fin, DateTime ahora, int? excluir = null) =>
+        db.Citas.Where(c => dentistas.Contains(c.DentistaId) && c.Inicio < fin && inicio < c.Fin && c.Id != excluir
                             && c.Estado == EstadosCita.Pendiente && c.BloqueoExpiraEn != null && c.BloqueoExpiraEn <= ahora);
 
-    private static Task<bool> HayVencidasAsync(DentissaDbContext db, IReadOnlyCollection<int> dentistas, DateTime inicio, DateTime fin, DateTime ahora, CancellationToken ct) =>
-        Vencidas(db, dentistas, inicio, fin, ahora).AnyAsync(ct);
+    public static Task<bool> HayVencidasAsync(DentissaDbContext db, IReadOnlyCollection<int> dentistas, DateTime inicio, DateTime fin, DateTime ahora, CancellationToken ct, int? excluir = null) =>
+        Vencidas(db, dentistas, inicio, fin, ahora, excluir).AnyAsync(ct);
+
+    /// <summary>¿El dentista tiene otra cita que ocupa [inicio, fin)? Una pendiente vencida no ocupa.</summary>
+    public static Task<bool> OcupadoAsync(DentissaDbContext db, int dentista, DateTime inicio, DateTime fin, DateTime ahora, CancellationToken ct, int? excluir = null) =>
+        db.Citas.AnyAsync(c => c.DentistaId == dentista && c.Inicio < fin && inicio < c.Fin && c.Id != excluir
+                               && EstadosCita.Activos.Contains(c.Estado)
+                               && !(c.Estado == EstadosCita.Pendiente && c.BloqueoExpiraEn != null && c.BloqueoExpiraEn <= ahora), ct);
 
     /// <summary>
     /// Cancela las pendientes con bloqueo vencido que se traslapan con [inicio, fin) para los dentistas dados
@@ -205,9 +219,9 @@ public class ReservasService : IReservasService
     /// </summary>
     public static async Task<int> LiberarVencidasAsync(
         DentissaDbContext db, ICitaHistorialService historial, ContextoAuditoria auditoria, IReadOnlyCollection<int> dentistas,
-        DateTime inicio, DateTime fin, DateTime ahora, object? provocadoPor, CancellationToken ct)
+        DateTime inicio, DateTime fin, DateTime ahora, object? provocadoPor, CancellationToken ct, int? excluir = null)
     {
-        var vencidas = await Vencidas(db, dentistas, inicio, fin, ahora).ToListAsync(ct);
+        var vencidas = await Vencidas(db, dentistas, inicio, fin, ahora, excluir).ToListAsync(ct);
         foreach (var cita in vencidas)
         {
             cita.Estado = EstadosCita.Cancelada;
@@ -221,7 +235,7 @@ public class ReservasService : IReservasService
         return vencidas.Count;
     }
 
-    private static string MensajeRechazo(MotivoRechazo motivo, CanalReserva canal) => motivo switch
+    public static string MensajeRechazo(MotivoRechazo motivo, CanalReserva canal) => motivo switch
     {
         MotivoRechazo.EnElPasado => "Ese horario ya pasó.",
         MotivoRechazo.FueraDeHorizonte => "Esa fecha todavía no está abierta para citas.",

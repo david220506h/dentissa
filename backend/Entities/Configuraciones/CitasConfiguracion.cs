@@ -23,7 +23,8 @@ public class CitaConfiguracion : IEntityTypeConfiguration<Cita>
                 "(solicitud_cambio_tipo IS NULL AND solicitud_cambio_motivo IS NULL AND solicitud_cambio_en IS NULL) OR " +
                 "(solicitud_cambio_tipo IS NOT NULL AND solicitud_cambio_motivo IS NOT NULL AND solicitud_cambio_en IS NOT NULL)");
             t.HasCheckConstraint("ck_citas_solicitud_cambio_tipo", "solicitud_cambio_tipo IN ('reagendar','cancelar')");
-            t.HasCheckConstraint("ck_citas_confirmacion_canal", "confirmacion_canal IN ('correo','portal','llamada')");
+            // "panel": confirmada al crearla en recepción (confirmarAlCrear) o por recepción sin llamada
+            t.HasCheckConstraint("ck_citas_confirmacion_canal", "confirmacion_canal IN ('correo','portal','llamada','panel')");
             t.HasCheckConstraint("ck_citas_bloqueo_solo_solicitudes",
                 "origen IN ('web','portal') OR bloqueo_expira_en IS NULL");
             t.HasCheckConstraint("ck_citas_bloqueo_despues_de_creacion",
@@ -36,6 +37,8 @@ public class CitaConfiguracion : IEntityTypeConfiguration<Cita>
         e.Property(c => c.Origen).HasMaxLength(20);
         e.Property(c => c.Motivo).HasMaxLength(500);
         e.Property(c => c.MotivoCancelacion).HasMaxLength(500);
+        e.Property(c => c.MotivoCambio).HasMaxLength(500);
+        e.Property(c => c.Version).IsRowVersion();
         e.Property(c => c.CostoBase).HasPrecision(10, 2);
         e.Property(c => c.DescuentoAplicado).HasPrecision(5, 2);
         e.Property(c => c.CostoExtra).HasPrecision(10, 2);
@@ -74,7 +77,9 @@ public class CitaHistorialConfiguracion : IEntityTypeConfiguration<CitaHistorial
         e.ToTable("cita_historial", t =>
         {
             t.HasCheckConstraint("ck_cita_historial_accion",
-                "accion IN ('creacion','modificacion','reagenda','cambio_estado','confirmacion','cancelacion','solicitud_cambio','resolucion_solicitud','vencimiento')");
+                $"accion IN ({string.Join(",", AccionesCitaHistorial.Todas.Select(a => $"'{a}'"))})");
+            t.HasCheckConstraint("ck_cita_historial_canal",
+                $"canal IS NULL OR canal IN ({string.Join(",", CanalesCitaHistorial.Todos.Select(c => $"'{c}'"))})");
         });
 
         e.Property(h => h.Accion).HasMaxLength(30);
