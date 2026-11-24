@@ -39,6 +39,9 @@ public class DentissaFactory : WebApplicationFactory<Program>
 
     protected virtual bool AplicarMigracionesAlArrancar => false;
 
+    // Reloj de la API: el del sistema salvo que la prueba fije uno (diseño de la agenda, 1.1.3)
+    public virtual TimeProvider? Tiempo => null;
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -49,6 +52,8 @@ public class DentissaFactory : WebApplicationFactory<Program>
         builder.UseSetting("RateLimiting:Login:PorIp:PermitLimit", (LimiteLogin * 6).ToString());
         builder.UseSetting("RateLimiting:Registro:PorIp:PermitLimit", LimiteLogin.ToString());
         builder.UseSetting("CatalogoImagenes:Ruta", _carpetaImagenes);
+        if (Tiempo is { } tiempo)
+            builder.ConfigureServices(s => s.AddSingleton(tiempo));
     }
 
     protected override void Dispose(bool disposing)

@@ -26,6 +26,8 @@ public class CitaConfiguracion : IEntityTypeConfiguration<Cita>
             t.HasCheckConstraint("ck_citas_confirmacion_canal", "confirmacion_canal IN ('correo','portal','llamada')");
             t.HasCheckConstraint("ck_citas_bloqueo_solo_solicitudes",
                 "origen IN ('web','portal') OR bloqueo_expira_en IS NULL");
+            t.HasCheckConstraint("ck_citas_bloqueo_despues_de_creacion",
+                "bloqueo_expira_en IS NULL OR bloqueo_expira_en > creado_en");
             t.HasCheckConstraint("ck_citas_descuento", "descuento_aplicado >= 0 AND descuento_aplicado <= 100");
             t.HasCheckConstraint("ck_citas_costos", "costo_base >= 0 AND costo_extra >= 0 AND costo_total >= 0");
         });
