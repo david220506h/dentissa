@@ -1,6 +1,6 @@
 # Propuesta: API de pacientes para el panel
 
-- **Fecha:** 2026-11-23 · **Estado:** propuesta con **decisiones provisionales, pendiente de revisión legal**. Sin código: no se implementa hasta la aprobación expresa.
+- **Fecha:** 2026-11-23 · **Estado:** **aprobada por el dueño el 2026-11-24 solo para la demo con datos ficticios** e implementada en la Fase 2b (rama `fase-2b-pacientes`). La revisión legal sigue siendo requisito antes de usar datos reales (`docs/requisitos-despliegue.md`, punto 5).
 
 > **Decisiones provisionales (2026-11-23).** Las tomó el dueño del proyecto; lo legal lo valida un especialista (protección de datos personales y NOM-004-SSA3-2012):
 > 1. **"Asignado"** = el paciente tiene al menos una cita no cancelada con ese dentista. Si no, **404**.
