@@ -27,7 +27,8 @@ import estilos from './Inicio.module.css';
  * - Recepción (administración y asistente): GET /api/citas → citas de hoy y citas sin confirmar.
  * - Dentista: GET /api/citas/mi-agenda (solo hoy) → sus citas de hoy.
  * No se dibujan, porque la API aún no los tiene: solicitudes, existencias bajas, "de N horarios del día",
- * horarios libres y descansos, "Por llamar" con teléfono y correo, buscador, notificaciones,
+ * horarios libres y descansos, "Por llamar" (la API no tiene el estado del correo: el indicador se llama
+ * "Sin confirmar"), buscador, notificaciones,
  * "Nueva cita", "Agendar" y la invitación a instalar.
  */
 export function Inicio() {
@@ -66,17 +67,13 @@ export function Inicio() {
           <div className={`${estilos.indicadores} ${estilos.soloEscritorio}`}>
             <TarjetaIndicador etiqueta="Citas de hoy" valor={deHoy.length} icono="agenda" />
             {sinConfirmar !== null && (
-              <TarjetaIndicador
-                etiqueta="Citas sin confirmar"
-                valor={sinConfirmar}
-                icono="telefono"
-                detalle="Pendientes de llamada"
-              />
+              // "Sin confirmar" (no "Por llamar") y sin detalle: la API aún no dice si el correo tuvo respuesta
+              <TarjetaIndicador etiqueta="Sin confirmar" valor={sinConfirmar} icono="telefono" />
             )}
           </div>
           {sinConfirmar !== null && (
             <div className={`${estilos.compactas} ${estilos.soloCelular}`}>
-              <TarjetaIndicadorCompacta etiqueta="Por llamar" valor={sinConfirmar} icono="telefono" />
+              <TarjetaIndicadorCompacta etiqueta="Sin confirmar" valor={sinConfirmar} icono="telefono" />
             </div>
           )}
         </>

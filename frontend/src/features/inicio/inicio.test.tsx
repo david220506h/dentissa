@@ -105,7 +105,9 @@ describe('pantalla de Inicio', () => {
     servicio.authFetch.mockResolvedValue(respuesta(CITAS));
     montar();
     expect(await screen.findByRole('region', { name: 'Citas de hoy' })).toHaveTextContent('3');
-    expect(screen.getByRole('region', { name: 'Citas sin confirmar' })).toHaveTextContent('1');
+    expect(screen.getAllByRole('region', { name: 'Sin confirmar' })[0]).toHaveTextContent('1');
+    expect(screen.queryByText('Por llamar')).toBeNull();
+    expect(screen.queryByText('Pendientes de llamada')).toBeNull();
     expect(servicio.authFetch).toHaveBeenCalledWith('/api/citas');
     const agenda = screen.getByRole('region', { name: /Agenda de hoy/ });
     const filas = within(agenda).getAllByRole('listitem');
@@ -128,14 +130,13 @@ describe('pantalla de Inicio', () => {
     expect(screen.queryByRole('link', { name: 'Nueva cita' })).toBeNull();
   });
 
-  it('dentista: solo su agenda de hoy (mi-agenda) y sin "Citas sin confirmar"', async () => {
+  it('dentista: solo su agenda de hoy (mi-agenda) y sin "Sin confirmar"', async () => {
     servicio.usuario = { ...servicio.usuario!, rol: 'dentista' };
     servicio.authFetch.mockResolvedValue(respuesta(CITAS.filter((c) => c.id === 1)));
     montar();
     expect(await screen.findByRole('region', { name: 'Citas de hoy' })).toHaveTextContent('1');
     expect(servicio.authFetch).toHaveBeenCalledWith('/api/citas/mi-agenda?desde=2026-11-18&hasta=2026-11-18');
-    expect(screen.queryByRole('region', { name: 'Citas sin confirmar' })).toBeNull();
-    expect(screen.queryByRole('region', { name: 'Por llamar' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Sin confirmar' })).toBeNull();
   });
 
   it('día sin citas: estado vacío de Estados', async () => {

@@ -83,9 +83,10 @@ const ESCRITORIO: Caso[] = [
     ignorar: CAJA,
   },
   {
-    nombre: 'indicador Citas sin confirmar (con detalle)',
+    // El panel lo llama "Sin confirmar" y sin detalle (decisión); se compara la caja con la del diseño
+    nombre: 'indicador Sin confirmar',
     diseno: (p) => p.getByText('Citas sin confirmar', { exact: true }).locator('xpath=ancestor::section[1]'),
-    panel: (p) => p.getByRole('region', { name: 'Citas sin confirmar' }),
+    panel: (p) => p.getByRole('region', { name: 'Sin confirmar' }).first(),
     ignorar: CAJA,
   },
   {
@@ -145,21 +146,21 @@ const CELULAR: Caso[] = [
     ignorar: TEXTO,
   },
   {
-    nombre: 'indicador compacto Por llamar',
+    nombre: 'indicador compacto (Sin confirmar; el diseño dice "Por llamar")',
     diseno: (p) => p.getByText('Por llamar', { exact: true }).first().locator('xpath=..'),
-    panel: (p) => p.getByRole('region', { name: 'Por llamar' }),
+    panel: (p) => p.getByRole('region', { name: 'Sin confirmar' }).last(),
     ignorar: [...CAJA],
   },
   {
     nombre: 'número del indicador compacto',
     diseno: (p) => p.getByText('Por llamar', { exact: true }).first().locator('xpath=preceding-sibling::span[1]'),
-    panel: (p) => p.getByRole('region', { name: 'Por llamar' }).locator('span').nth(1),
+    panel: (p) => p.getByRole('region', { name: 'Sin confirmar' }).last().locator('span').nth(1),
     ignorar: TEXTO,
   },
   {
     nombre: 'etiqueta del indicador compacto',
     diseno: (p) => p.getByText('Por llamar', { exact: true }).first(),
-    panel: (p) => p.getByRole('region', { name: 'Por llamar' }).getByText('Por llamar'),
+    panel: (p) => p.getByRole('region', { name: 'Sin confirmar' }).last().getByText('Sin confirmar'),
     ignorar: TEXTO,
   },
   {
