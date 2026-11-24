@@ -62,10 +62,13 @@ export const SECCIONES: Seccion[] = [
 ];
 
 /**
- * Restricción temporal (plan de la Fase 3a, decisión 14.2): el dentista solo ve Inicio hasta que su
- * agenda, pacientes, expediente, inventario y reportes tengan pantalla y backend.
+ * Restricción temporal (plan de la Fase 3a, decisión 14.2): el dentista solo ve lo que ya tiene pantalla y
+ * backend para su rol: Inicio y Pacientes (los asignados, Fase 2b). Su agenda, expediente, inventario y
+ * reportes se agregan al tenerlos.
  */
-const SOLO_INICIO_POR_AHORA: ReadonlySet<RolPanel> = new Set([ROLES.DENTISTA]);
+const TEMPORAL: Partial<Record<RolPanel, ReadonlySet<IdSeccion>>> = {
+  [ROLES.DENTISTA]: new Set<IdSeccion>(['inicio', 'pacientes']),
+};
 
 /** Roles que entran al panel: la lista vive en constants/roles.js. */
 export function esRolPanel(rol: string | undefined | null): rol is RolPanel {
@@ -74,7 +77,8 @@ export function esRolPanel(rol: string | undefined | null): rol is RolPanel {
 
 /** ¿Puede este rol ver la sección? (matriz de Main, más la restricción temporal del dentista). */
 export function puedeVer(rol: RolPanel, seccion: IdSeccion): boolean {
-  if (SOLO_INICIO_POR_AHORA.has(rol) && seccion !== 'inicio') return false;
+  const temporal = TEMPORAL[rol];
+  if (temporal && !temporal.has(seccion)) return false;
   const s = SECCIONES.find((x) => x.id === seccion);
   return !!s && s.matriz[rol] !== '—';
 }

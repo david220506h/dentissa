@@ -14,8 +14,9 @@ describe('matriz de permisos (Main.dc.html)', () => {
     expect(ids('asistente')).toEqual(['inicio', 'agenda', 'solicitudes', 'pacientes', 'inventario', 'pagos']);
   });
 
-  it('dentista: solo Inicio por ahora (decisión 14.2), aunque la matriz le dé más', () => {
-    expect(ids('dentista')).toEqual(['inicio']);
+  it('dentista: Inicio y Pacientes por ahora (decisión 14.2), aunque la matriz le dé más', () => {
+    expect(ids('dentista')).toEqual(['inicio', 'pacientes']);
+    expect(puedeVer('dentista', 'agenda')).toBe(false);
     expect(puedeVer('dentista', 'expediente')).toBe(false);
   });
 

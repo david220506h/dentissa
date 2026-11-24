@@ -4,13 +4,15 @@ import { NoEncontrado, Proximamente } from '../features/estados/Estados';
 import { Agenda } from '../features/agenda/Agenda';
 import { Equipo } from '../features/equipo/Equipo';
 import { Inicio } from '../features/inicio/Inicio';
+import { FichaPaciente, Pacientes } from '../features/pacientes/Pacientes';
 import { Disposicion } from './Disposicion';
 import { SECCIONES } from './permisos';
 import { RutaProtegida } from './RutaProtegida';
 
 // Todas las secciones de la matriz existen como ruta; las que aún no tienen pantalla muestran
-// "Próximamente" (Servicios y Ofertas por separado, decisión 14.4). Inicio, Agenda y Equipo
-// llegan con el diseño del arquitecto.
+// "Próximamente" (Servicios y Ofertas por separado, decisión 14.4). Inicio, Agenda, Pacientes (con su
+// ficha en /pacientes/:id) y Equipo tienen pantalla.
+const PANTALLAS = { inicio: Inicio, agenda: Agenda, pacientes: Pacientes, equipo: Equipo } as const;
 export function Rutas() {
   return (
     <Routes>
@@ -28,11 +30,22 @@ export function Rutas() {
             path={s.ruta}
             element={
               <RutaProtegida seccion={s.id}>
-                {s.id === 'inicio' ? <Inicio /> : s.id === 'agenda' ? <Agenda /> : s.id === 'equipo' ? <Equipo /> : <Proximamente titulo={s.etiqueta} icono={s.icono} />}
+                {(() => {
+                  const Pantalla = PANTALLAS[s.id as keyof typeof PANTALLAS];
+                  return Pantalla ? <Pantalla /> : <Proximamente titulo={s.etiqueta} icono={s.icono} />;
+                })()}
               </RutaProtegida>
             }
           />
         ))}
+        <Route
+          path="/pacientes/:id"
+          element={
+            <RutaProtegida seccion="pacientes">
+              <FichaPaciente />
+            </RutaProtegida>
+          }
+        />
         <Route path="*" element={<NoEncontrado />} />
       </Route>
       <Route path="/registro" element={<Navigate to="/iniciar-sesion" replace />} />

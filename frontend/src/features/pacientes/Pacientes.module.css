@@ -1,0 +1,195 @@
+/* Pacientes (Pacientes.dc.html; celular: Movil2 · Pacientes en tarjetas). Solo tokens. */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-14);
+}
+
+.soloEscritorio {
+  display: none;
+}
+
+.busqueda {
+  max-width: 480px;
+}
+
+.tarjeta {
+  min-width: 0;
+  padding: var(--espacio-24);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-14);
+  box-shadow: var(--sombra-tarjeta);
+}
+
+.tituloTarjeta {
+  margin: 0 0 var(--espacio-14);
+  font-size: var(--texto-titulo-tarjeta);
+  font-weight: var(--peso-negrita);
+  color: var(--texto);
+}
+
+.persona {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-12);
+}
+
+.nombre {
+  font-weight: var(--peso-negrita);
+  color: var(--texto);
+}
+
+.sinRegistro {
+  margin: 0;
+  font-size: var(--texto-tabla);
+  color: var(--texto-secundario);
+}
+
+.accion {
+  text-align: right;
+}
+
+/* "Ver ficha": botón de texto del diseño, como enlace */
+.enlace {
+  gap: var(--espacio-8);
+  justify-content: center;
+  height: var(--alto-toque);
+  padding: 0 var(--espacio-18);
+  border: 1px solid transparent;
+  border-radius: var(--radio-10);
+  white-space: nowrap;
+}
+
+.enlace,
+.volver {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--alto-toque);
+  font-size: var(--texto-14-5);
+  font-weight: var(--peso-negrita);
+  color: var(--rosa-800);
+  text-decoration: none;
+}
+
+.volver {
+  align-self: flex-start;
+  padding: 0;
+  border-radius: var(--radio-8);
+}
+
+.enlace:hover,
+.volver:hover {
+  text-decoration: underline;
+}
+
+.enlace:focus-visible,
+.volver:focus-visible {
+  outline: 3px solid var(--foco-anillo);
+  outline-offset: var(--foco-separacion);
+}
+
+.tarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-10);
+  margin: 0 0 var(--espacio-12);
+  padding: 0;
+  list-style: none;
+}
+
+/* Formulario de alta y edición */
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-14);
+}
+
+.dosColumnas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espacio-14);
+}
+
+/* Ficha */
+.columnasFicha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--espacio-24);
+}
+
+.alergiaFicha {
+  margin-bottom: var(--espacio-14);
+}
+
+.datos {
+  display: grid;
+  gap: var(--espacio-12);
+  margin: 0;
+}
+
+.datos div {
+  display: grid;
+  gap: var(--espacio-2);
+}
+
+.datos dt {
+  font-size: var(--texto-13);
+  font-weight: var(--peso-negrita);
+  color: var(--texto-secundario);
+}
+
+.datos dd {
+  margin: 0;
+  font-size: var(--texto-14-5);
+  color: var(--texto);
+  overflow-wrap: anywhere;
+}
+
+.citas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-10);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cita {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-8);
+  padding: var(--espacio-12) var(--espacio-14);
+  border-radius: var(--radio-10);
+  background: var(--fondo);
+  font-size: var(--texto-14-5);
+}
+
+.servicio {
+  display: block;
+  font-size: var(--texto-13-5);
+  color: var(--texto-secundario);
+}
+
+@media (min-width: 560px) {
+  .dosColumnas {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .soloEscritorio {
+    display: block;
+  }
+
+  .soloCelular {
+    display: none;
+  }
+
+  .columnasFicha {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
