@@ -3,6 +3,12 @@ import { ANCHOS, abrirDiseno, sesionDeEjemplo, sinDesbordeHorizontal, sinViolaci
 
 // Panel nuevo: inicio de sesión contra Login.dc.html. Sin API: no se envía el formulario con datos reales.
 
+// Reloj fijo para todo el archivo: Inicio muestra la fecha y el saludo, y las capturas no deben depender del día.
+// Miércoles 18 nov 2026, 9:30 en la clínica.
+test.beforeEach(async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-11-18T15:30:00Z') });
+});
+
 const PROPIEDADES = ['font-size', 'font-weight', 'color', 'background-color', 'border-radius', 'padding', 'line-height'] as const;
 
 async function estilos(objetivo: Locator) {
@@ -158,7 +164,6 @@ for (const ancho of ANCHOS) {
     });
 
     test('inactividad: aviso a los 14 min, foco dentro y Esc lo cierra', async ({ page }) => {
-      await page.clock.install();
       await sesionDeEjemplo(page);
       await page.goto('/');
       await expect(page.locator('h1')).toBeVisible();
