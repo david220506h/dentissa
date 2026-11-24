@@ -1,0 +1,12 @@
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-24);
+}
+
+/* Celular (Movil.dc.html): separación de 14 px; desde 1024 px, la de Inicio.dc.html */
+@media (max-width: 1023px) {
+  .pagina {
+    gap: var(--espacio-14);
+  }
+}

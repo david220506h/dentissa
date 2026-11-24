@@ -1,0 +1,101 @@
+/* Iniciar sesión (Login.dc.html): presentación en Rosa 50 y formulario en blanco; se apilan en pantallas angostas. */
+.raiz {
+  min-height: 100dvh;
+  display: flex;
+  flex-wrap: wrap;
+  color: var(--texto);
+}
+
+.presentacion {
+  flex: 1 1 480px;
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--espacio-48);
+  padding: var(--espacio-56) var(--espacio-64);
+  background: var(--rosa-50);
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-12);
+}
+
+.marcaIcono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--alto-toque);
+  height: var(--alto-toque);
+  border-radius: var(--radio-10);
+  background: var(--rosa-700);
+  color: var(--superficie);
+}
+
+.marcaNombre {
+  font-size: var(--texto-24);
+  font-weight: var(--peso-extranegrita);
+}
+
+.lema {
+  max-width: 480px;
+}
+
+.lemaTitulo {
+  margin: 0;
+  font-size: var(--texto-40);
+  font-weight: var(--peso-extranegrita);
+  line-height: 1.15;
+}
+
+.lemaTexto {
+  margin: var(--espacio-16) 0 0;
+  font-size: var(--texto-17);
+  color: var(--texto-secundario);
+}
+
+/* Ilustración: el diente del logo en Rosa 500 con relleno Rosa 100 */
+.ilustracion {
+  color: var(--rosa-500);
+}
+
+.ilustracion svg {
+  fill: var(--rosa-100);
+}
+
+.formularioLado {
+  flex: 1 1 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--espacio-48) var(--espacio-32);
+  background: var(--superficie);
+}
+
+.formulario {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-20);
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--texto-30);
+  font-weight: var(--peso-extranegrita);
+}
+
+.subtitulo {
+  margin: var(--espacio-6) 0 0;
+  font-size: var(--texto-15);
+  color: var(--texto-secundario);
+}
+
+.nota {
+  margin: var(--espacio-8) 0 0;
+  font-size: var(--texto-14);
+  color: var(--texto-secundario);
+}

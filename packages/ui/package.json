@@ -5,7 +5,8 @@
   "description": "Componentes de interfaz de Dentissa según docs/design/panel. No dependen del enrutador ni de la API: reciben datos y funciones por propiedades.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./prueba/axe": "./src/prueba/axe.ts"
   },
   "peerDependencies": {
     "react": "^19.0.0",
