@@ -1,6 +1,7 @@
 import { Aviso, Boton, CampoContrasena, CampoTexto, Icono } from '@dentissa/ui';
 import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { destinoSeguro } from '../../app/destino';
 import { CuentaSinAccesoAlPanel, useSesion } from '../../app/sesion';
 import estilos from './IniciarSesion.module.css';
 
@@ -23,7 +24,8 @@ export function IniciarSesion() {
   const [errorGeneral, setErrorGeneral] = useState<{ titulo: string; texto?: string } | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  const destino = (ubicacion.state as { desde?: string } | null)?.desde ?? '/';
+  // Solo rutas internas del panel (destino.ts): nunca una dirección externa
+  const destino = destinoSeguro((ubicacion.state as { desde?: unknown } | null)?.desde);
   if (usuario) return <Navigate to={destino} replace />;
 
   const alEnviar = async (e: FormEvent) => {

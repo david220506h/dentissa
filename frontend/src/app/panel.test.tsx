@@ -27,7 +27,7 @@ vi.mock('../services/authService', () => ({
 
 const ejemplo = (rol: string) => ({ id: 1, nombre: 'Ana', apellido: 'Ejemplo', email: 'ana@ejemplo.test', rol });
 
-function montar(ruta: string) {
+function montar(ruta: string | { pathname: string; state: unknown }) {
   const qc = new QueryClient();
   return render(
     <QueryClientProvider client={qc}>
@@ -219,4 +219,18 @@ describe('hoja "Más" por rol (Movil2; manda la matriz de Main)', () => {
     await abrirHoja();
     await sinViolacionesAxe(document.body);
   });
+});
+
+describe('redirección tras iniciar sesión', () => {
+  it.each(['//sitio-malicioso.example', 'https://sitio-malicioso.example', 'javascript:alert(1)'])(
+    'un destino externo (%s) no sale del panel: va a Inicio',
+    async (desde) => {
+      servicio.login.mockResolvedValue(ejemplo('asistente'));
+      montar({ pathname: '/iniciar-sesion', state: { desde } });
+      await userEvent.type(screen.getByLabelText('Correo electrónico'), 'ana@ejemplo.test');
+      await userEvent.type(screen.getByLabelText('Contraseña'), 'clave-de-prueba');
+      await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+      expect(await screen.findByRole('region', { name: /Agenda de hoy/ })).toBeInTheDocument();
+    },
+  );
 });
