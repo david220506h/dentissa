@@ -61,7 +61,7 @@ const respuesta = (datos: unknown, status = 200) => ({ ok: status < 400, status,
 
 function apiSimulada(url: string, opciones?: RequestInit) {
   if (opciones?.method === 'PATCH') return Promise.resolve(respuesta({ mensaje: 'ok' }));
-  if (url === '/api/citas') return Promise.resolve(respuesta(CITAS));
+  if (url === '/api/citas' || url.startsWith('/api/citas?')) return Promise.resolve(respuesta(CITAS));
   if (url === '/api/citas/dentistas') {
     return Promise.resolve(
       respuesta([
@@ -135,10 +135,11 @@ describe('Agenda: semana', () => {
     expect(screen.getAllByText('16 – 21 nov 2026').length).toBeGreaterThan(0);
   });
 
-  it('sin controles de la Fase 2 ni sin backend', async () => {
+  it('recepción tiene "Nueva cita"; una completada no tiene acciones', async () => {
     montar();
     await screen.findByRole('region', { name: 'Citas de la semana' });
-    for (const nombre of ['Nueva cita', 'Agendar', 'Mes']) expect(screen.queryByRole('button', { name: nombre })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Nueva cita' })).toBeInTheDocument();
+    for (const nombre of ['Agendar', 'Mes']) expect(screen.queryByRole('button', { name: nombre })).toBeNull();
     expect(screen.queryByRole('searchbox')).toBeNull();
     await userEvent.click(within(semana()).getByRole('button', { name: /Andrea Cruz/ }));
     const dialogo = await screen.findByRole('dialog', { name: 'Cita' });
@@ -155,11 +156,11 @@ describe('Agenda: confirmar y cancelar', () => {
     await userEvent.click(within(semana()).getByRole('button', { name: /Ernesto Vega/ }));
     const dialogo = await screen.findByRole('dialog', { name: 'Cita' });
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Confirmar cita' }));
-    expect(servicio.authFetch).toHaveBeenCalledWith('/api/citas/2/confirmar', { method: 'PATCH' });
+    expect(servicio.authFetch).toHaveBeenCalledWith('/api/citas/2/confirmar', { method: 'PATCH', body: '{}' });
     expect(await screen.findByText('Cita confirmada.')).toBeInTheDocument();
   });
 
-  it('una confirmada solo se puede cancelar; el motivo elegido va en el cuerpo', async () => {
+  it('una confirmada no se confirma; al cancelar, el motivo elegido y la nota van en el cuerpo', async () => {
     montar();
     await screen.findByRole('region', { name: 'Citas de la semana' });
     await userEvent.click(within(semana()).getByRole('button', { name: /Rosa Aguilar/ }));
@@ -167,13 +168,13 @@ describe('Agenda: confirmar y cancelar', () => {
     expect(within(dialogo).queryByRole('button', { name: 'Confirmar cita' })).toBeNull();
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Cancelar cita' }));
     const cancelar = await screen.findByRole('dialog', { name: 'Cancelar cita' });
-    expect(within(cancelar).queryByLabelText(/Nota/)).toBeNull();
     expect(within(cancelar).queryByText(/Avisar/)).toBeNull();
     await userEvent.selectOptions(within(cancelar).getByLabelText('Motivo de la cancelación'), 'La clínica debe reprogramar');
+    await userEvent.type(within(cancelar).getByLabelText(/Nota/), 'Agenda de la dentista');
     await userEvent.click(within(cancelar).getByRole('button', { name: 'Cancelar cita' }));
     expect(servicio.authFetch).toHaveBeenCalledWith('/api/citas/1/cancelar', {
       method: 'PATCH',
-      body: JSON.stringify({ motivo: 'La clínica debe reprogramar' }),
+      body: JSON.stringify({ motivo: 'La clínica debe reprogramar. Agenda de la dentista' }),
     });
     expect(await screen.findByText('Cita cancelada.')).toBeInTheDocument();
   });
@@ -203,7 +204,7 @@ describe('Agenda: día, errores y permisos', () => {
       expect.stringContaining('9:00Ernesto Vega'),
       '10:00Libre',
       '11:00Descanso',
-      expect.stringContaining('12:00Mario Delgado'),
+      expect.stringContaining('12:00 a 14:00Mario Delgado'),
       '14:00Descanso',
     ]);
     expect(filas[4]).toContain('2 horarios');
@@ -220,7 +221,7 @@ describe('Agenda: día, errores y permisos', () => {
 
   it('error al cargar las citas: mensaje de Estados con Reintentar', async () => {
     servicio.authFetch.mockImplementation((url: string, op?: RequestInit) =>
-      url === '/api/citas' ? Promise.resolve(respuesta({}, 500)) : apiSimulada(url, op),
+      url.startsWith('/api/citas?') ? Promise.resolve(respuesta({}, 500)) : apiSimulada(url, op),
     );
     montar();
     expect(await screen.findByRole('heading', { name: 'No pudimos cargar las citas' })).toBeInTheDocument();

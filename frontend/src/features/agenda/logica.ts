@@ -6,6 +6,11 @@ import type { CitaApi } from '../inicio/datos';
 export interface CitaAgenda extends CitaApi {
   dentistaId: number;
   pacienteId: number;
+  /** Para pedir horarios libres al reagendar o cambiar de dentista. */
+  servicioId?: number;
+  /** xmin de la cita: se envía en cada acción (409 CITA_MODIFICADA si cambió). */
+  version?: number;
+  pacientePresente?: boolean;
 }
 
 export interface Dentista {

@@ -338,10 +338,13 @@ for (const ancho of ANCHOS) {
   });
 }
 
-test('vista Día en escritorio: captura', async ({ page }) => {
+test('vista Día en escritorio: la cuadrícula con una columna, y captura', async ({ page }) => {
   await abrirAgenda(page, 1440);
   await page.getByRole('button', { name: 'Día', exact: true }).click();
-  await expect(diaPanel(page).getByText('Libre')).toBeVisible();
+  const dia = page.getByRole('region', { name: 'Citas del día' });
+  await expect(dia).toBeVisible();
+  await expect(dia.getByRole('button', { name: /Ernesto Vega/ })).toBeVisible();
+  await sinDesbordeHorizontal(page);
   await sinViolacionesAxe(page);
   await expect(page).toHaveScreenshot('agenda-dia-1440.png', { fullPage: true });
 });
