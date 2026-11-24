@@ -219,7 +219,7 @@ test('panel: "Más" activo con la hoja abierta, como en el diseño', async ({ pa
 
   await page.setViewportSize({ width: 390, height: 844 });
   await sesionDeEjemplo(page);
-  await page.goto('/');
+  await page.goto('/panel/');
   await page.getByRole('button', { name: 'Más' }).click();
   await page.getByRole('dialog', { name: 'Más opciones' }).waitFor();
   await page.waitForTimeout(400);

@@ -17,11 +17,14 @@ Lo que quedó fuera de la versión de demostración (`v0.1-demo`, `docs/DEMO.md`
 
 ## 2. Portal de pacientes
 
+Hecho en la entrega (bloque C): sitio público mínimo en "/" dentro del mismo proyecto React (sin Astro), `POST /api/publico/solicitudes` (campo trampa, límite de 5 por IP y hora, aviso de privacidad **de ejemplo**) y la bandeja Solicitudes del panel. Falta lo siguiente:
+
 Requiere la etapa 2 (sitio). Commits pendientes del plan de la agenda (`docs/agenda/diseno-agenda.md`):
 
 | Commit | Contenido |
 |---|---|
-| 11 | Solicitud pública `POST /api/publico/citas`: campo trampa, Turnstile, aviso de privacidad, teléfono normalizado (migración), tope por contacto, límites de tasa. |
+| 11 | Turnstile en la solicitud pública, teléfono normalizado (migración), tope de solicitudes por contacto. (Hecho: campo trampa, aviso y límite por IP.) |
+| 11 (antes) | Solicitud pública `POST /api/publico/citas`: campo trampa, Turnstile, aviso de privacidad, teléfono normalizado (migración), tope por contacto, límites de tasa. |
 | 12 | Enlaces del correo: `consultar`, `confirmar` y `solicitar-cambio` (los tokens ya existen, commit 9). |
 | 13 | Portal del paciente (9.3). |
 | 14 | Solicitudes de cambio del paciente y su resolución por recepción (pantalla Solicitudes del panel). |

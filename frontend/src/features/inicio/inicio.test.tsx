@@ -147,7 +147,11 @@ describe('pantalla de Inicio', () => {
   });
 
   it('error: mensaje de Estados sin indicadores, y "Reintentar" vuelve a pedir', async () => {
-    servicio.authFetch.mockResolvedValueOnce(respuesta({}, 500)).mockResolvedValueOnce(respuesta(CITAS));
+    // La primera petición de citas falla; la bandeja de Solicitudes (contador del menú) responde aparte
+    let pedidasCitas = 0;
+    servicio.authFetch.mockImplementation((url: string) =>
+      Promise.resolve(url.includes('/solicitudes') ? respuesta([]) : pedidasCitas++ === 0 ? respuesta({}, 500) : respuesta(CITAS)),
+    );
     montar();
     expect(await screen.findByRole('heading', { name: 'No pudimos cargar las citas' })).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Citas de hoy' })).toBeNull();

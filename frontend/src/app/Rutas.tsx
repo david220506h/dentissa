@@ -5,6 +5,7 @@ import { Agenda } from '../features/agenda/Agenda';
 import { Equipo } from '../features/equipo/Equipo';
 import { Inicio } from '../features/inicio/Inicio';
 import { FichaPaciente, Pacientes } from '../features/pacientes/Pacientes';
+import { Solicitudes } from '../features/solicitudes/Solicitudes';
 import { Disposicion } from './Disposicion';
 import { SECCIONES } from './permisos';
 import { RutaProtegida } from './RutaProtegida';
@@ -12,7 +13,7 @@ import { RutaProtegida } from './RutaProtegida';
 // Todas las secciones de la matriz existen como ruta; las que aún no tienen pantalla muestran
 // "Próximamente" (Servicios y Ofertas por separado, decisión 14.4). Inicio, Agenda, Pacientes (con su
 // ficha en /pacientes/:id) y Equipo tienen pantalla.
-const PANTALLAS = { inicio: Inicio, agenda: Agenda, pacientes: Pacientes, equipo: Equipo } as const;
+const PANTALLAS = { inicio: Inicio, agenda: Agenda, solicitudes: Solicitudes, pacientes: Pacientes, equipo: Equipo } as const;
 export function Rutas() {
   return (
     <Routes>

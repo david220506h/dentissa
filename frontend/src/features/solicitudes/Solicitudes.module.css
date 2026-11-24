@@ -1,0 +1,98 @@
+/* Bandeja «Solicitudes». Solo tokens de @dentissa/tokens. */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-14);
+}
+
+.lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: var(--espacio-14);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-14);
+  min-width: 0;
+  padding: var(--espacio-20);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-14);
+  box-shadow: var(--sombra-tarjeta);
+}
+
+.cabeza {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--espacio-12);
+}
+
+.nombre {
+  margin: 0;
+  font-size: var(--texto-titulo-tarjeta);
+  font-weight: var(--peso-negrita);
+  color: var(--texto);
+}
+
+.cuando {
+  margin: var(--espacio-4) 0 0;
+  font-size: var(--texto-14-5);
+  font-weight: var(--peso-seminegrita);
+  color: var(--texto-secundario);
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--espacio-12);
+  margin: 0;
+}
+
+.datos div {
+  display: grid;
+  gap: var(--espacio-2);
+  min-width: 0;
+}
+
+.datos .ancho {
+  grid-column: 1 / -1;
+}
+
+.datos dt {
+  font-size: var(--texto-13);
+  font-weight: var(--peso-negrita);
+  color: var(--texto-secundario);
+}
+
+.datos dd {
+  margin: 0;
+  font-size: var(--texto-14-5);
+  color: var(--texto);
+  overflow-wrap: anywhere;
+}
+
+.vence {
+  margin: 0;
+  font-size: var(--texto-13);
+  color: var(--estado-pendiente-texto);
+  font-weight: var(--peso-seminegrita);
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--espacio-10);
+  margin-top: auto;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-16);
+}

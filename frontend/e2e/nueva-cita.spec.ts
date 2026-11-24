@@ -22,7 +22,7 @@ async function abrirFormulario(page: Page) {
   // Registradas después: Playwright usa primero la última ruta que coincide
   await page.route('**/api/citas/servicios', (r) => r.fulfill({ status: 200, json: SERVICIOS }));
   await page.route('**/api/agenda/disponibilidad?**', (r) => r.fulfill({ status: 200, json: [libre('10:00'), libre('12:00')] }));
-  await page.goto('/agenda');
+  await page.goto('/panel/agenda');
   await page.getByRole('button', { name: 'Nueva cita' }).click();
   const dialogo = page.getByRole('dialog', { name: 'Nueva cita' });
   await dialogo.getByLabel('Horario libre').selectOption('10:00');

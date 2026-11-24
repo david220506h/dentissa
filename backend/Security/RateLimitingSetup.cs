@@ -21,7 +21,9 @@ namespace backend.Security
             var loginIpCorreo = LeerVentana(config, "RateLimiting:Login:PorIpYCorreo", 5, 60);
             var loginIp       = LeerVentana(config, "RateLimiting:Login:PorIp", 30, 60);
             var registroIp    = LeerVentana(config, "RateLimiting:Registro:PorIp", 3, 600);
-        var publicoIp     = LeerVentana(config, "RateLimiting:Publico:PorIp", 60, 60);
+            var publicoIp     = LeerVentana(config, "RateLimiting:Publico:PorIp", 60, 60);
+            // Solicitudes de cita del sitio: pocas por IP (además del límite público general)
+            var solicitudesIp = LeerVentana(config, "RateLimiting:Solicitudes:PorIp", 5, 3600);
 
             services.AddRateLimiter(options =>
             {
@@ -39,7 +41,8 @@ namespace backend.Security
                     Particion(EsLogin,    ctx => $"login-ip:{Ip(ctx)}", loginIp),
                     Particion(EsLogin,    ctx => $"login-ip-correo:{Ip(ctx)}|{Correo(ctx)}", loginIpCorreo),
                     Particion(EsRegistro, ctx => $"registro-ip:{Ip(ctx)}", registroIp),
-                    Particion(EsPublico,  ctx => $"publico-ip:{Ip(ctx)}", publicoIp));
+                    Particion(EsPublico,  ctx => $"publico-ip:{Ip(ctx)}", publicoIp),
+                    Particion(EsSolicitud, ctx => $"solicitud-ip:{Ip(ctx)}", solicitudesIp));
             });
 
             return services;
@@ -101,6 +104,7 @@ namespace backend.Security
 
         private static bool EsLogin(HttpContext ctx) => EsPost(ctx, LoginPath);
         private static bool EsRegistro(HttpContext ctx) => EsPost(ctx, RegistroPath);
+        private static bool EsSolicitud(HttpContext ctx) => EsPost(ctx, "/api/publico/solicitudes");
         private static bool EsPublico(HttpContext ctx) =>
             ctx.Request.Path.StartsWithSegments("/api/publico", StringComparison.OrdinalIgnoreCase);
 

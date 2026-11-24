@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { SitioPublico } from '../features/publico/Sitio';
+import { BASE_PANEL, esRutaDelPanel } from './base';
 import { Rutas } from './Rutas';
 import { ProveedorSesion } from './sesion';
 
@@ -13,14 +15,22 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: true, gcTime: 5 * 60_000 } },
 });
 
+// Dos aplicaciones en el mismo sitio: la pública en "/" y el panel del personal en "/panel" (con basename,
+// así sus rutas internas siguen siendo "/agenda", "/iniciar-sesion", etc.). Pasar de una a otra recarga la página.
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
+    {esRutaDelPanel(window.location.pathname) ? (
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter basename={BASE_PANEL}>
+          <ProveedorSesion>
+            <Rutas />
+          </ProveedorSesion>
+        </BrowserRouter>
+      </QueryClientProvider>
+    ) : (
       <BrowserRouter>
-        <ProveedorSesion>
-          <Rutas />
-        </ProveedorSesion>
+        <SitioPublico />
       </BrowserRouter>
-    </QueryClientProvider>
+    )}
   </StrictMode>,
 );
