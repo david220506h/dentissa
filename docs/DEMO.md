@@ -1,6 +1,10 @@
 # Demo de Dentissa (versión v0.1-demo)
 
-Panel de la clínica funcionando en tu equipo, con **datos inventados**. No es un despliegue: no se usa con datos reales hasta cumplir `docs/requisitos-despliegue.md`.
+Panel de la clínica y sitio público con **datos inventados**, en tu equipo o en internet.
+
+**En internet (demo):** sitio https://dentissa-two.vercel.app · panel https://dentissa-two.vercel.app/panel · API https://dentissa-api-22cy.onrender.com. Guía de despliegue: `docs/DESPLIEGUE.md`. Ahí las contraseñas son las de `DEMO_PASSWORD_ADMIN` (administración) y `DEMO_PASSWORD_PERSONAL` (las otras 4 cuentas); el correo está apagado.
+
+**En tu equipo:** No es un despliegue: no se usa con datos reales hasta cumplir `docs/requisitos-despliegue.md`.
 
 ## Levantar todo con un comando
 
@@ -20,7 +24,8 @@ El script:
 
 | Qué | Dónde |
 |---|---|
-| Panel | http://127.0.0.1:8080 |
+| Sitio público | http://127.0.0.1:8080 |
+| Panel | http://127.0.0.1:8080/panel |
 | Correos que envía el sistema (Mailpit) | http://127.0.0.1:8026 |
 
 Todo se publica solo en `127.0.0.1`. Los puertos se cambian en `.env.demo` (`PANEL_PUERTO`, `MAILPIT_PUERTO`).
@@ -55,7 +60,8 @@ Todo es ficticio; cualquier parecido con personas reales es coincidencia.
 
 ## Guion de 5 minutos
 
-1. **Entrada (30 s).** Abre el panel e inicia sesión como **recepción**. Se ve el Inicio con las citas de hoy. Menciona que la sesión se cierra sola a los 15 minutos sin uso, con aviso al minuto 14.
+0. **Sitio público (1 min).** Abre `/`: presentación, servicios, horario y contacto (datos de ejemplo). Pulsa **Solicitar cita**, elige servicio, fecha y horario libre, escribe nombre, teléfono y correo, acepta el aviso de privacidad y envía: "Recibimos tu solicitud". El horario queda apartado.
+1. **Entrada (30 s).** Abre `/panel` e inicia sesión como **recepción**. En el menú, **Solicitudes** muestra el contador: abre la bandeja y **confirma** la solicitud (pasa a la Agenda) o **recházala** con un motivo neutro (libera el horario). Se ve el Inicio con las citas de hoy. Menciona que la sesión se cierra sola a los 15 minutos sin uso, con aviso al minuto 14.
 2. **Agenda (1 min).** Entra a Agenda: la semana con las citas por color de estado y los descansos. Cambia a la vista **Día**. Toca una cita: el diálogo «Cita» muestra los datos y solo las acciones que corresponden a su estado y su hora (confirmar, reagendar, cambiar de dentista, cancelar, completar, no asistió).
 3. **Nueva cita (1 min 30 s).** «Nueva cita»: busca a "Ernesto" y aparece su **alergia en rojo**. Elige servicio, fecha y un horario libre (ya sin descansos ni cierres) y deja que la clínica asigne dentista. Muestra el **alta rápida** de una persona nueva sin salir del formulario. Opcional: marca "La persona está en la clínica" para una cita de hoy.
    - **Conflicto (409):** abre «Nueva cita» en dos pestañas con el mismo horario y guarda en ambas. La segunda avisa que el horario ya no está libre, propone horarios libres y conserva lo capturado.
@@ -69,10 +75,10 @@ Cierra con: cada acción queda en la bitácora con los datos sensibles enmascara
 
 Ver `docs/pendientes.md` para el orden y el detalle.
 
-- Portal del paciente y solicitudes en línea (formulario público, Turnstile, enlaces de los correos).
+- Portal del paciente, enlaces de los correos y Turnstile (la solicitud pública tiene campo trampa y límite por IP).
 - Sitio web comercial (Astro).
 - Expediente clínico (odontograma, notas, fotos, radiografías, consentimientos, recetas), inventario, pagos y reportes.
-- Pantallas de Solicitudes, Configuración (los endpoints de horario y cierres ya existen) y Auditoría; la agenda propia del dentista.
+- Pantallas de Configuración (los endpoints de horario y cierres ya existen) y Auditoría; la agenda propia del dentista.
 - Todo lo que bloquea un despliegue real: tokens en cookie `HttpOnly`, hosting, correo con dominio, revisión legal y cuenta de administración nueva.
 
 ## Notas técnicas

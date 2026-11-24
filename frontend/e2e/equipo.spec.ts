@@ -15,7 +15,7 @@ async function abrirEquipo(page: Page, ancho: number) {
   await page.setViewportSize({ width: ancho, height: 900 });
   // La sesión es de otra cuenta de administración: así Laura es "la única administración activa", como en el diseño
   await sesionDeEjemplo(page, { rol: 'admin', usuarios: USUARIOS });
-  await page.goto('/equipo');
+  await page.goto('/panel/equipo');
   await page.getByRole('button', { name: 'Acceso de Laura Mendoza' }).waitFor();
   await page.evaluate(() => document.fonts.ready);
 }

@@ -22,7 +22,7 @@ async function abrirPacientes(page: Page, ancho: number) {
   await page.route('**/api/pacientes?**', (ruta) =>
     ruta.fulfill({ status: 200, json: { elementos: PACIENTES, total: PACIENTES.length, pagina: 1, tamano: 10 } }),
   );
-  await page.goto('/pacientes');
+  await page.goto('/panel/pacientes');
   await page.getByText('Ernesto Vega').filter({ visible: true }).first().waitFor();
   await page.evaluate(() => document.fonts.ready);
 }

@@ -8,6 +8,8 @@ Pon la demo en internet con **datos ficticios**. No es el despliegue con datos r
 | API | **Render** (plan gratis, Docker) | `backend/Dockerfile` en modo **Production** |
 | Panel y sitio | **Vercel** (gratis) | `frontend/dist`; `/api/*` se reenvía a Render |
 
+**Despliegue actual (demo):** sitio en https://dentissa-two.vercel.app (panel del personal en https://dentissa-two.vercel.app/panel) y API en https://dentissa-api-22cy.onrender.com (salud: https://dentissa-api-22cy.onrender.com/health).
+
 Orden: **1. Neon → 2. Render → 3. Vercel**. Necesitas una cuenta en cada uno (puedes entrar con GitHub) y el repositorio en GitHub.
 
 ## 0. Genera los secretos (PowerShell, en tu equipo)
@@ -66,7 +68,7 @@ Al primer arranque con la base vacía, la API siembra los datos ficticios (30 pa
 ## 4. Comprobar
 
 1. Abre `https://<render>/health` para despertar la API (el plan gratis la duerme tras 15 minutos sin uso; despertar tarda cerca de un minuto).
-2. Abre la URL de Vercel e inicia sesión:
+2. Abre la URL de Vercel: `/` es el sitio público de la clínica y `/panel` el panel del personal. Inicia sesión en `/panel`:
 
 | Cuenta | Correo | Contraseña |
 |---|---|---|

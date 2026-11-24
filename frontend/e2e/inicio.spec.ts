@@ -57,7 +57,7 @@ async function abrirInicio(page: Page, ancho: number, opciones: { rol?: string; 
   await page.clock.install({ time: AHORA });
   await page.setViewportSize({ width: ancho, height: 900 });
   await sesionDeEjemplo(page, { citas: CITAS, ...opciones });
-  await page.goto('/');
+  await page.goto('/panel/');
   await page.evaluate(() => document.fonts.ready);
 }
 

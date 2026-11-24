@@ -68,7 +68,7 @@ async function abrirAgenda(page: Page, ancho: number) {
     dentistas: [{ id: 1, nombre: 'Ana', apellido: 'Torres', titulo: 'Dra.' }],
     libres,
   });
-  await page.goto('/agenda');
+  await page.goto('/panel/agenda');
   await page.evaluate(() => document.fonts.ready);
 }
 
