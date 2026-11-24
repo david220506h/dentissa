@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./tokens.css": "./src/tokens.css",
     "./fuente.css": "./src/fuente.css",
-    "./base.css": "./src/base.css"
+    "./base.css": "./src/base.css",
+    "./sitio.css": "./src/sitio.css"
   },
   "dependencies": {
     "@fontsource/nunito": "5.3.0"

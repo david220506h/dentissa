@@ -3,6 +3,8 @@ import { sinDesbordeHorizontal, sinViolacionesAxe } from './utilidades';
 
 // Sitio público con la API simulada (datos inventados). Reglas: AA, sin desborde a 360 px, texto ≥ 12.5 px y toques de 44 px.
 async function simularApi(page: Page) {
+  // axe mide el estado final: sin las animaciones de entrada (opacidad intermedia) ni el revelado al desplazarse
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.route('**/api/publico/**', (ruta) => {
     const url = new URL(ruta.request().url());
     if (url.pathname.endsWith('/servicios'))
