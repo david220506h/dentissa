@@ -52,6 +52,8 @@ public class DentissaDbContext : DbContext
     {
         modelBuilder.HasPostgresExtension("citext");
         modelBuilder.HasPostgresExtension("btree_gist");
+        // Búsqueda de pacientes sin distinguir acentos (Fase 2b)
+        modelBuilder.HasPostgresExtension("unaccent");
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DentissaDbContext).Assembly);
 
