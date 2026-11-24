@@ -43,30 +43,66 @@ public class ConfiguracionAgendaMigracionTests
         return cadena;
     }
 
+    // Filas de la bitácora que dejó la migración sobre configuracion_agenda (detalle en JSON)
+    private static async Task<List<System.Text.Json.JsonElement>> BitacoraAsync(string cadena)
+    {
+        await using var conexion = new NpgsqlConnection(cadena);
+        await conexion.OpenAsync();
+        await using var comando = new NpgsqlCommand(
+            "SELECT detalle::text FROM auditoria WHERE entidad = 'configuracion_agenda' AND usuario_id IS NULL ORDER BY id", conexion);
+        await using var r = await comando.ExecuteReaderAsync();
+        var filas = new List<System.Text.Json.JsonElement>();
+        while (await r.ReadAsync())
+            filas.Add(System.Text.Json.JsonDocument.Parse(r.GetString(0)).RootElement.Clone());
+        return filas;
+    }
+
+    private static int Cambio(System.Text.Json.JsonElement detalle, string campo, string cuando) =>
+        detalle.GetProperty("cambios").GetProperty(campo).GetProperty(cuando).GetInt32();
+
     [Fact]
-    public async Task FilaSembrada_PasaALosValoresAprobados()
+    public async Task FilaSembrada_PasaALosValoresAprobados_SinBitacora()
     {
         // Valores de siembra de la Fase 1: 2 h, 24 h y 2 h
         var cadena = await BaseConConfiguracionViejaAsync(2, 24, 2);
 
         Assert.Equal((180, 720, 120, 60, 60), await LeerAsync(cadena));
+        Assert.Empty(await BitacoraAsync(cadena));
     }
 
     [Fact]
-    public async Task ConfiguracionPersonalizada_SoloSeConvierte()
+    public async Task ConfiguracionPersonalizada_SoloSeConvierte_YQuedaEnLaBitacora()
     {
         var cadena = await BaseConConfiguracionViejaAsync(4, 10, 1);
 
         Assert.Equal((240, 600, 60, 60, 60), await LeerAsync(cadena));
+        var detalle = Assert.Single(await BitacoraAsync(cadena));
+        Assert.Equal("migración AgendaEnHorasDeAtencion", detalle.GetProperty("origen").GetString());
+        Assert.Equal(4, Cambio(detalle, "anticipacion_en_linea_atencion_minutos", "antes"));
+        Assert.Equal(240, Cambio(detalle, "anticipacion_en_linea_atencion_minutos", "despues"));
+        Assert.Equal(0, detalle.GetProperty("ajustadosAlMinimo").GetArrayLength());
     }
 
     [Fact]
-    public async Task ConfiguracionQueNoCumpliria_SeCorrigeLoMinimo()
+    public async Task ConfiguracionQueNoCumpliria_SeCorrigeLoMinimo_YLoRegistra()
     {
         // Anticipación 1 h = liberación 1 h: la restricción nueva exige anticipación > liberación
         var cadena = await BaseConConfiguracionViejaAsync(1, 24, 1);
 
         Assert.Equal((120, 1440, 60, 60, 60), await LeerAsync(cadena));
+        var detalle = Assert.Single(await BitacoraAsync(cadena));
+        Assert.Equal(["anticipacion_en_linea_atencion_minutos"], detalle.GetProperty("ajustadosAlMinimo").EnumerateArray().Select(a => a.GetString()));
+        Assert.Equal(120, Cambio(detalle, "anticipacion_en_linea_atencion_minutos", "despues"));
+    }
+
+    [Fact]
+    public async Task LiberacionCero_SeAjustaA120_YLoRegistra()
+    {
+        var cadena = await BaseConConfiguracionViejaAsync(4, 24, 0);
+
+        Assert.Equal((240, 1440, 120, 60, 60), await LeerAsync(cadena));
+        var detalle = Assert.Single(await BitacoraAsync(cadena));
+        Assert.Equal(["liberacion_antes_cita_atencion_minutos"], detalle.GetProperty("ajustadosAlMinimo").EnumerateArray().Select(a => a.GetString()));
     }
 
     [Fact]

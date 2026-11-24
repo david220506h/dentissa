@@ -29,25 +29,64 @@ internal static class SqlFase2
 
     // Commit 2 (1.6): horas de reloj → minutos. La fila sembrada (2 h, 24 h, 2 h) pasa a los valores
     // aprobados (180, 720 y 120 minutos de atención); una configuración ya personalizada solo se
-    // convierte, y se corrige lo mínimo para cumplir las restricciones nuevas.
+    // convierte, y se corrige lo mínimo para cumplir las restricciones nuevas:
+    //   - liberación ≤ 0 → 120 minutos de atención;
+    //   - anticipación en línea ≤ liberación → liberación + 60.
+    // Si la configuración estaba personalizada, la conversión queda en la bitácora con los valores de antes
+    // (horas) y de después (minutos), y qué campos se ajustaron al mínimo. Sin usuario: la hace la migración.
     public const string ConvertirConfiguracionAMinutos = """
-        UPDATE configuracion_agenda SET
-          anticipacion_en_linea_atencion_minutos = anticipacion_en_linea_atencion_minutos * 60,
-          vida_maxima_solicitud_atencion_minutos = vida_maxima_solicitud_atencion_minutos * 60,
-          liberacion_antes_cita_atencion_minutos = liberacion_antes_cita_atencion_minutos * 60;
+        DO $$
+        DECLARE
+          antes RECORD;
+          despues RECORD;
+          sembrada boolean;
+          ajustados text[] := ARRAY[]::text[];
+        BEGIN
+          SELECT anticipacion_en_linea_atencion_minutos AS anticipacion, vida_maxima_solicitud_atencion_minutos AS vida,
+                 liberacion_antes_cita_atencion_minutos AS liberacion
+            INTO antes FROM configuracion_agenda WHERE id = 1;
+          IF NOT FOUND THEN RETURN; END IF;
+          sembrada := antes.anticipacion = 2 AND antes.vida = 24 AND antes.liberacion = 2;
 
-        UPDATE configuracion_agenda SET
-          anticipacion_en_linea_atencion_minutos = 180,
-          vida_maxima_solicitud_atencion_minutos = 720,
-          liberacion_antes_cita_atencion_minutos = 120
-        WHERE anticipacion_en_linea_atencion_minutos = 120
-          AND vida_maxima_solicitud_atencion_minutos = 1440
-          AND liberacion_antes_cita_atencion_minutos = 120;
+          UPDATE configuracion_agenda SET
+            anticipacion_en_linea_atencion_minutos = anticipacion_en_linea_atencion_minutos * 60,
+            vida_maxima_solicitud_atencion_minutos = vida_maxima_solicitud_atencion_minutos * 60,
+            liberacion_antes_cita_atencion_minutos = liberacion_antes_cita_atencion_minutos * 60
+          WHERE id = 1;
 
-        UPDATE configuracion_agenda SET liberacion_antes_cita_atencion_minutos = 120
-        WHERE liberacion_antes_cita_atencion_minutos <= 0;
-        UPDATE configuracion_agenda SET anticipacion_en_linea_atencion_minutos = liberacion_antes_cita_atencion_minutos + 60
-        WHERE anticipacion_en_linea_atencion_minutos <= liberacion_antes_cita_atencion_minutos;
+          IF sembrada THEN
+            UPDATE configuracion_agenda SET
+              anticipacion_en_linea_atencion_minutos = 180,
+              vida_maxima_solicitud_atencion_minutos = 720,
+              liberacion_antes_cita_atencion_minutos = 120
+            WHERE id = 1;
+            RETURN;
+          END IF;
+
+          IF (SELECT liberacion_antes_cita_atencion_minutos FROM configuracion_agenda WHERE id = 1) <= 0 THEN
+            UPDATE configuracion_agenda SET liberacion_antes_cita_atencion_minutos = 120 WHERE id = 1;
+            ajustados := array_append(ajustados, 'liberacion_antes_cita_atencion_minutos');
+          END IF;
+          IF (SELECT anticipacion_en_linea_atencion_minutos <= liberacion_antes_cita_atencion_minutos FROM configuracion_agenda WHERE id = 1) THEN
+            UPDATE configuracion_agenda SET anticipacion_en_linea_atencion_minutos = liberacion_antes_cita_atencion_minutos + 60 WHERE id = 1;
+            ajustados := array_append(ajustados, 'anticipacion_en_linea_atencion_minutos');
+          END IF;
+
+          SELECT anticipacion_en_linea_atencion_minutos AS anticipacion, vida_maxima_solicitud_atencion_minutos AS vida,
+                 liberacion_antes_cita_atencion_minutos AS liberacion
+            INTO despues FROM configuracion_agenda WHERE id = 1;
+
+          INSERT INTO auditoria (ocurrido_en, accion, entidad, entidad_id, detalle)
+          VALUES (now(), 'modificar', 'configuracion_agenda', '1', jsonb_build_object(
+            'origen', 'migración AgendaEnHorasDeAtencion',
+            'unidades', jsonb_build_object('antes', 'horas de reloj', 'despues', 'minutos de atención'),
+            'cambios', jsonb_build_object(
+              'anticipacion_en_linea_atencion_minutos', jsonb_build_object('antes', antes.anticipacion, 'despues', despues.anticipacion),
+              'vida_maxima_solicitud_atencion_minutos', jsonb_build_object('antes', antes.vida, 'despues', despues.vida),
+              'liberacion_antes_cita_atencion_minutos', jsonb_build_object('antes', antes.liberacion, 'despues', despues.liberacion)),
+            'ajustadosAlMinimo', to_jsonb(ajustados)));
+        END
+        $$;
         """;
 
     // Reversa del commit 2: minutos → horas, redondeando hacia arriba
