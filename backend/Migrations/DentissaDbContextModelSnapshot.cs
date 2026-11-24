@@ -330,6 +330,10 @@ namespace backend.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("paciente_id");
 
+                    b.Property<bool>("PacientePresente")
+                        .HasColumnType("boolean")
+                        .HasColumnName("paciente_presente");
+
                     b.Property<int>("ServicioId")
                         .HasColumnType("integer")
                         .HasColumnName("servicio_id");

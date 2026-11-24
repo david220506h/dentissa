@@ -134,7 +134,8 @@ namespace backend.Controllers
             {
                 var cita = await _reservas.ReservarAsync(new SolicitudReserva(
                     dto.PacienteId, dto.DentistaId, dto.ServicioId, dto.Fecha, dto.Hora,
-                    CanalReserva.Recepcion, OrigenesCita.Recepcion, "Cita creada desde el panel",
+                    dto.PacientePresente ? CanalReserva.PacientePresente : CanalReserva.Recepcion, OrigenesCita.Recepcion,
+                    dto.PacientePresente ? "Cita creada desde el panel con el paciente presente" : "Cita creada desde el panel",
                     dto.Motivo, dto.CostoExtra, dto.MotivoExtra));
                 return CreatedAtAction(nameof(GetById), new { id = cita.Id }, new { cita.Id, mensaje = "Cita creada correctamente" });
             }

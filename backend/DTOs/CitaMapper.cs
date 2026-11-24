@@ -21,6 +21,7 @@ namespace backend.DTOs
                 Fin               = DateTime.SpecifyKind(c.Fin, DateTimeKind.Utc),
                 Estado            = c.Estado,
                 Origen            = c.Origen,
+                PacientePresente  = c.PacientePresente,
                 Motivo            = c.Motivo,
                 MotivoCancelacion = c.MotivoCancelacion,
                 SolicitudCambio   = c.SolicitudCambioTipo == null ? null : new SolicitudCambioDto

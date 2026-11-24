@@ -8,6 +8,12 @@ public enum CanalReserva
 
     /// <summary>Asistente y administración: anticipación en minutos de reloj; sin vencimiento.</summary>
     Recepcion,
+
+    /// <summary>
+    /// Recepción con el paciente presente en la clínica: sin anticipación mínima; un inicio pasado se acepta solo
+    /// dentro de la tolerancia, medida en minutos de atención. Sin vencimiento. Horizonte igual que los demás.
+    /// </summary>
+    PacientePresente,
 }
 
 public enum MotivoRechazo
@@ -46,16 +52,27 @@ public sealed record ResultadoBloqueo(
 /// </summary>
 public static class ReglaBloqueo
 {
+    /// <summary>Minutos de atención que puede haber pasado el inicio de una cita con el paciente presente.</summary>
+    public const int ToleranciaPacientePresenteMinutos = 15;
+
     public static ResultadoBloqueo CalcularBloqueo(DateTime creadoUtc, DateTime inicioUtc, CanalReserva canal, RelojAtencion reloj, ParametrosBloqueo p)
     {
-        // Nunca en el pasado
-        if (inicioUtc <= creadoUtc)
+        // Nunca en el pasado (con el paciente presente, solo dentro de la tolerancia en horas de atención)
+        if (canal == CanalReserva.PacientePresente)
+        {
+            if (inicioUtc <= creadoUtc && reloj.AtencionEntre(inicioUtc, creadoUtc) > TimeSpan.FromMinutes(ToleranciaPacientePresenteMinutos))
+                return ResultadoBloqueo.Rechazada(MotivoRechazo.EnElPasado);
+        }
+        else if (inicioUtc <= creadoUtc)
             return ResultadoBloqueo.Rechazada(MotivoRechazo.EnElPasado);
 
         // Horizonte: fecha local de la cita ≤ hoy local + horizonte
         var hoy = reloj.Horario.FechaLocal(creadoUtc);
         if (reloj.Horario.FechaLocal(inicioUtc) > hoy.AddDays(p.HorizonteReservaDias))
             return ResultadoBloqueo.Rechazada(MotivoRechazo.FueraDeHorizonte);
+
+        if (canal == CanalReserva.PacientePresente)
+            return new ResultadoBloqueo(true, null, null, null, null, null);
 
         if (canal == CanalReserva.Recepcion)
         {

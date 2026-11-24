@@ -182,9 +182,11 @@ public class ReservasService : IReservasService
                 MotivoExtra       = s.MotivoExtra,
                 CostoTotal        = CostosCita.Total(servicio.Precio, descuento, extra),
                 BloqueoExpiraEn   = regla.BloqueoExpiraEn,
+                PacientePresente  = s.Canal == CanalReserva.PacientePresente,
             };
             db.Citas.Add(cita);
-            historial.Registrar(cita, AccionesCitaHistorial.Creacion, s.DetalleHistorial);
+            historial.Registrar(cita, AccionesCitaHistorial.Creacion, s.DetalleHistorial,
+                cita.PacientePresente ? new { pacientePresente = true } : null);
             await db.SaveChangesAsync(token);
             return cita;
         }, ct);
