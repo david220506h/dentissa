@@ -100,7 +100,9 @@ describe('panel por rol', () => {
   it('asistente: menú según la matriz y "Sin permiso" fuera de ella', async () => {
     servicio.usuario = ejemplo('asistente');
     montar('/equipo');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Sin permiso' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'No tienes acceso a esta sección' })).toBeInTheDocument();
+    expect(screen.getByText('Tu rol no incluye Equipo y usuarios. Si lo necesitas, pídeselo a la administración.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Volver al inicio' })).toBeInTheDocument();
     const menu = screen.getAllByRole('navigation')[0]!;
     expect(within(menu).queryByRole('link', { name: /Equipo y usuarios/ })).not.toBeInTheDocument();
     expect(within(menu).getByRole('link', { name: /Pagos/ })).toBeInTheDocument();
@@ -109,14 +111,14 @@ describe('panel por rol', () => {
   it('dentista: solo Inicio', async () => {
     servicio.usuario = ejemplo('dentista');
     montar('/agenda');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Sin permiso' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'No tienes acceso a esta sección' })).toBeInTheDocument();
   });
 
   it('Servicios y Ofertas son rutas separadas, "Próximamente"', async () => {
     servicio.usuario = ejemplo('admin');
     montar('/ofertas');
     expect(await screen.findByRole('heading', { level: 1, name: 'Ofertas y contenido' })).toBeInTheDocument();
-    expect(screen.getByText('Próximamente')).toBeInTheDocument();
+    expect(screen.getByText(/^Próximamente./)).toBeInTheDocument();
   });
 
   it('ruta inexistente: página no encontrada', async () => {

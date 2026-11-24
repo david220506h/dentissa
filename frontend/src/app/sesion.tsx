@@ -20,7 +20,8 @@ interface ValorSesion {
   aviso: string | null;
   limpiarAviso: () => void;
   iniciar: (correo: string, contrasena: string) => Promise<UsuarioPanel>;
-  cerrar: () => Promise<void>;
+  /** Con `motivo: 'inactividad'`, el inicio de sesión avisa que la sesión expiró. */
+  cerrar: (opciones?: { motivo?: 'inactividad' }) => Promise<void>;
 }
 
 const ContextoSesion = createContext<ValorSesion | null>(null);
@@ -59,13 +60,17 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
     return delPanel;
   }, []);
 
-  const cerrar = useCallback(async () => {
-    // logout() revoca el token de renovación en el servidor y limpia la sesión local
-    await logout();
-    clearSession();
-    queryClient.clear();
-    setUsuario(null);
-  }, [queryClient]);
+  const cerrar = useCallback(
+    async (opciones?: { motivo?: 'inactividad' }) => {
+      // logout() revoca el token de renovación en el servidor y limpia la sesión local
+      await logout();
+      clearSession();
+      queryClient.clear();
+      setUsuario(null);
+      if (opciones?.motivo === 'inactividad') setAviso(MENSAJE_SESION_EXPIRADA);
+    },
+    [queryClient],
+  );
 
   const valor = useMemo(
     () => ({ usuario, aviso, limpiarAviso: () => setAviso(null), iniciar, cerrar }),

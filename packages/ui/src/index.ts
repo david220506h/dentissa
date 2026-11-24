@@ -54,3 +54,5 @@ export {
 export { Odontograma, ESTADOS_PIEZA, type EstadoPieza, type OdontogramaProps } from './Odontograma/Odontograma';
 export { SoloLector } from './utilidades/SoloLector';
 export { clases } from './utilidades/clases';
+export { MensajeEstado, CargandoLista, type MensajeEstadoProps, type CargandoListaProps } from './Estado/Estado';
+export { Dialogo, type DialogoProps } from './Dialogo/Dialogo';

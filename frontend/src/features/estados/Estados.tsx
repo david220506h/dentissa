@@ -1,49 +1,63 @@
-import { Aviso, Boton, EncabezadoPagina } from '@dentissa/ui';
+import { Boton, MensajeEstado, type NombreIcono } from '@dentissa/ui';
 import { useNavigate } from 'react-router-dom';
 import estilos from './Estados.module.css';
 
-// PROVISIONAL: Estados.dc.html (zip del arquitecto, pendiente) define estas pantallas. Mientras llega,
-// solo usan componentes ya aprobados (encabezado y aviso) y se sustituyen al recibir el diseño.
+// Pantallas de estado según Estados.dc.html: el mensaje (ícono, título, texto y acción) dentro de una
+// tarjeta, como en el diseño. El título es el h1 de la página.
 
-export function Proximamente({ titulo }: { titulo: string }) {
-  return (
-    <div className={estilos.pagina}>
-      <EncabezadoPagina titulo={titulo} />
-      <Aviso tono="info" titulo="Próximamente">
-        Esta sección se habilitará cuando su servicio esté listo.
-      </Aviso>
-    </div>
-  );
-}
-
-export function SinPermiso() {
+function VolverAlInicio() {
   const navegar = useNavigate();
   return (
-    <div className={estilos.pagina}>
-      <EncabezadoPagina titulo="Sin permiso" />
-      <Aviso tono="advertencia" titulo="No tienes permiso para ver esta sección.">
-        Si crees que es un error, pide a la administración que revise tu rol.
-      </Aviso>
-      <div>
-        <Boton variante="secundario" icono="inicio" onClick={() => navegar('/')}>
-          Ir a Inicio
-        </Boton>
-      </div>
-    </div>
+    <Boton variante="secundario" icono="inicio" onClick={() => navegar('/')}>
+      Volver al inicio
+    </Boton>
   );
 }
 
+/** Sin permiso (Estados · Sin permiso): para quien abre una dirección que su rol no puede ver. */
+export function SinPermiso({ seccion }: { seccion?: string }) {
+  return (
+    <section className={estilos.tarjeta}>
+      <MensajeEstado
+        nivel={1}
+        icono="auditoria"
+        titulo="No tienes acceso a esta sección"
+        texto={
+          seccion
+            ? `Tu rol no incluye ${seccion}. Si lo necesitas, pídeselo a la administración.`
+            : 'Tu rol no incluye esta sección. Si la necesitas, pídesela a la administración.'
+        }
+        accion={<VolverAlInicio />}
+      />
+    </section>
+  );
+}
+
+/** Dirección inexistente. Estados no la dibuja: usa el mismo patrón que "Sin permiso". */
 export function NoEncontrado() {
-  const navegar = useNavigate();
   return (
-    <div className={estilos.pagina}>
-      <EncabezadoPagina titulo="No encontramos esta página" />
-      <Aviso tono="info" titulo="La dirección no existe en el panel." />
-      <div>
-        <Boton variante="secundario" icono="inicio" onClick={() => navegar('/')}>
-          Ir a Inicio
-        </Boton>
-      </div>
-    </div>
+    <section className={estilos.tarjeta}>
+      <MensajeEstado
+        nivel={1}
+        icono="buscar"
+        titulo="No encontramos esta página"
+        texto="La dirección no existe en el panel. Revisa el enlace o vuelve al inicio."
+        accion={<VolverAlInicio />}
+      />
+    </section>
+  );
+}
+
+/** Sección sin pantalla todavía. Estados no la dibuja: patrón de "Vacío", sin acción. */
+export function Proximamente({ titulo, icono }: { titulo: string; icono: NombreIcono }) {
+  return (
+    <section className={estilos.tarjeta}>
+      <MensajeEstado
+        nivel={1}
+        icono={icono}
+        titulo={titulo}
+        texto="Próximamente. Esta sección se habilitará cuando su servicio esté listo."
+      />
+    </section>
   );
 }

@@ -1,5 +1,6 @@
 import { Icono, MenuInferior, MenuLateral, SinConexion, type ComponenteEnlace, type ElementoMenu, type GrupoMenu } from '@dentissa/ui';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { AvisoInactividad } from './AvisoInactividad';
 import { useConexion } from './conexion';
 import { NOMBRE_ROL, SECCIONES, seccionesDe, type IdSeccion, type Seccion } from './permisos';
 import { useSesion } from './sesion';
@@ -83,6 +84,7 @@ export function Disposicion() {
           <MenuInferior elementos={inferior} enlace={EnlaceRouter} {...(activa ? { activo: activa } : {})} />
         </div>
       </div>
+      <AvisoInactividad />
     </div>
   );
 }

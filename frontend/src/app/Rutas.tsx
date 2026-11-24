@@ -26,7 +26,7 @@ export function Rutas() {
             path={s.ruta}
             element={
               <RutaProtegida seccion={s.id}>
-                <Proximamente titulo={s.etiqueta} />
+                <Proximamente titulo={s.etiqueta} icono={s.icono} />
               </RutaProtegida>
             }
           />

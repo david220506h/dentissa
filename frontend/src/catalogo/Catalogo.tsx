@@ -3,16 +3,19 @@ import {
   Avatar,
   Boton,
   Busqueda,
+  CargandoLista,
   CampoAreaTexto,
   CampoContrasena,
   CampoSeleccion,
   CampoTexto,
   Contador,
+  Dialogo,
   EncabezadoPagina,
   GrupoVista,
   GruposMenu,
   Icono,
   Insignia,
+  MensajeEstado,
   InsigniaEstadoCita,
   MenuInferior,
   MenuLateral,
@@ -85,6 +88,39 @@ function Seccion({ titulo, fuente, children }: { titulo: string; fuente: string;
       <p className={estilos.fuente}>Fuente: {fuente}</p>
       {children}
     </section>
+  );
+}
+
+/** "¿Sigues ahí?" (Estados · Cierre por inactividad), con cuenta fija de ejemplo. */
+function DialogoDeMuestra() {
+  const [abierto, setAbierto] = useState(false);
+  return (
+    <>
+      <Boton variante="secundario" icono="reloj" onClick={() => setAbierto(true)}>
+        Ver aviso de inactividad
+      </Boton>
+      <Dialogo
+        abierto={abierto}
+        alCerrar={() => setAbierto(false)}
+        titulo="¿Sigues ahí?"
+        icono="reloj"
+        tamano="chico"
+        acciones={
+          <>
+            <Boton variante="secundario" icono="cerrarSesion" onClick={() => setAbierto(false)}>
+              Cerrar sesión
+            </Boton>
+            <Boton variante="principal" icono="confirmar" onClick={() => setAbierto(false)}>
+              Mantener sesión
+            </Boton>
+          </>
+        }
+      >
+        <p>
+          Por seguridad, cerraremos tu sesión en <b>60 segundos</b>. No se pierde nada de lo guardado.
+        </p>
+      </Dialogo>
+    </>
   );
 }
 
@@ -164,9 +200,68 @@ export function Catalogo() {
           <Aviso tono="advertencia" titulo="Horario bloqueado">
             Se libera mañana a las 10:42.
           </Aviso>
-          <Aviso tono="error" titulo="No se pudo guardar" anunciar alCerrar={() => {}}>
+          <Aviso tono="error" titulo="No se pudo guardar" anunciar>
             Ese horario ya tiene una cita.
           </Aviso>
+        </div>
+      </Seccion>
+
+      <Seccion titulo="Estados" fuente="Estados">
+        <div className={estilos.rejilla}>
+          <div className={estilos.tarjetaEstado}>
+            <MensajeEstado
+              icono="agenda"
+              titulo="No hay citas este día"
+              texto="Es un día sin citas. Puedes agendar una o revisar otro día."
+              accion={
+                <Boton variante="principal" icono="agregar">
+                  Nueva cita
+                </Boton>
+              }
+            />
+          </div>
+          <div className={estilos.tarjetaEstado}>
+            <CargandoLista etiqueta="Cargando citas" />
+          </div>
+          <div className={estilos.tarjetaEstado}>
+            <MensajeEstado
+              icono="sinConexion"
+              titulo="No pudimos cargar las citas"
+              texto="Revisa tu conexión con la clínica e inténtalo de nuevo. No se perdió ningún dato."
+              accion={
+                <Boton variante="principal" icono="reloj">
+                  Reintentar
+                </Boton>
+              }
+            />
+          </div>
+          <div className={estilos.tarjetaEstado}>
+            <MensajeEstado
+              icono="auditoria"
+              titulo="No tienes acceso a esta sección"
+              texto="Tu rol no incluye Equipo y usuarios. Si lo necesitas, pídeselo a la administración."
+              accion={
+                <Boton variante="secundario" icono="inicio">
+                  Volver al inicio
+                </Boton>
+              }
+            />
+          </div>
+        </div>
+        <div className={`${estilos.muestra} ${estilos.columna}`}>
+          <Aviso tono="exito" alCerrar={() => {}}>
+            Cita confirmada. Se envió el correo a Rosa Aguilar.
+          </Aviso>
+          <Aviso tono="info" alCerrar={() => {}}>
+            El horario de las 15:00 se liberará hoy a las 13:00.
+          </Aviso>
+          <Aviso tono="advertencia" icono="alerta">
+            Hay 2 solicitudes por vencer en menos de 2 horas.
+          </Aviso>
+          <Aviso tono="error">No se pudo enviar el correo. Reintentaremos en 5 minutos; puedes llamar a la paciente.</Aviso>
+        </div>
+        <div className={estilos.muestra}>
+          <DialogoDeMuestra />
         </div>
       </Seccion>
 

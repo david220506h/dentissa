@@ -32,6 +32,9 @@
   --fondo-encabezado-tabla: #f9fafb; /* Encabezado de tabla */
   --deshabilitado-fondo: #f3f4f6; /* Botón deshabilitado ("Sin teléfono") */
   --deshabilitado-borde: #e5e7eb;
+  --fondo-icono-estado: #f3f4f6; /* Círculo del ícono en vacío, error y sin permiso (Estados) */
+  --esqueleto: #e5e7eb; /* Bloques del esqueleto de carga (Estados) */
+  --borde-dialogo: #e5e7eb; /* Diálogos (Estados, CitaFormularios) */
   --borde-libre: #9ca3af; /* Horario libre en la agenda del celular (borde punteado) */
   --borde-peligro: #fca5a5; /* Botón "Rechazar solicitud" */
 

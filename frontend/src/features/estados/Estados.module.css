@@ -1,12 +1,7 @@
-.pagina {
-  display: flex;
-  flex-direction: column;
-  gap: var(--espacio-24);
-}
-
-/* Celular (Movil.dc.html): separación de 14 px; desde 1024 px, la de Inicio.dc.html */
-@media (max-width: 1023px) {
-  .pagina {
-    gap: var(--espacio-14);
-  }
+/* Tarjeta de las secciones de Estados.dc.html: blanca, borde, radio 14 y 24 px de relleno */
+.tarjeta {
+  padding: var(--espacio-24);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-14);
 }

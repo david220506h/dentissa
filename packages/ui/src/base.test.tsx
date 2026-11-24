@@ -200,11 +200,31 @@ describe('Aviso', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('No se pudo guardar');
   });
 
-  it('se puede cerrar', async () => {
+  it('informativos y de éxito se pueden cerrar', async () => {
     const alCerrar = vi.fn();
-    render(<Aviso tono="advertencia" titulo="Horario bloqueado" alCerrar={alCerrar} />);
+    const { rerender } = render(<Aviso tono="info" titulo="Información" alCerrar={alCerrar} />);
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar aviso' }));
-    expect(alCerrar).toHaveBeenCalledOnce();
+    rerender(<Aviso tono="exito" alCerrar={alCerrar}>Cita confirmada.</Aviso>);
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar aviso' }));
+    expect(alCerrar).toHaveBeenCalledTimes(2);
+  });
+
+  it('errores y advertencias se quedan hasta resolverse: sin "Cerrar aviso"', () => {
+    // Los tipos ya lo impiden; la prueba cubre también el caso forzado desde JavaScript
+    const forzado = { alCerrar: vi.fn() } as unknown as Record<string, never>;
+    const { rerender } = render(<Aviso tono="advertencia" titulo="Horario bloqueado" {...forzado} />);
+    expect(screen.queryByRole('button', { name: 'Cerrar aviso' })).toBeNull();
+    rerender(<Aviso tono="error" titulo="No se pudo guardar" {...forzado} />);
+    expect(screen.queryByRole('button', { name: 'Cerrar aviso' })).toBeNull();
+  });
+
+  it('las advertencias tras una acción se anuncian como alert; sin título es un solo mensaje', () => {
+    render(
+      <Aviso tono="advertencia" anunciar icono="alerta">
+        Hay 2 solicitudes por vencer en menos de 2 horas.
+      </Aviso>,
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Hay 2 solicitudes por vencer en menos de 2 horas.');
   });
 });
 

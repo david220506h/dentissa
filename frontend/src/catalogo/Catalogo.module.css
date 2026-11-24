@@ -98,3 +98,11 @@
 .marcoSinConexion > main {
   min-height: 100%;
 }
+
+/* Tarjeta de Estados: blanca, borde, radio 14 y 24 px de relleno */
+.tarjetaEstado {
+  padding: var(--espacio-24);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-14);
+}

@@ -129,3 +129,48 @@ for (const ancho of ANCHOS) {
     }
   });
 }
+
+// Estados en el panel: "Sin permiso" (asistente en Equipo), "Próximamente" y el aviso de inactividad
+for (const ancho of ANCHOS) {
+  test.describe(`estados del panel a ${ancho} px`, () => {
+    test.use({ viewport: { width: ancho, height: 900 } });
+
+    test('sin permiso: accesible, sin desborde y captura', async ({ page }) => {
+      await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), { ...USUARIO_EJEMPLO, rol: 'asistente' });
+      await page.goto('/panel/equipo');
+      await expect(page.getByRole('heading', { level: 1, name: 'No tienes acceso a esta sección' })).toBeVisible();
+      await expect(page.getByText('Tu rol no incluye Equipo y usuarios.', { exact: false })).toBeVisible();
+      await sinViolacionesAxe(page);
+      await sinDesbordeHorizontal(page);
+      await expect(page).toHaveScreenshot(`panel-sin-permiso-${ancho}.png`, { fullPage: true });
+    });
+
+    test('próximamente: captura', async ({ page }) => {
+      await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), USUARIO_EJEMPLO);
+      await page.goto('/panel/ofertas');
+      await expect(page.getByRole('heading', { level: 1, name: 'Ofertas y contenido' })).toBeVisible();
+      await sinViolacionesAxe(page);
+      await expect(page).toHaveScreenshot(`panel-proximamente-${ancho}.png`, { fullPage: true });
+    });
+
+    test('inactividad: aviso a los 14 min, foco dentro y Esc lo cierra', async ({ page }) => {
+      await page.clock.install();
+      await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), USUARIO_EJEMPLO);
+      await page.goto('/panel/');
+      await expect(page.locator('h1')).toBeVisible();
+      await page.clock.fastForward('13:59');
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await page.clock.fastForward('00:02');
+      const dialogo = page.getByRole('dialog', { name: '¿Sigues ahí?' });
+      await expect(dialogo).toBeVisible();
+      await expect(dialogo).toContainText('cerraremos tu sesión en');
+      await expect(dialogo).toBeFocused();
+      await sinViolacionesAxe(page);
+      await sinDesbordeHorizontal(page);
+      await page.waitForTimeout(300);
+      await expect(page).toHaveScreenshot(`panel-inactividad-${ancho}.png`, { mask: [dialogo.locator('b')] });
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+    });
+  });
+}

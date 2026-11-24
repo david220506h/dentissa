@@ -34,7 +34,8 @@
   justify-content: center;
   width: var(--alto-toque);
   height: var(--alto-toque);
-  margin: calc(var(--espacio-12) * -1) calc(var(--espacio-14) * -1) calc(var(--espacio-12) * -1) 0;
+  /* Estados: el botón de 44 px sobresale 10 px para no agrandar el aviso */
+  margin: calc(var(--espacio-10) * -1) calc(var(--espacio-10) * -1) calc(var(--espacio-10) * -1) 0;
   border: 0;
   border-radius: var(--radio-10);
   background: transparent;
