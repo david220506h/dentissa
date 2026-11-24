@@ -424,7 +424,7 @@ export function DialogoNuevaCita({
       }
     >
       <div className={estilos.cuerpo}>
-        <p className={estilos.ayuda}>
+        <p className={estilos.subtitulo}>
           Los horarios libres ya excluyen descansos y cierres.
         </p>
         <SelectorPaciente
