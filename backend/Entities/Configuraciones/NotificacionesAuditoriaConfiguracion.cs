@@ -28,6 +28,9 @@ public class NotificacionConfiguracion : IEntityTypeConfiguration<Notificacion>
         e.Property(n => n.Intentos).HasDefaultValue(0);
         // Lo que el trabajador busca: pendientes por fecha del próximo intento
         e.HasIndex(n => n.ProximoIntentoEn).HasFilter("estado = 'pendiente'").HasDatabaseName("ix_notificaciones_bandeja_pendientes");
+        // Un solo recordatorio por cita (7.3)
+        e.HasIndex(n => n.CitaId, "PorCita").HasDatabaseName("ix_notificaciones_cita_id");
+        e.HasIndex(n => n.CitaId, "RecordatorioUnico").IsUnique().HasFilter("tipo = 'recordatorio' AND canal = 'correo'").HasDatabaseName("ux_notificaciones_recordatorio_cita");
         e.Property(n => n.Leida).HasDefaultValue(false);
         e.Property(n => n.Enviada).HasDefaultValue(false);
         e.Property(n => n.CreadoEn).HasDefaultValueSql("now()");

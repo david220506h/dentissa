@@ -56,11 +56,13 @@ builder.Services.Configure<backend.Services.Correo.OpcionesClinica>(builder.Conf
 builder.Services.AddSingleton<backend.Services.Correo.IEmailSender, backend.Services.Correo.SmtpEmailSender>();
 builder.Services.AddSingleton<backend.Services.Correo.AvisoBandeja>();
 builder.Services.AddSingleton<backend.Services.Correo.IProcesadorBandeja, backend.Services.Correo.ProcesadorBandeja>();
+builder.Services.AddScoped<backend.Services.Correo.IRecordatorios, backend.Services.Correo.Recordatorios>();
 if (builder.Configuration.GetValue<bool>("Correo:Habilitado"))
 {
     if (string.IsNullOrWhiteSpace(builder.Configuration["Correo:Smtp:Host"]) || string.IsNullOrWhiteSpace(builder.Configuration["Correo:Remitente"]))
         throw new InvalidOperationException("Correo:Habilitado requiere Correo:Smtp:Host y Correo:Remitente (user-secrets o variables de entorno).");
     builder.Services.AddHostedService<backend.Services.Correo.EnvioCorreosService>();
+    builder.Services.AddHostedService<backend.Services.Correo.RecordatoriosService>();
 }
 builder.Services.AddScoped<IPacientesService, PacientesService>();
 builder.Services.AddSingleton(TimeProvider.System);

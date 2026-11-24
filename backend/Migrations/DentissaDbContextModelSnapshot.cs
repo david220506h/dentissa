@@ -1234,9 +1234,6 @@ namespace backend.Migrations
                     b.HasKey("Id")
                         .HasName("pk_notificaciones");
 
-                    b.HasIndex("CitaId")
-                        .HasDatabaseName("ix_notificaciones_cita_id");
-
                     b.HasIndex("PacienteId")
                         .HasDatabaseName("ix_notificaciones_paciente_id");
 
@@ -1246,6 +1243,14 @@ namespace backend.Migrations
 
                     b.HasIndex("UsuarioId")
                         .HasDatabaseName("ix_notificaciones_usuario_id");
+
+                    b.HasIndex(new[] { "CitaId" }, "PorCita")
+                        .HasDatabaseName("ix_notificaciones_cita_id");
+
+                    b.HasIndex(new[] { "CitaId" }, "RecordatorioUnico")
+                        .IsUnique()
+                        .HasDatabaseName("ux_notificaciones_recordatorio_cita")
+                        .HasFilter("tipo = 'recordatorio' AND canal = 'correo'");
 
                     b.ToTable("notificaciones", null, t =>
                         {

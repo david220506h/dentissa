@@ -22,6 +22,7 @@ namespace backend.Services.Correo
         public int ArrendamientoMinutos { get; set; } = 10;
         // Una fila más antigua ya no se envía (p. ej., tras tener el correo apagado): se descarta
         public int MaxAntiguedadHoras { get; set; } = 48;
+        public int RecordatoriosMinutos { get; set; } = 60;
     }
 
     public class OpcionesSmtp
