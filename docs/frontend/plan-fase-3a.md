@@ -421,6 +421,12 @@ Respondidas por las decisiones del arquitecto: 1 (`CLAUDE.md`), 2 (landing y reg
 - Landing, menú, inicio de sesión de pacientes y registro se movieron con `git mv` a `frontend/src/migrar-a-sitio/` (ver su `LEEME.md`, con la imagen externa de `decogaleria.mx` pendiente).
 - **Mientras no existan Agenda y Equipo y usuarios en el panel nuevo, las citas y los usuarios solo se manejan por la API** (`/api/citas`, `/api/usuarios`). El panel no tiene, por ahora, forma de crear, confirmar o cancelar citas, ni de crear o desactivar usuarios.
 
+### 14.6 Tareas con fecha
+
+| Fecha | Tarea | Motivo |
+|---|---|---|
+| **2026-12-07** | Subir `typescript-eslint` de 8.72.1 a **8.74.0** (publicada el 2026-11-23; ese día cumple dos semanas) y cerrar los **7 hallazgos moderados** que quedan en `npm audit`: `minimatch` (DoS por patrones glob, GHSA-g3hv-75wg-m249) y los 6 paquetes de `typescript-eslint` que lo traen. Comprobar antes que su `peerDependencies.typescript` siga aceptando la versión instalada (hoy `>=4.8.4 <6.1.0` con TypeScript 6.0.3). Commit propio, con tipos, lint, compilación, unitarias, Playwright y `npm audit` final. | Solo de desarrollo (lint). No se fuerza con `overrides`: la corrección está en `minimatch` 11 y `typescript-eslint` 8.72 declara `^10.2.2`. |
+
 ### 14.3 Versiones elegidas (estables, publicadas antes del 9-nov-2026 y compatibles entre sí)
 
 | Paquete | Versión | Nota |
