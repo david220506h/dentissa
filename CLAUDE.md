@@ -20,7 +20,7 @@ No avances a una etapa posterior sin que se indique expresamente.
 - `backend/`: ASP.NET Core en **.NET 10** (SDK fijado en `global.json`), **EF Core 10 con Npgsql** sobre **PostgreSQL 17** (Docker; en local, puerto **5433**). Pruebas de integración contra PostgreSQL real con **Testcontainers** (requieren Docker).
 - La migración `Inicial` queda **cerrada** al integrarse la Fase 1 a `main`: todo cambio de esquema posterior es una **migración nueva**.
 - **Fase 2 (agenda): en diseño** (`docs/agenda/diseno-agenda.md`). **Panel nuevo: Fase 3.**
-- `frontend/`: React + Vite. Solo login, registro, citas y usuarios están conectados a la API; el resto usa datos fijos en el código.
+- `frontend/`: React + Vite + TypeScript, con `@dentissa/tokens` y `@dentissa/ui` en `packages/` (Fase 3a, rama `fase-3a-panel-base`). El panel nuevo es solo para el personal: hoy conecta a la API el inicio y el cierre de sesión (con revocación del token de renovación) y el cierre por inactividad; las secciones sin pantalla dicen "Próximamente". **Hasta que existan Agenda y Equipo, citas y usuarios solo se manejan por la API.** La landing, el inicio de sesión de pacientes y el registro anteriores están en `frontend/src/migrar-a-sitio/`, para el sitio en Astro.
 - **El panel se rediseña por completo; solo se conservan los colores actuales.** El diseño (sistema visual, componentes y pantallas) lo entrega el arquitecto y se guardará en `docs/design/`. No rediseñes ni reorganices la interfaz por tu cuenta; los únicos cambios de frontend permitidos hasta recibir el diseño son los que pida cada fase de manera expresa.
 - Autenticación: JWT con refresh token y BCrypt. Se conserva.
 - Patrón repositorio y servicios en `backend/`. Se conserva.
