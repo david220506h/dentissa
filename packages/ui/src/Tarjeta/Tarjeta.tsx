@@ -64,3 +64,16 @@ export function TarjetaIndicador({ etiqueta, valor, icono, detalle }: TarjetaInd
     </section>
   );
 }
+
+/** Indicador compacto del celular (Movil · Inicio): ícono, número y etiqueta, en tarjetas lado a lado. */
+export function TarjetaIndicadorCompacta({ etiqueta, valor, icono }: Omit<TarjetaIndicadorProps, 'detalle'>) {
+  return (
+    <section className={estilos.compacta} aria-label={etiqueta}>
+      <span className={estilos.compactaIcono}>
+        <Icono nombre={icono} tamano={20} />
+      </span>
+      <span className={estilos.compactaValor}>{valor}</span>
+      <span className={estilos.compactaEtiqueta}>{etiqueta}</span>
+    </section>
+  );
+}

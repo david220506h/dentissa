@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { ANCHOS, abrirDiseno, sinDesbordeHorizontal, sinViolacionesAxe } from './utilidades';
+import { ANCHOS, abrirDiseno, sesionDeEjemplo, sinDesbordeHorizontal, sinViolacionesAxe } from './utilidades';
 
 // Panel nuevo: inicio de sesión contra Login.dc.html. Sin API: no se envía el formulario con datos reales.
 
@@ -111,15 +111,13 @@ test('sin sesión, una ruta del panel lleva al inicio de sesión', async ({ page
   await expect(page).toHaveURL(/\/iniciar-sesion$/);
 });
 
-// Sesión de ejemplo solo en el navegador de prueba: sin tokens ni API (las secciones aún no piden datos)
-const USUARIO_EJEMPLO = { id: 1, nombre: 'Ana', apellido: 'Ejemplo', email: 'ana@ejemplo.test', rol: 'admin' };
 
 for (const ancho of ANCHOS) {
   test.describe(`panel con sesión a ${ancho} px`, () => {
     test.use({ viewport: { width: ancho, height: 900 } });
 
     test.beforeEach(async ({ page }) => {
-      await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), USUARIO_EJEMPLO);
+      await sesionDeEjemplo(page);
     });
 
     for (const ruta of ['/', '/no-existe']) {
@@ -142,7 +140,7 @@ for (const ancho of ANCHOS) {
     test.use({ viewport: { width: ancho, height: 900 } });
 
     test('sin permiso: accesible, sin desborde y captura', async ({ page }) => {
-      await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), { ...USUARIO_EJEMPLO, rol: 'asistente' });
+      await sesionDeEjemplo(page, { rol: 'asistente' });
       await page.goto('/equipo');
       await expect(page.getByRole('heading', { level: 1, name: 'No tienes acceso a esta sección' })).toBeVisible();
       await expect(page.getByText('Tu rol no incluye Equipo y usuarios.', { exact: false })).toBeVisible();
@@ -152,7 +150,7 @@ for (const ancho of ANCHOS) {
     });
 
     test('próximamente: captura', async ({ page }) => {
-      await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), USUARIO_EJEMPLO);
+      await sesionDeEjemplo(page);
       await page.goto('/ofertas');
       await expect(page.getByRole('heading', { level: 1, name: 'Ofertas y contenido' })).toBeVisible();
       await sinViolacionesAxe(page);
@@ -161,7 +159,7 @@ for (const ancho of ANCHOS) {
 
     test('inactividad: aviso a los 14 min, foco dentro y Esc lo cierra', async ({ page }) => {
       await page.clock.install();
-      await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), USUARIO_EJEMPLO);
+      await sesionDeEjemplo(page);
       await page.goto('/');
       await expect(page.locator('h1')).toBeVisible();
       await page.clock.fastForward('13:59');
@@ -186,7 +184,7 @@ for (const ancho of [360, 768] as const) {
   for (const rol of ['admin', 'asistente', 'dentista'] as const) {
     test(`hoja Más de ${rol} a ${ancho} px: accesible y captura`, async ({ page }) => {
       await page.setViewportSize({ width: ancho, height: 900 });
-      await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), { ...USUARIO_EJEMPLO, rol });
+      await sesionDeEjemplo(page, { rol });
       await page.goto('/');
       await page.getByRole('button', { name: 'Más' }).click();
       const hoja = page.getByRole('dialog', { name: 'Más opciones' });
@@ -204,7 +202,7 @@ for (const ancho of [360, 768] as const) {
 
 test('a 1440 px no hay menú inferior ni botón Más: el menú lateral muestra todo', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.addInitScript((u) => localStorage.setItem('usuario', JSON.stringify(u)), USUARIO_EJEMPLO);
+  await sesionDeEjemplo(page);
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Más' })).toBeHidden();
   await expect(page.getByRole('navigation', { name: 'Menú principal' }).getByRole('link', { name: 'Auditoría' })).toBeVisible();

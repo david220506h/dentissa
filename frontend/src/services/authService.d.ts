@@ -11,6 +11,8 @@ export interface UsuarioSesion {
   fechaRegistro?: string | null;
 }
 
+/** Base de la API: VITE_API_URL o "/api" (proxy de Vite en desarrollo). */
+export const API_URL: string;
 export const MENSAJE_SIN_PERMISO: string;
 export const MENSAJE_SESION_EXPIRADA: string;
 

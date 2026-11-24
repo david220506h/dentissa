@@ -11,7 +11,7 @@ export {
 } from './Insignia/Insignia';
 export { Contador, type ContadorProps } from './Contador/Contador';
 export { Avatar, iniciales, type AvatarProps } from './Avatar/Avatar';
-export { Tarjeta, TarjetaIndicador, type TarjetaProps, type TarjetaIndicadorProps } from './Tarjeta/Tarjeta';
+export { Tarjeta, TarjetaIndicador, TarjetaIndicadorCompacta, type TarjetaProps, type TarjetaIndicadorProps } from './Tarjeta/Tarjeta';
 export {
   CampoTexto,
   CampoContrasena,

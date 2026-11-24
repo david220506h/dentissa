@@ -1,0 +1,187 @@
+/* Inicio. Escritorio (desde 1024 px): Inicio.dc.html. Celular y tableta: Movil.dc.html · Inicio. */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-16);
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--texto-22);
+  font-weight: var(--peso-extranegrita);
+  color: var(--texto);
+}
+
+.fecha {
+  margin: 0;
+  font-size: var(--texto-14);
+  color: var(--texto-secundario);
+}
+
+.soloEscritorio {
+  display: none;
+}
+
+/* Indicadores compactos lado a lado (Movil) */
+.compactas {
+  display: flex;
+  gap: var(--espacio-12);
+}
+
+.indicadores {
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+  gap: var(--espacio-16);
+}
+
+/* Lista de hoy: en celular, "Hoy" con filas compactas (hora arriba del nombre) */
+.agenda {
+  padding: var(--espacio-16);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-14);
+}
+
+.agendaTitulo {
+  margin: 0 0 var(--espacio-6);
+  font-size: var(--texto-16);
+  font-weight: var(--peso-extranegrita);
+  color: var(--texto);
+}
+
+.lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fila {
+  display: flex;
+  flex-direction: column;
+  padding: var(--espacio-10) 0;
+  border-top: 1px solid var(--borde);
+}
+
+.hora {
+  font-size: var(--texto-13);
+  font-weight: var(--peso-extranegrita);
+  color: var(--texto-secundario);
+  white-space: nowrap;
+}
+
+.contenido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-12);
+  min-width: 0;
+}
+
+.datos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.paciente {
+  font-size: var(--texto-15);
+  font-weight: var(--peso-negrita);
+  color: var(--texto);
+  overflow-wrap: anywhere;
+}
+
+.servicio {
+  font-size: var(--texto-14);
+  color: var(--texto-secundario);
+}
+
+/* En celular la hora va arriba del nombre y la insignia a la derecha, centradas en la fila (Movil) */
+@media (max-width: 1023px) {
+  .fila {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: var(--espacio-12);
+  }
+
+  .hora {
+    grid-column: 1;
+  }
+
+  .contenido {
+    display: contents;
+  }
+
+  .datos {
+    grid-column: 1;
+  }
+
+  /* La insignia ocupa la columna derecha, a la altura de hora y nombre */
+  .contenido > :last-child {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .pagina {
+    gap: var(--espacio-24);
+  }
+
+  .soloEscritorio {
+    display: revert;
+  }
+
+  .soloCelular {
+    display: none;
+  }
+
+  .indicadores {
+    display: grid;
+  }
+
+  .titulo {
+    font-size: var(--texto-26);
+    line-height: var(--altura-linea-titulo);
+  }
+
+  .fecha {
+    margin-top: var(--espacio-4);
+    font-size: var(--texto-15);
+  }
+
+  /* "Agenda de hoy": tarjeta holgada con sombra (Inicio) */
+  .agenda {
+    padding: var(--espacio-24);
+    box-shadow: var(--sombra-tarjeta);
+  }
+
+  .agendaTitulo {
+    margin-bottom: var(--espacio-8);
+    font-size: var(--texto-titulo-tarjeta);
+    font-weight: var(--peso-negrita);
+  }
+
+  .fila {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--espacio-16);
+    padding: var(--espacio-12) 0;
+  }
+
+  .fila:first-child {
+    border-top: 0;
+  }
+
+  .hora {
+    flex: 0 0 76px;
+    padding-top: 3px;
+    font-size: var(--texto-14);
+    color: var(--texto);
+  }
+
+  .contenido {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    gap: var(--espacio-8) var(--espacio-12);
+  }
+}

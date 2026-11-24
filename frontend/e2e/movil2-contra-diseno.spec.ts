@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { abrirDiseno } from './utilidades';
+import { abrirDiseno, sesionDeEjemplo } from './utilidades';
 
 // Hoja "Más" y pacientes en tarjetas (catálogo y panel) frente a Movil2.dc.html.
 
@@ -217,9 +217,7 @@ test('panel: "Más" activo con la hoja abierta, como en el diseño', async ({ pa
   const esperado = await estilos(disenoPage.locator('nav a[aria-current="page"]', { hasText: 'Más' }).first(), ANCHO);
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.addInitScript(() =>
-    localStorage.setItem('usuario', JSON.stringify({ id: 1, nombre: 'Ana', apellido: 'Ejemplo', email: 'ana@ejemplo.test', rol: 'admin' })),
-  );
+  await sesionDeEjemplo(page);
   await page.goto('/');
   await page.getByRole('button', { name: 'Más' }).click();
   await page.getByRole('dialog', { name: 'Más opciones' }).waitFor();
