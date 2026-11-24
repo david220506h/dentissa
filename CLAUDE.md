@@ -63,6 +63,8 @@ No avances a una etapa posterior sin que se indique expresamente.
 - **El administrador inicial y las contraseñas** vienen de user-secrets (`Seed:AdminEmail`, `Seed:AdminPassword`) o de variables de entorno, y **nunca se imprimen** en consola, logs ni respuestas.
 - **El token de acceso dura 15 minutos** (`JwtSettings:ExpirationMinutes`, configurable).
 - **Regla del último administrador:** no se puede desactivar, eliminar ni cambiar de rol al último administrador activo (lo valida el backend).
+- **BLOQUEANTE del primer despliegue** (no de la Fase 3a): hoy el frontend guarda los tokens en `localStorage`. Antes de desplegar, el refresh token pasa a una cookie `HttpOnly` y el access token vive solo en memoria. Requiere cambios de backend; se hace en la fase que lo indique.
+- **Cierre por inactividad:** 15 minutos para todos los roles, con aviso a los 14 y opción de "Mantener sesión". En la Fase 3a solo el frontend, con el tiempo fijo; que la administración lo configure y que el servidor también expire la sesión por inactividad va en la fase de Configuración.
 - **La bitácora enmascara las columnas sensibles** (`[DatoSensible]`): se registran como `"[cambió]"`, nunca con su valor. Hoy: `password_hash`, `refresh_token`, `confirmacion_token_hash`, `alergias`, `condiciones_medicas`, `curp` y `direccion`.
 - Legislación mexicana aplicable: protección de datos personales en posesión de particulares y NOM-004-SSA3-2012 (expediente clínico). Se valida con un especialista; no la interpretes por tu cuenta.
 

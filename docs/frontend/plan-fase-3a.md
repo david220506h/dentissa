@@ -348,13 +348,13 @@ Además, con cada hito, `critique` y `audit` de impeccable, con la lista de lo q
 | **Huecos del diseño:** Equipo y usuarios, formularios de cita, 768 px, vista Mes | Se arman solo con componentes y patrones aprobados; capturas para tu aprobación antes de cerrar cada uno. |
 | **Inconsistencias del diseño:** "nada por debajo de 12.5 px" (Main) frente a 12 px en etiquetas de grupo del menú, contador, menú inferior y estado dentro de la cuadrícula; "Servicios" y "Ofertas y contenido" apuntan a la misma pantalla; Nunito desde Google Fonts | Se implementa lo dibujado (12 px donde está dibujado) y se te reporta para que decidas; Nunito local. |
 | **Horarios deducidos de la API** en la Agenda hasta la Fase 2 | Prueba de la deducción con la configuración sembrada; reemplazo directo cuando exista el endpoint. |
-| **Tokens en `localStorage`** (P3) | Se conserva el comportamiento actual; cambiarlo requiere backend (cookie `HttpOnly`). Queda en el informe. |
+| **Tokens en `localStorage`** (P3) | Se conserva el comportamiento actual en esta fase. **BLOQUEANTE del primer despliegue:** token de renovación en cookie `HttpOnly` y token de acceso solo en memoria (requiere backend; decisión 14.4.5). |
 | **Skill de taste con hook `Stop`** | No se arma nunca (`.taste-skill/build.json` no se crea); se revisa antes de cada uso. |
 | **Telemetría y cuenta de impeccable** | Propuesta: telemetría apagada y sin `login`. |
 | **El `CLAUDE.md` de esta rama está desactualizado** (las actualizaciones viven en `fase-2-agenda`) | Ver pregunta 1. |
 | **Logo provisional** (según el diseño) en la PWA | Íconos regenerables en cuanto llegue el archivo final. |
 | **Dependencias nuevas** (TS, Query, React Aria, Vitest, Playwright, vite-plugin-pwa, fontsource) | Versiones fijadas con al menos dos semanas de antigüedad; `npm audit` en cada commit que instala. |
-| **Datos en memoria visibles en un equipo compartido** | Cierre de sesión limpia todo; la sesión expira en 15 min sin renovación activa. **[DECIDE]** si se agrega cierre por inactividad. |
+| **Datos en memoria visibles en un equipo compartido** | Cierre de sesión limpia todo. Cierre por inactividad a los 15 min en el frontend (decisión 14.4.3, con `Estados.dc.html`); mientras solo exista en el navegador, una pestaña manipulada podría evitarlo hasta que el servidor también lo aplique (fase de Configuración). |
 
 ---
 
@@ -402,7 +402,17 @@ Además, con cada hito, `critique` y `audit` de impeccable, con la lista de lo q
 
 Respondidas por las decisiones del arquitecto: 1 (`CLAUDE.md`), 2 (landing y registro), 3 y 4 (esperan diseño), 6, 7 y 8 (no se muestran), 10 (mínimo de 12.5 px), 11 (Playwright aprobado) y 12 (telemetría apagada).
 
-**Pendiente de decisión de negocio:** 13, cierre de sesión por inactividad en equipos compartidos de recepción (si se agrega y con qué tiempo).
+**Decisión de negocio 13 (inactividad):** resuelta en la sección 14.4.
+
+### 14.4 Decisiones del arquitecto, segunda ronda (2026-11-23)
+
+| # | Decisión |
+|---|---|
+| 1 | **Inicio de sesión en celular:** primero el formulario; la presentación se reduce a marca y lema, sin ilustración. Se aplica cuando las dos columnas se apilan (menos de 960 px). El diseño móvil formal llega en el próximo zip. |
+| 2 | **Palabra sola al final del párrafo** a 360 px: `text-wrap: pretty` en los párrafos del inicio de sesión, sin cambiar el texto. |
+| 3 | **Cierre por inactividad: en esta fase solo el frontend**, y se implementa cuando llegue `Estados.dc.html` (trae el diálogo). 15 minutos fijos para todos los roles en una constante; a los 14 minutos, diálogo de 60 s con "Mantener sesión"; al vencer, cierre de sesión con revocación del token de renovación (`POST /auth/logout`). **Fase de Configuración:** el tiempo lo configura la administración, y el servidor también hace expirar la sesión por inactividad. |
+| 4 | **Leyenda del odontograma: 30 px reales** con `border-box`. El diseño la declaraba de 30 px sin `border-box` y se dibujaba de 32; el próximo zip lo corrige. (El Aviso nunca tuvo esa diferencia: su altura coincide con el diseño.) |
+| 5 | **BLOQUEANTE del primer despliegue** (no de esta fase): el token de renovación pasa a cookie `HttpOnly` y el token de acceso vive solo en memoria. Requiere cambios de backend. También anotado en `CLAUDE.md`. |
 
 ### 14.3 Versiones elegidas (estables, publicadas antes del 9-nov-2026 y compatibles entre sí)
 
