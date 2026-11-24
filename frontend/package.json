@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "vite",
+    "//dev:red": "RIESGO: expone el servidor de desarrollo a toda la red local (cualquier equipo en la misma wifi puede abrirlo, y el proxy /api llega al backend). Úsalo solo en una red de confianza, con datos de ejemplo, y ciérralo al terminar.",
+    "dev:red": "vite --host",
     "build": "vite build",
     "preview": "vite preview"
   },
