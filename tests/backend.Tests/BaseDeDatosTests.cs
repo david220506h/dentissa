@@ -21,7 +21,8 @@ public class MigracionTests
         await factory.ConDbAsync(async db =>
         {
             Assert.Empty(await db.Database.GetPendingMigrationsAsync());
-            Assert.Single(await db.Database.GetAppliedMigrationsAsync());
+            // Todas las migraciones del proyecto quedan aplicadas, en orden
+            Assert.Equal(db.Database.GetMigrations(), await db.Database.GetAppliedMigrationsAsync());
             Assert.False(db.Database.HasPendingModelChanges());
             Assert.True(await db.ConfiguracionAgenda.AnyAsync());
             return true;
@@ -190,7 +191,9 @@ public class RestriccionesTests : IClassFixture<DentissaFactory>
     [InlineData("TRUNCATE cita_historial")]
     [InlineData("DELETE FROM examen_medico")]
     [InlineData("TRUNCATE consulta_fotos")]
-    public async Task BitacoraYExpediente_RechazanModificacionYBorrado(string sql)
+    [InlineData("DELETE FROM citas")]
+    [InlineData("TRUNCATE citas CASCADE")]
+    public async Task BitacoraExpedienteYCitas_RechazanModificacionYBorrado(string sql)
     {
         // Garantiza al menos una fila en la bitácora y en el historial
         await _factory.CrearCitaAsync();
