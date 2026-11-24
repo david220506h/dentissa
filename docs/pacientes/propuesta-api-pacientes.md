@@ -1,6 +1,12 @@
 # Propuesta: API de pacientes para el panel
 
-- **Fecha:** 2026-11-23 · **Estado:** propuesta, sin código. Espera aprobación.
+- **Fecha:** 2026-11-23 · **Estado:** propuesta con **decisiones provisionales, pendiente de revisión legal**. Sin código: no se implementa hasta la aprobación expresa.
+
+> **Decisiones provisionales (2026-11-23).** Las tomó el dueño del proyecto; lo legal lo valida un especialista (protección de datos personales y NOM-004-SSA3-2012):
+> 1. **"Asignado"** = el paciente tiene al menos una cita no cancelada con ese dentista. Si no, **404**.
+> 2. La asistente **no recibe CURP ni dirección**.
+> 3. La bitácora de lecturas se conserva **al menos tanto como el expediente**, **sin purga automática**; el plazo exacto lo fija el especialista.
+> 4. El dentista **no recibe el teléfono** por ahora.
 - **Motivo:** la pantalla Pacientes (tarjetas en celular, tabla en escritorio) y el selector de paciente de los formularios de cita necesitan datos que la API no entrega. Sin alergias no se muestra la lista: una tarjeta sin alergia podría leerse como "sin alergias".
 
 ## 0. Lo que existe hoy
@@ -55,7 +61,7 @@ Respuesta:
 
 Los mismos campos que la lista más `correo`, `fechaNacimiento` y `sexo` (los "datos generales" de la matriz). Sin `curp`, `direccion` ni `condicionesMedicas`: esos van con el expediente, en su fase, con la autorización del expediente (asistente **no**).
 
-> Pendiente de tu decisión: si `curp` y `direccion` cuentan como "datos generales" para la asistente. La propuesta los deja fuera (principio de mínimo necesario) y los valida el especialista en protección de datos.
+> **Decisión provisional 2:** la asistente no recibe `curp` ni `direccion`. Ningún rol los recibe por estos endpoints; van con el expediente, en su fase.
 
 ### 1.3 Reemplazo de `GET /api/citas/pacientes`
 
@@ -67,10 +73,10 @@ El selector de paciente del formulario de cita (bloque f) usa `GET /api/paciente
 |---|---|---|---|
 | Asistente | Todos (activos) | Los de 1.1 y 1.2, **con alergias** | **Nunca** (403 en cualquier endpoint del expediente). |
 | Administración | Todos (activos) | Los de 1.1 y 1.2 | Solo lectura, en su fase. |
-| Dentista | **Los asignados** | Los de 1.1 y 1.2 | Edita, en su fase. |
+| Dentista | **Los asignados** | Los de 1.1 y 1.2 **sin `telefono`** (decisión provisional 4: llega `null`) | Edita, en su fase. |
 | Paciente | — | Solo los propios, por el portal (Fase 2, commit 13), no por estos endpoints. | Resumen propio. |
 
-- **"Asignado" no existe hoy en la base.** Propuesta: un paciente está asignado a un dentista si tiene **al menos una cita no cancelada con ese dentista** (pasada o futura). No requiere tabla nueva y coincide con "la clínica asigna dentista" (sección 3 del diseño de la agenda). Alternativa: tabla `paciente_dentista` explícita. **Decisión tuya.**
+- **"Asignado" no existe hoy en la base.** **Decisión provisional 1:** un paciente está asignado a un dentista si tiene **al menos una cita no cancelada con ese dentista** (pasada o futura). No requiere tabla nueva y coincide con "la clínica asigna dentista" (sección 3 del diseño de la agenda).
 - Un dentista que pide `GET /api/pacientes/{id}` de un paciente no asignado recibe **404** (no 403), para no confirmar que existe.
 - Los pacientes con eliminado lógico no aparecen.
 - Autorización con `[Authorize(Roles = …)]` más el filtro por dentista en la consulta, no después.
@@ -94,7 +100,7 @@ El selector de paciente del formulario de cita (bloque f) usa `GET /api/paciente
 
 **Cómo.** Un filtro de acción (`[AuditarLecturaSensible]`) que, tras una respuesta 200, llama a `IAuditoriaService.RegistrarAsync` con los ids devueltos. Si la bitácora falla, la respuesta falla (500): no se entregan datos sensibles sin registro.
 
-**Volumen.** Con 3 personas y la lista refrescándose al volver a la pestaña, se esperan decenas a cientos de filas por día. Es aceptable; si crece, se agrupan lecturas idénticas del mismo usuario en ventanas de 5 minutos. La **retención** de la bitácora la define el especialista (NOM-004 y protección de datos).
+**Volumen.** Con 3 personas y la lista refrescándose al volver a la pestaña, se esperan decenas a cientos de filas por día. Es aceptable; si crece, se agrupan lecturas idénticas del mismo usuario en ventanas de 5 minutos. **Retención (decisión provisional 3):** las filas de lectura se conservan **al menos tanto como el expediente**, **sin purga automática**; el plazo exacto lo fija el especialista. La tabla ya es de solo inserción.
 
 **Consulta.** La pantalla Auditoría (solo administración) podrá filtrar por `lectura_sensible`.
 
@@ -128,7 +134,9 @@ El selector de paciente del formulario de cita (bloque f) usa `GET /api/paciente
 
 ## 6. Para validar contigo o con el especialista
 
-1. Definición de "asignado" para el dentista (sección 2).
-2. Si `curp` y `direccion` son "datos generales" visibles para la asistente (1.2).
-3. Retención de la bitácora y si la lectura de la lista completa debe registrarse por paciente o por página (sección 3).
-4. Si el teléfono debe mostrarse completo a todos los roles del panel o enmascarado para el dentista.
+Las cuatro preguntas originales tienen **decisión provisional** (arriba). Quedan para la **revisión legal**:
+
+1. Confirmar "asignado" y el 404 para no asignados.
+2. Confirmar que la asistente no necesita CURP ni dirección para su trabajo.
+3. Fijar el plazo de conservación de la bitácora de lecturas, y si la lectura de la lista debe registrarse por paciente o por página.
+4. Confirmar que el dentista no necesita el teléfono (hoy no llama a pacientes; lo hace recepción).
