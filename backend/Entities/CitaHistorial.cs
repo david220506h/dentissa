@@ -36,6 +36,8 @@ public static class AccionesCitaHistorial
     public const string Cancelacion         = "cancelacion";
     public const string SolicitudCambio     = "solicitud_cambio";
     public const string ResolucionSolicitud = "resolucion_solicitud";
+    // Fase 2 (6.1): una solicitud pendiente que nadie confirmó a tiempo se cancela al reservar su horario
+    public const string Vencimiento         = "vencimiento";
 
     public static readonly string[] Todas =
     {

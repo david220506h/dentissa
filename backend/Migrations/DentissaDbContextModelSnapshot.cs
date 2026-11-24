@@ -449,7 +449,7 @@ namespace backend.Migrations
 
                     b.ToTable("cita_historial", null, t =>
                         {
-                            t.HasCheckConstraint("ck_cita_historial_accion", "accion IN ('creacion','modificacion','reagenda','cambio_estado','confirmacion','cancelacion','solicitud_cambio','resolucion_solicitud')");
+                            t.HasCheckConstraint("ck_cita_historial_accion", "accion IN ('creacion','modificacion','reagenda','cambio_estado','confirmacion','cancelacion','solicitud_cambio','resolucion_solicitud','vencimiento')");
                         });
                 });
 

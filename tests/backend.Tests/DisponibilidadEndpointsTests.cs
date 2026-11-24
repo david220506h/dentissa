@@ -120,7 +120,7 @@ public class DisponibilidadEndpointsTests : IClassFixture<FabricaDisponibilidad>
         var r = await admin.GetAsync($"/api/Citas/horarios-disponibles?fecha=2026-11-30&dentistaId={dentista}");
 
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
-        Assert.Equal(["08:00", "10:00", "12:00", "13:00", "15:00"], await r.Content.ReadFromJsonAsync<string[]>());
+        Assert.Equal(["08:00", "10:00", "12:00", "13:00", "15:00"], (await r.Content.ReadFromJsonAsync<string[]>())!);
     }
 }
 

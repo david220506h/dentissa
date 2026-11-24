@@ -74,7 +74,7 @@ public class CitaHistorialConfiguracion : IEntityTypeConfiguration<CitaHistorial
         e.ToTable("cita_historial", t =>
         {
             t.HasCheckConstraint("ck_cita_historial_accion",
-                "accion IN ('creacion','modificacion','reagenda','cambio_estado','confirmacion','cancelacion','solicitud_cambio','resolucion_solicitud')");
+                "accion IN ('creacion','modificacion','reagenda','cambio_estado','confirmacion','cancelacion','solicitud_cambio','resolucion_solicitud','vencimiento')");
         });
 
         e.Property(h => h.Accion).HasMaxLength(30);

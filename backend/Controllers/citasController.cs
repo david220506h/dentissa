@@ -24,9 +24,11 @@ namespace backend.Controllers
         private readonly IRelojClinica _reloj;
         private readonly ICitaHistorialService _historial;
         private readonly IDisponibilidadService _disponibilidad;
+        private readonly IReservasService _reservas;
 
-        public CitasController(ICitasRepository repo, IAgendaService agenda, IRelojClinica reloj, ICitaHistorialService historial, IDisponibilidadService disponibilidad)
+        public CitasController(ICitasRepository repo, IAgendaService agenda, IRelojClinica reloj, ICitaHistorialService historial, IDisponibilidadService disponibilidad, IReservasService reservas)
         {
+            _reservas = reservas;
             _repo = repo;
             _agenda = agenda;
             _reloj = reloj;
@@ -127,50 +129,43 @@ namespace backend.Controllers
             if (await _repo.GetDentistaActivoAsync(dto.DentistaId) == null)
                 return BadRequest(new { mensaje = "Dentista no encontrado o inactivo" });
 
+            // Candado por fecha, liberación de vencidas, regla de recepción y reintentos (diseño, sección 6)
             try
             {
-                if (!(await _agenda.HorariosDelDiaAsync(dto.Fecha)).Contains(dto.Hora))
-                    return BadRequest(new { mensaje = "La hora no corresponde a un horario de la clínica" });
-
-                var (inicio, fin) = await _agenda.CalcularIntervaloAsync(dto.Fecha, dto.Hora, servicio.DuracionSlots);
-
-                var oferta = await _repo.GetOfertaVigenteAsync(dto.ServicioId, dto.Fecha);
-                var costoBase = servicio.Precio;
-                var descuento = oferta?.Descuento ?? 0;
-                var extra = dto.CostoExtra ?? 0;
-
-                var cita = new Cita
-                {
-                    PacienteId        = dto.PacienteId,
-                    DentistaId        = dto.DentistaId,
-                    ServicioId        = dto.ServicioId,
-                    OfertaId          = oferta?.Id,
-                    Inicio            = inicio,
-                    Fin               = fin,
-                    Estado            = EstadosCita.Pendiente,
-                    Origen            = OrigenesCita.Recepcion,
-                    CreadoPor         = UsuarioActualId(),
-                    Motivo            = dto.Motivo,
-                    CostoBase         = costoBase,
-                    DescuentoAplicado = descuento,
-                    CostoExtra        = extra,
-                    MotivoExtra       = dto.MotivoExtra,
-                    CostoTotal        = CalcularTotal(costoBase, descuento, extra)
-                };
-
-                _historial.Registrar(cita, AccionesCitaHistorial.Creacion, "Cita creada desde el panel");
-                await _repo.CreateAsync(cita);
+                var cita = await _reservas.ReservarAsync(new SolicitudReserva(
+                    dto.PacienteId, dto.DentistaId, dto.ServicioId, dto.Fecha, dto.Hora,
+                    CanalReserva.Recepcion, OrigenesCita.Recepcion, "Cita creada desde el panel",
+                    dto.Motivo, dto.CostoExtra, dto.MotivoExtra));
                 return CreatedAtAction(nameof(GetById), new { id = cita.Id }, new { cita.Id, mensaje = "Cita creada correctamente" });
             }
             catch (AgendaNoConfiguradaException ex)
             {
                 return Problem(ex.Message, statusCode: StatusCodes.Status503ServiceUnavailable);
             }
+            catch (ServicioNoDisponibleException)
+            {
+                return BadRequest(new { mensaje = "Servicio no encontrado o inactivo" });
+            }
+            catch (HoraFueraDeHorarioException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message, codigo = "HORA_FUERA_DE_HORARIO" });
+            }
+            catch (ReservaRechazadaException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message, codigo = CodigoRechazo(ex.Motivo) });
+            }
             catch (HorarioOcupadoException ex)
             {
-                return Conflict(new { mensaje = ex.Message });
+                return Conflict(new { mensaje = ex.Message, codigo = "HORARIO_OCUPADO" });
             }
         }
+
+        private static string CodigoRechazo(MotivoRechazo motivo) => motivo switch
+        {
+            MotivoRechazo.EnElPasado => "HORARIO_PASADO",
+            MotivoRechazo.FueraDeHorizonte => "FUERA_DE_HORIZONTE",
+            _ => "ANTICIPACION_INSUFICIENTE",
+        };
 
         // ── PUT: api/Citas/5 ──────────────────────────────────
         [HttpPut("{id}")]
@@ -212,7 +207,7 @@ namespace backend.Controllers
                 cita.Estado      = estado;
                 cita.CostoExtra  = dto.CostoExtra ?? 0;
                 cita.MotivoExtra = dto.MotivoExtra;
-                cita.CostoTotal  = CalcularTotal(cita.CostoBase, cita.DescuentoAplicado, cita.CostoExtra);
+                cita.CostoTotal  = CostosCita.Total(cita.CostoBase, cita.DescuentoAplicado, cita.CostoExtra);
 
                 var despues = new { cita.DentistaId, cita.Inicio, cita.Fin, cita.Estado, cita.CostoExtra, cita.MotivoExtra };
                 var datos = new { antes, despues };
@@ -284,9 +279,6 @@ namespace backend.Controllers
 
         private int? UsuarioActualId()
             => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
-
-        private static decimal CalcularTotal(decimal costoBase, decimal descuento, decimal extra)
-            => Math.Round(costoBase - (costoBase * descuento / 100) + extra, 2, MidpointRounding.AwayFromZero);
 
         private CitaRespuestaDto ToRespuestaDto(Cita c) => CitaMapper.ARespuesta(c, _reloj);
     }

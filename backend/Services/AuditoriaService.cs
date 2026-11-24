@@ -45,33 +45,37 @@ namespace backend.Services
     // SaveChanges que el cambio de la cita (misma transacción).
     public interface ICitaHistorialService
     {
-        void Registrar(Cita cita, string accion, string? detalle = null, object? datos = null);
+        void Registrar(Cita cita, string accion, string? detalle = null, object? datos = null, string? canal = null);
     }
 
     public class CitaHistorialService : ICitaHistorialService
     {
         public const string CanalPanel = "panel";
+        // Acciones automáticas (vencimiento de solicitudes, barrido)
+        public const string CanalSistema = "sistema";
 
         private readonly DentissaDbContext _db;
         private readonly IActorActual _actor;
+        private readonly TimeProvider _tiempo;
 
-        public CitaHistorialService(DentissaDbContext db, IActorActual actor)
+        public CitaHistorialService(DentissaDbContext db, IActorActual actor, TimeProvider tiempo)
         {
             _db = db;
             _actor = actor;
+            _tiempo = tiempo;
         }
 
-        public void Registrar(Cita cita, string accion, string? detalle = null, object? datos = null)
+        public void Registrar(Cita cita, string accion, string? detalle = null, object? datos = null, string? canal = null)
         {
             _db.CitaHistorial.Add(new CitaHistorial
             {
                 Cita      = cita,
                 Accion    = accion,
-                UsuarioId = _actor.UsuarioId,
-                Canal     = CanalPanel,
+                UsuarioId = canal == CanalSistema ? null : _actor.UsuarioId,
+                Canal     = canal ?? CanalPanel,
                 Detalle   = detalle,
                 Datos     = datos == null ? null : JsonBitacora.Serializar(datos),
-                CreadoEn  = DateTime.UtcNow
+                CreadoEn  = _tiempo.GetUtcNow().UtcDateTime
             });
         }
     }
