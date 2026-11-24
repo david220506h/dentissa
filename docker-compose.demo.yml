@@ -39,7 +39,7 @@ services:
     environment:
       # Development: migraciones al arrancar y sin redirección a HTTPS (todo es local, detrás de nginx)
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=dentissa;Username=dentissa;Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=dentissa;Username=dentissa;Password=${POSTGRES_PASSWORD};GSS Encryption Mode=Disable
       JwtSettings__SecretKey: ${JWT_SECRET:?Define JWT_SECRET en .env.demo}
       Demo__Habilitada: "true"
       # Sin cada consulta SQL en la consola (las cuentas sembradas quedan a la vista)
