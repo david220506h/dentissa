@@ -1,7 +1,7 @@
 // Servicio centralizado para manejar autenticación y tokens
 // En desarrollo se usa "/api" a través del proxy de Vite (ver vite.config.js).
 // Para otro destino, definir VITE_API_URL en frontend/.env.local
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+export const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 export const MENSAJE_SIN_PERMISO = "No tienes permiso para realizar esta acción.";
 export const MENSAJE_SESION_EXPIRADA = "Tu sesión expiró. Inicia sesión de nuevo.";

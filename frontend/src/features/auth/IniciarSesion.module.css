@@ -1,0 +1,148 @@
+/* Iniciar sesión (Login.dc.html): presentación en Rosa 50 y formulario en blanco.
+   Apilados (menos de 960 px) va primero el formulario y la presentación se reduce a marca y lema,
+   sin ilustración (decisión del arquitecto; el diseño móvil formal llega en el próximo zip). */
+.raiz {
+  min-height: 100dvh;
+  display: flex;
+  flex-wrap: wrap;
+  color: var(--texto);
+}
+
+.presentacion {
+  flex: 1 1 480px;
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--espacio-48);
+  padding: var(--espacio-56) var(--espacio-64);
+  background: var(--rosa-50);
+}
+
+/* Lado a lado (dos columnas de 480 px): la presentación a la izquierda, como en el diseño */
+@media (min-width: 960px) {
+  .presentacion {
+    order: -1;
+  }
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-12);
+}
+
+.marcaIcono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--alto-toque);
+  height: var(--alto-toque);
+  border-radius: var(--radio-10);
+  background: var(--rosa-700);
+  color: var(--superficie);
+}
+
+.marcaNombre {
+  font-size: var(--texto-24);
+  font-weight: var(--peso-extranegrita);
+}
+
+.lema {
+  max-width: 480px;
+}
+
+.lemaTitulo {
+  margin: 0;
+  font-size: var(--texto-40);
+  font-weight: var(--peso-extranegrita);
+  line-height: 1.15;
+}
+
+.lemaTexto {
+  text-wrap: pretty;
+  margin: var(--espacio-16) 0 0;
+  font-size: var(--texto-17);
+  color: var(--texto-secundario);
+}
+
+/* Ilustración: el diente del logo en Rosa 500 con relleno Rosa 100 */
+.ilustracion {
+  color: var(--rosa-500);
+}
+
+.ilustracion svg {
+  fill: var(--rosa-100);
+}
+
+.formularioLado {
+  flex: 1 1 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--espacio-48) var(--espacio-32);
+  background: var(--superficie);
+}
+
+.formulario {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-20);
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--texto-30);
+  font-weight: var(--peso-extranegrita);
+}
+
+.subtitulo {
+  text-wrap: pretty;
+  margin: var(--espacio-6) 0 0;
+  font-size: var(--texto-15);
+  color: var(--texto-secundario);
+}
+
+.nota {
+  text-wrap: pretty;
+  margin: var(--espacio-8) 0 0;
+  font-size: var(--texto-14);
+  color: var(--texto-secundario);
+}
+
+@media (max-width: 959px) {
+  /* Sin estirar las filas: cada bloque mide lo que su contenido */
+  .raiz {
+    align-content: flex-start;
+    background: var(--rosa-50);
+  }
+
+  .presentacion {
+    min-height: auto;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--espacio-16);
+    padding: var(--espacio-24) var(--espacio-16);
+  }
+
+  /* Misma columna de 400 px que el formulario */
+  .marca,
+  .lema {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .lemaTitulo {
+    font-size: var(--texto-28);
+  }
+
+  .ilustracion {
+    display: none;
+  }
+
+  .formularioLado {
+    padding: var(--espacio-32) var(--espacio-16);
+  }
+}

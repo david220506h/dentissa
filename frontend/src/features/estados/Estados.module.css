@@ -1,0 +1,7 @@
+/* Tarjeta de las secciones de Estados.dc.html: blanca, borde, radio 14 y 24 px de relleno */
+.tarjeta {
+  padding: var(--espacio-24);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-14);
+}

@@ -1,0 +1,139 @@
+/* Botones de Main.dc.html · Componentes. Alto mínimo de 44 px; un solo principal por pantalla. */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-8);
+  height: var(--alto-toque);
+  padding: 0 var(--espacio-18);
+  border: 1px solid transparent;
+  border-radius: var(--radio-10);
+  font-family: inherit;
+  font-size: var(--texto-boton);
+  font-weight: var(--peso-negrita);
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  /* Hover casi imperceptible y presión breve (especificación de movimiento, sección 4) */
+  transition:
+    background-color var(--dur-rapida) ease,
+    border-color var(--dur-rapida) ease,
+    color var(--dur-rapida) ease,
+    transform var(--dur-presion) var(--ease-out);
+}
+
+.grande {
+  height: var(--alto-control-grande);
+}
+
+.anchoCompleto {
+  width: 100%;
+}
+
+.principal {
+  background: var(--rosa-700);
+  border-color: var(--rosa-700);
+  color: var(--superficie);
+}
+
+.secundario {
+  background: var(--superficie);
+  border-color: var(--borde-control);
+  color: var(--texto);
+}
+
+.peligro {
+  background: var(--superficie);
+  border-color: var(--borde-peligro);
+  color: var(--estado-cancelada-texto);
+}
+
+.texto {
+  background: transparent;
+  border-color: transparent;
+  color: var(--rosa-800);
+}
+
+/* Deshabilitado ("Sin teléfono" en Main) */
+.boton:disabled:not([aria-busy='true']),
+.boton[aria-disabled='true'] {
+  background: var(--deshabilitado-fondo);
+  border-color: var(--deshabilitado-borde);
+  color: var(--texto-terciario);
+  cursor: not-allowed;
+}
+
+/* Cargando: conserva el color de su variante (no es lo mismo que deshabilitado) y solo bloquea la acción */
+.boton[aria-busy='true'] {
+  cursor: progress;
+}
+
+/* Hover solo con puntero fino: en táctil el "hover" queda pegado tras tocar */
+@media (hover: hover) and (pointer: fine) {
+  .principal:hover:not(:disabled, [aria-disabled='true']) {
+    background: var(--rosa-800);
+    border-color: var(--rosa-800);
+  }
+
+  .secundario:hover:not(:disabled, [aria-disabled='true']) {
+    background: var(--fondo-encabezado-tabla);
+  }
+
+  .peligro:hover:not(:disabled, [aria-disabled='true']) {
+    background: var(--estado-cancelada-fondo);
+  }
+
+  .texto:hover:not(:disabled, [aria-disabled='true']) {
+    background: var(--rosa-50);
+  }
+}
+
+/* Presión con puntero: no con teclado (:focus-visible) ni en elementos deshabilitados */
+.boton:active:not(:focus-visible, :disabled, [aria-disabled='true']) {
+  transform: scale(0.97);
+}
+
+/* Indicador de carga: aparece solo si la espera pasa de 300 ms */
+.indicador {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--radio-circulo);
+  opacity: 0;
+  animation:
+    girar 700ms linear infinite,
+    aparecer 0ms linear 300ms forwards;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes aparecer {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boton {
+    transition:
+      background-color var(--dur-rapida) ease,
+      border-color var(--dur-rapida) ease,
+      color var(--dur-rapida) ease;
+  }
+
+  .boton:active:not(:focus-visible, :disabled, [aria-disabled='true']) {
+    transform: none;
+  }
+
+  /* Sin giro: el texto del botón cambia a "Guardando…" (lo hace el componente) */
+  .indicador {
+    display: none;
+  }
+}

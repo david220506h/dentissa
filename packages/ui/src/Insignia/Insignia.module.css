@@ -1,0 +1,57 @@
+/* Insignias de Main.dc.html · Insignias de estado. Siempre con texto: el estado nunca depende solo del color. */
+.insignia {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: var(--alto-insignia);
+  padding: 0 var(--espacio-10);
+  border-radius: var(--radio-pildora);
+  font-size: var(--texto-insignia);
+  font-weight: var(--peso-negrita);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Las de estado de la cita llevan punto y un poco más de separación */
+.conPunto {
+  gap: var(--espacio-6);
+}
+
+.punto {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radio-circulo);
+  background: currentColor;
+}
+
+.verde {
+  background: var(--estado-confirmada-fondo);
+  color: var(--estado-confirmada-texto);
+}
+
+.amarillo {
+  background: var(--estado-pendiente-fondo);
+  color: var(--estado-pendiente-texto);
+}
+
+.azul {
+  background: var(--estado-completada-fondo);
+  color: var(--estado-completada-texto);
+}
+
+.rojo {
+  background: var(--estado-cancelada-fondo);
+  color: var(--estado-cancelada-texto);
+}
+
+.gris {
+  background: var(--estado-no-asistio-fondo);
+  color: var(--estado-no-asistio-texto);
+}
+
+/* Rol de administración (Equipo.dc.html) */
+.rosa {
+  background: var(--rosa-50);
+  color: var(--rosa-800);
+}

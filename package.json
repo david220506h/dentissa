@@ -1,0 +1,38 @@
+{
+  "name": "dentissa",
+  "private": true,
+  "type": "module",
+  "description": "Espacios de trabajo del frontend de Dentissa: panel (frontend/) y paquetes compartidos con el futuro sitio en Astro (packages/).",
+  "workspaces": [
+    "frontend",
+    "packages/*"
+  ],
+  "scripts": {
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint packages frontend/src --no-warn-ignored",
+    "build": "npm run build -w frontend",
+    "verificar": "npm run typecheck && npm run lint && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
+    "@types/node": "24.19.2",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "axe-core": "4.14.0",
+    "eslint": "9.39.3",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react-hooks": "7.0.1",
+    "globals": "16.5.0",
+    "jsdom": "31.0.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1",
+    "vitest": "5.1.0"
+  }
+}

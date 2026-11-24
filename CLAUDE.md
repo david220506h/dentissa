@@ -4,13 +4,13 @@ Este archivo se coloca en la raíz del repositorio (`Dentissa/CLAUDE.md`). Léel
 
 ## 1. Qué es el proyecto
 
-Sistema integral para una clínica dental de **una sola sucursal**: panel administrativo web, sitio web comercial con portal del paciente y app móvil para el personal, conectados a un mismo backend y una misma base de datos.
+Sistema integral para una clínica dental de **una sola sucursal**: panel administrativo web (instalable como PWA en el celular del personal) y sitio web comercial con portal del paciente, conectados a un mismo backend y una misma base de datos.
 
 Orden de trabajo, de manera estricta:
 
 1. **Panel administrativo + backend** (React + Vite, ASP.NET Core). Estamos aquí.
 2. Sitio web comercial (Astro) y portal del paciente.
-3. App móvil (React Native + Expo).
+3. ~~App móvil (React Native + Expo)~~: **descartada.** Solo habrá **PWA instalable del panel**; no habrá app nativa ni Expo (decisión 2026-11-23).
 
 No avances a una etapa posterior sin que se indique expresamente.
 
@@ -20,7 +20,7 @@ No avances a una etapa posterior sin que se indique expresamente.
 - `backend/`: ASP.NET Core en **.NET 10** (SDK fijado en `global.json`), **EF Core 10 con Npgsql** sobre **PostgreSQL 17** (Docker; en local, puerto **5433**). Pruebas de integración contra PostgreSQL real con **Testcontainers** (requieren Docker).
 - La migración `Inicial` queda **cerrada** al integrarse la Fase 1 a `main`: todo cambio de esquema posterior es una **migración nueva**.
 - **Fase 2 (agenda): en diseño** (`docs/agenda/diseno-agenda.md`). **Panel nuevo: Fase 3.**
-- `frontend/`: React + Vite. Solo login, registro, citas y usuarios están conectados a la API; el resto usa datos fijos en el código.
+- `frontend/`: React + Vite + TypeScript, con `@dentissa/tokens` y `@dentissa/ui` en `packages/` (Fase 3a, rama `fase-3a-panel-base`). El panel nuevo es solo para el personal: hoy conecta a la API el inicio y el cierre de sesión (con revocación del token de renovación) y el cierre por inactividad; las secciones sin pantalla dicen "Próximamente". **Hasta que existan Agenda y Equipo, citas y usuarios solo se manejan por la API.** La landing, el inicio de sesión de pacientes y el registro anteriores están en `frontend/src/migrar-a-sitio/`, para el sitio en Astro.
 - **El panel se rediseña por completo; solo se conservan los colores actuales.** El diseño (sistema visual, componentes y pantallas) lo entrega el arquitecto y se guardará en `docs/design/`. No rediseñes ni reorganices la interfaz por tu cuenta; los únicos cambios de frontend permitidos hasta recibir el diseño son los que pida cada fase de manera expresa.
 - Autenticación: JWT con refresh token y BCrypt. Se conserva.
 - Patrón repositorio y servicios en `backend/`. Se conserva.
@@ -63,11 +63,16 @@ No avances a una etapa posterior sin que se indique expresamente.
 - **El administrador inicial y las contraseñas** vienen de user-secrets (`Seed:AdminEmail`, `Seed:AdminPassword`) o de variables de entorno, y **nunca se imprimen** en consola, logs ni respuestas.
 - **El token de acceso dura 15 minutos** (`JwtSettings:ExpirationMinutes`, configurable).
 - **Regla del último administrador:** no se puede desactivar, eliminar ni cambiar de rol al último administrador activo (lo valida el backend).
+- **BLOQUEANTE del primer despliegue** (no de la Fase 3a): hoy el frontend guarda los tokens en `localStorage`. Antes de desplegar, el refresh token pasa a una cookie `HttpOnly` y el access token vive solo en memoria. Requiere cambios de backend; se hace en la fase que lo indique.
+- **Requisitos del primer despliegue real:** la lista completa (cuenta de administración con contraseña nueva, tokens en cookie, hosting, correo y dominio, revisión legal) está en `docs/requisitos-despliegue.md`. No se despliega con ninguno pendiente.
+- **Cierre por inactividad:** 15 minutos para todos los roles, con aviso a los 14 y opción de "Mantener sesión". En la Fase 3a solo el frontend, con el tiempo fijo; que la administración lo configure y que el servidor también expire la sesión por inactividad va en la fase de Configuración.
 - **La bitácora enmascara las columnas sensibles** (`[DatoSensible]`): se registran como `"[cambió]"`, nunca con su valor. Hoy: `password_hash`, `refresh_token`, `confirmacion_token_hash`, `alergias`, `condiciones_medicas`, `curp` y `direccion`.
 - Legislación mexicana aplicable: protección de datos personales en posesión de particulares y NOM-004-SSA3-2012 (expediente clínico). Se valida con un especialista; no la interpretes por tu cuenta.
 
 ## 6. Convenciones
 
 - Idioma de la interfaz y de los mensajes al usuario: español de México.
+- **Género neutro en todo texto del panel y del sitio** ("la persona", "la cuenta", "Administración"). Lo que el diseño escriba con género se adapta y se reporta al arquitecto.
+- Decisiones de bajo riesgo tomadas durante el trabajo: `docs/decisiones.md`.
 - Nombres de código existentes se respetan; los nuevos siguen la convención ya usada en cada capa.
 - Documentación del proyecto en `docs/` (requisitos en `docs/requirements/`).

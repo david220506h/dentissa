@@ -1,0 +1,15 @@
+/* Contador del menú (Main · Elementos del menú · "Con contador"). 12.5 px como mínimo (decisión 3). */
+.contador {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--alto-contador);
+  height: var(--alto-contador);
+  padding: 0 7px;
+  border-radius: var(--radio-pildora);
+  background: var(--rosa-700);
+  color: var(--superficie);
+  font-size: var(--texto-12-5);
+  font-weight: var(--peso-negrita);
+  line-height: 1;
+}

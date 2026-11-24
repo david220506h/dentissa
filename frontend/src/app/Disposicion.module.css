@@ -1,0 +1,104 @@
+/* Disposición del panel: menú lateral desde 1024 px (Inicio.dc.html); encabezado compacto y menú
+   inferior por debajo (Movil.dc.html; decisión 14.2 para 768–1023 px). */
+.raiz {
+  min-height: 100dvh;
+  display: flex;
+  background: var(--fondo);
+}
+
+.lateral {
+  display: none;
+}
+
+.columna {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.principal {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-14);
+  padding: var(--espacio-12) var(--espacio-16) var(--espacio-16);
+}
+
+/* Encabezado compacto del celular: marca a la izquierda */
+.encabezadoMovil {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-8);
+  min-height: var(--alto-toque);
+  padding: var(--espacio-10) var(--espacio-12) var(--espacio-10) var(--espacio-16);
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-10);
+  font-size: var(--texto-18);
+  font-weight: var(--peso-extranegrita);
+  color: var(--texto);
+}
+
+.marcaIcono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radio-10);
+  background: var(--rosa-700);
+  color: var(--superficie);
+}
+
+.inferior {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+}
+
+/* Salto de contenido para teclado: visible solo con foco */
+.saltar {
+  position: absolute;
+  left: var(--espacio-16);
+  top: -100px;
+  z-index: 2;
+  padding: var(--espacio-10) var(--espacio-14);
+  border-radius: var(--radio-10);
+  background: var(--superficie);
+  color: var(--rosa-800);
+  font-weight: var(--peso-negrita);
+}
+
+.saltar:focus {
+  top: var(--espacio-12);
+}
+
+@media (min-width: 1024px) {
+  .lateral {
+    display: block;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+  }
+
+  .encabezadoMovil,
+  .inferior {
+    display: none;
+  }
+
+  .principal {
+    gap: var(--espacio-24);
+    padding: var(--espacio-28) var(--espacio-32) var(--espacio-40);
+  }
+}

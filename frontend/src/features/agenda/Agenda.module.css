@@ -1,0 +1,458 @@
+/* Agenda. Escritorio: Agenda.dc.html (semana). Celular, tableta y vista Día: Movil.dc.html · Agenda del día. */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-14);
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--texto-22);
+  font-weight: var(--peso-extranegrita);
+  color: var(--texto);
+}
+
+.subtitulo {
+  display: none;
+  margin: var(--espacio-4) 0 0;
+  font-size: var(--texto-15);
+  color: var(--texto-secundario);
+}
+
+.soloEscritorio {
+  display: none;
+}
+
+.soloLector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Tarjetas de Agenda (barra y cuadrícula): 20 px de relleno */
+.barra,
+.tarjeta {
+  min-width: 0;
+  padding: var(--espacio-20);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-14);
+  box-shadow: var(--sombra-tarjeta);
+}
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-12) var(--espacio-20);
+}
+
+.navegacion,
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-8);
+}
+
+.filtros {
+  gap: var(--espacio-16);
+}
+
+.botonIcono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--alto-toque);
+  height: var(--alto-toque);
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-10);
+  background: var(--superficie);
+  color: var(--texto);
+  cursor: pointer;
+}
+
+.rango {
+  margin-left: var(--espacio-8);
+  font-size: var(--texto-18);
+  font-weight: var(--peso-negrita);
+  color: var(--texto);
+}
+
+/* "Dentista" con su lista al lado (Agenda.dc.html) */
+.dentista {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-8);
+  font-size: var(--texto-14);
+  font-weight: var(--peso-negrita);
+  color: var(--texto-secundario);
+}
+
+.dentista select {
+  height: var(--alto-toque);
+  padding: 0 var(--espacio-12);
+  border: 1px solid var(--borde-campo);
+  border-radius: var(--radio-10);
+  background: var(--superficie);
+  font: inherit;
+  font-size: var(--texto-15);
+  font-weight: var(--peso-normal);
+  color: var(--texto);
+}
+
+/* ── Semana ─────────────────────────────────────────────────────────── */
+.tarjeta[aria-label='Semana'] {
+  padding-top: var(--espacio-16);
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-8) var(--espacio-12);
+  margin-bottom: var(--espacio-16);
+  font-size: var(--texto-13);
+  font-weight: var(--peso-negrita);
+  color: var(--texto-secundario);
+}
+
+.leyendaNota {
+  font-weight: var(--peso-seminegrita);
+}
+
+.desplazable {
+  overflow-x: auto;
+}
+
+.cuadricula {
+  display: grid;
+  grid-template-columns: 72px repeat(6, minmax(0, 1fr));
+  min-width: 900px;
+}
+
+.esquina {
+  border-bottom: 1px solid var(--borde);
+}
+
+.cabeceraDia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+  border-left: 1px solid var(--borde);
+}
+
+.diaNombre {
+  font-size: var(--texto-13);
+  font-weight: var(--peso-negrita);
+  color: var(--texto-secundario);
+}
+
+.diaNumero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radio-circulo);
+  font-size: var(--texto-20);
+  font-weight: var(--peso-extranegrita);
+  color: var(--texto);
+}
+
+.cabeceraDia.hoy .diaNumero {
+  background: var(--rosa-700);
+  color: var(--superficie);
+}
+
+.hora {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--espacio-8) var(--espacio-10) 0 0;
+  font-size: var(--texto-13);
+  font-weight: var(--peso-negrita);
+  color: var(--texto-secundario);
+  border-top: 1px solid var(--borde);
+}
+
+.celda {
+  background: var(--superficie);
+  border-top: 1px solid var(--borde);
+  border-left: 1px solid var(--borde);
+}
+
+.hoy {
+  background: var(--rosa-25);
+}
+
+.descanso {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--patron-descanso);
+  border-top: 1px solid var(--borde);
+  border-left: 1px solid var(--borde);
+  font-size: var(--texto-13);
+  font-weight: var(--peso-negrita);
+  color: var(--texto-secundario);
+}
+
+/* Bloque de cita: pareja de color del estado, nombre, servicio y estado en texto */
+.bloque {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 1px;
+  min-width: 0;
+  margin: 5px;
+  padding: var(--espacio-8) var(--espacio-10);
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radio-10);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.bloquePaciente,
+.bloqueServicio {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bloquePaciente {
+  font-size: var(--texto-13-5);
+  font-weight: var(--peso-extranegrita);
+}
+
+.bloqueServicio {
+  font-size: var(--texto-12-5);
+  font-weight: var(--peso-seminegrita);
+}
+
+.bloqueEstado {
+  margin-top: auto;
+  font-size: var(--texto-12-5);
+  font-weight: var(--peso-extranegrita);
+}
+
+.confirmada {
+  background: var(--estado-confirmada-fondo);
+  color: var(--estado-confirmada-texto);
+}
+
+.pendiente {
+  background: var(--estado-pendiente-fondo);
+  color: var(--estado-pendiente-texto);
+}
+
+.completada {
+  background: var(--estado-completada-fondo);
+  color: var(--estado-completada-texto);
+}
+
+.noAsistio {
+  background: var(--estado-no-asistio-fondo);
+  color: var(--estado-no-asistio-texto);
+}
+
+.cancelada {
+  background: var(--estado-cancelada-fondo);
+  color: var(--estado-cancelada-texto);
+}
+
+/* ── Día (Movil · Agenda del día) ──────────────────────────────────── */
+.dia {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-14);
+}
+
+.chips {
+  display: flex;
+  gap: var(--espacio-6);
+}
+
+.chip {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 56px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-12);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  cursor: pointer;
+}
+
+.chip[aria-pressed='true'] {
+  border: 0;
+  background: var(--rosa-700);
+  color: var(--superficie);
+}
+
+.chipDia {
+  font-size: var(--texto-12-5);
+  font-weight: var(--peso-negrita);
+}
+
+.chipNumero {
+  font-size: var(--texto-17);
+  font-weight: var(--peso-extranegrita);
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-14);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.filaDia {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espacio-12);
+}
+
+.horaDia {
+  flex: 0 0 52px;
+  padding-top: var(--espacio-12);
+  font-size: var(--texto-13-5);
+  font-weight: var(--peso-extranegrita);
+  color: var(--texto);
+}
+
+.contenidoDia {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.citaDia {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-8);
+  width: 100%;
+  padding: var(--espacio-10) var(--espacio-12);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-12);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.citaDatos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.citaPaciente {
+  font-size: var(--texto-15);
+  font-weight: var(--peso-negrita);
+  color: var(--texto);
+  overflow-wrap: anywhere;
+}
+
+.citaServicio {
+  font-size: var(--texto-13-5);
+  color: var(--texto-secundario);
+}
+
+.libre {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 var(--espacio-12);
+  border: 1px dashed var(--borde-libre);
+  border-radius: var(--radio-12);
+  font-size: var(--texto-14);
+  font-weight: var(--peso-seminegrita);
+  color: var(--texto-secundario);
+}
+
+.descansoDia {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--espacio-12);
+  border-radius: var(--radio-12);
+  background: var(--patron-descanso);
+  font-size: var(--texto-13-5);
+  font-weight: var(--peso-negrita);
+  color: var(--texto-secundario);
+}
+
+.vacioDia {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-14);
+}
+
+/* Diálogos de la cita */
+.dialogoCuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-14);
+}
+
+.resumen {
+  padding: var(--espacio-12) var(--espacio-14);
+  border-radius: var(--radio-10);
+  background: var(--fondo);
+  font-size: var(--texto-14-5);
+  color: var(--texto);
+}
+
+@media (min-width: 1024px) {
+  .pagina {
+    gap: var(--espacio-24);
+  }
+
+  .titulo {
+    font-size: var(--texto-26);
+    line-height: var(--altura-linea-titulo);
+  }
+
+  .subtitulo {
+    display: block;
+  }
+
+  .soloEscritorio {
+    display: block;
+  }
+
+  .soloCelular {
+    display: none;
+  }
+
+  /* Vista Día en escritorio: la lista del celular dentro de una tarjeta */
+  .dia {
+    padding: var(--espacio-20);
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-14);
+    box-shadow: var(--sombra-tarjeta);
+  }
+}

@@ -1,0 +1,213 @@
+/* Menú lateral (Inicio.dc.html) y menú inferior (Movil.dc.html). Cambiar de sección no se anima. */
+
+/* ── Menú lateral ─────────────────────────────────────────────────── */
+.lateral {
+  flex: 0 0 auto;
+  width: var(--ancho-menu-lateral-max);
+  min-width: var(--ancho-menu-lateral-min);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-28);
+  padding: var(--espacio-24) var(--espacio-16);
+  background: var(--superficie);
+  border-right: 1px solid var(--borde);
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-12);
+  padding: 0 var(--espacio-12);
+}
+
+.marcaIcono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radio-10);
+  background: var(--rosa-700);
+  color: var(--superficie);
+}
+
+.marcaNombre {
+  font-size: var(--texto-20);
+  font-weight: var(--peso-extranegrita);
+  line-height: 1.1;
+  color: var(--texto);
+}
+
+.marcaSubtitulo {
+  font-size: var(--texto-13);
+  font-weight: var(--peso-seminegrita);
+  color: var(--texto-secundario);
+}
+
+.grupos {
+  /* El texto terciario de las etiquetas de grupo solo cumple contraste sobre blanco (Main) */
+  background: var(--superficie);
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-20);
+}
+
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Etiqueta de grupo: 12.5 px como mínimo (el diseño la dibuja en 12 px; decisión 3) */
+.grupoTitulo {
+  padding: 0 var(--espacio-12) var(--espacio-6);
+  font-size: var(--texto-12-5);
+  font-weight: var(--peso-negrita);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--texto-terciario);
+}
+
+.elemento {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-12);
+  min-height: var(--alto-toque);
+  padding: 0 var(--espacio-12);
+  border-radius: var(--radio-10);
+  background: transparent;
+  color: var(--texto);
+  font-size: var(--texto-14-5);
+  font-weight: var(--peso-seminegrita);
+  text-decoration: none;
+}
+
+.elemento[aria-current='page'] {
+  background: var(--rosa-50);
+  color: var(--rosa-800);
+  font-weight: var(--peso-negrita);
+}
+
+.elementoTexto {
+  flex: 1 1 auto;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .elemento:not([aria-current='page']):hover {
+    background: var(--fondo-encabezado-tabla);
+  }
+}
+
+.pie {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-12);
+  padding: var(--espacio-12);
+  border-top: 1px solid var(--borde);
+}
+
+.pieDatos {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pieNombre {
+  font-size: var(--texto-14);
+  font-weight: var(--peso-negrita);
+  color: var(--texto);
+}
+
+.pieRol {
+  font-size: var(--texto-13);
+  font-weight: var(--peso-seminegrita);
+  color: var(--texto-secundario);
+}
+
+.botonIcono {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--alto-toque);
+  height: var(--alto-toque);
+  border: 0;
+  border-radius: var(--radio-10);
+  background: transparent;
+  color: var(--texto-secundario);
+  cursor: pointer;
+}
+
+/* ── Menú inferior (celular y hasta 1023 px) ──────────────────────── */
+.inferior {
+  display: flex;
+  border-top: 1px solid var(--borde);
+  background: var(--superficie);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.inferiorElemento {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--alto-menu-inferior);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--texto-secundario);
+  font-size: var(--texto-12-5);
+  font-weight: var(--peso-seminegrita);
+  text-decoration: none;
+}
+
+.inferiorIcono {
+  display: inline-flex;
+}
+
+/* "Más" es un botón: mismo aspecto que los enlaces */
+button.inferiorElemento {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Activo: la sección actual, o "Más" con la hoja abierta (Movil2) */
+.inferiorElemento[aria-expanded='true'],
+.inferiorElemento[aria-current='page'] {
+  background: var(--rosa-50);
+  color: var(--rosa-800);
+  font-weight: var(--peso-extranegrita);
+}
+
+/* Ícono activo en Rosa 700; los demás en texto secundario (Movil) */
+.inferiorElemento[aria-expanded='true'] .inferiorIcono,
+.inferiorElemento[aria-current='page'] .inferiorIcono {
+  color: var(--rosa-700);
+}
+
+/* Contador sobre el ícono: 12.5 px como mínimo (el diseño lo dibuja en 11 px; decisión 3) */
+.inferiorContador {
+  position: absolute;
+  top: 4px;
+  left: calc(50% + 6px);
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radio-pildora);
+  background: var(--rosa-700);
+  color: var(--superficie);
+  font-size: var(--texto-12-5);
+  font-weight: var(--peso-negrita);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

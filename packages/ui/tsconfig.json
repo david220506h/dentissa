@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "outDir": "../../node_modules/.tsbuild/ui",
+    "types": ["vite/client", "@testing-library/jest-dom/vitest"]
+  },
+  "include": ["src"],
+  "references": [{ "path": "../tokens" }]
+}

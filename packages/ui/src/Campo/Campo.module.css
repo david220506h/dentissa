@@ -1,0 +1,132 @@
+/* Campos de Main.dc.html · Componentes · Campos, y del inicio de sesión (Login). */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-6);
+  min-width: 0;
+}
+
+.etiqueta {
+  font-size: var(--texto-etiqueta);
+  font-weight: var(--peso-negrita);
+  color: var(--texto);
+}
+
+.ayuda {
+  font-size: var(--texto-13);
+  color: var(--texto-secundario);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-6);
+  font-size: var(--texto-13-5);
+  font-weight: var(--peso-negrita);
+  color: var(--estado-cancelada-texto);
+}
+
+.control {
+  width: 100%;
+  height: var(--alto-toque);
+  padding: 0 var(--espacio-14);
+  border: 1px solid var(--borde-campo);
+  border-radius: var(--radio-10);
+  background: var(--superficie);
+  font-family: inherit;
+  font-size: var(--texto-15);
+  color: var(--texto);
+}
+
+.control::placeholder {
+  color: var(--texto-terciario);
+  opacity: 1;
+}
+
+/* Foco del diseño: borde de 2 px Rosa 700 con halo Rosa 100. El padding compensa el grosor
+   para que el texto no salte. Aparece al instante (sin transición). */
+.control:focus,
+.control:focus-visible {
+  outline: none;
+  border: var(--campo-foco-borde);
+  box-shadow: var(--campo-foco-halo);
+  padding-left: calc(var(--espacio-14) - 1px);
+}
+
+.control[aria-invalid='true'] {
+  border: var(--campo-error-borde);
+  padding-left: calc(var(--espacio-14) - 1px);
+}
+
+.control:disabled {
+  background: var(--deshabilitado-fondo);
+  border-color: var(--deshabilitado-borde);
+  color: var(--texto-terciario);
+  cursor: not-allowed;
+}
+
+.grande {
+  height: var(--alto-control-grande);
+  font-size: var(--texto-16);
+}
+
+.areaTexto {
+  height: auto;
+  min-height: 96px;
+  padding-top: var(--espacio-10);
+  padding-bottom: var(--espacio-10);
+  resize: vertical;
+}
+
+.seleccion {
+  padding-right: var(--espacio-12);
+}
+
+/* Contraseña: botón "Mostrar contraseña" de 44 px dentro del campo */
+.conBoton {
+  position: relative;
+}
+
+.conBoton .control {
+  padding-right: 52px;
+}
+
+.botonInterno {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--alto-toque);
+  height: var(--alto-toque);
+  border: 0;
+  border-radius: var(--radio-10);
+  background: transparent;
+  color: var(--texto-secundario);
+  cursor: pointer;
+}
+
+/* Búsqueda con ícono (encabezado; se muestra solo cuando exista su backend) */
+.busqueda {
+  position: relative;
+  min-width: 0;
+}
+
+.busqueda .control {
+  padding-left: 42px;
+}
+
+.busqueda .control:focus,
+.busqueda .control:focus-visible {
+  padding-left: 41px;
+}
+
+.iconoBusqueda {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  color: var(--texto-secundario);
+  pointer-events: none;
+}

@@ -14,7 +14,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     server: {
-      host: true,
+      // Solo localhost. Para abrirlo a la red local (probar en el celular) existe "npm run dev:red".
+      host: 'localhost',
       allowedHosts,
       proxy: {
         '/api': {
@@ -24,6 +25,7 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
+    // catalogo.html no entra a la compilación: solo se usa en desarrollo
     plugins: [
       react({
         babel: {

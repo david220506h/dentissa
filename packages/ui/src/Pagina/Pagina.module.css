@@ -1,0 +1,240 @@
+/* Encabezado de página (Inicio, Agenda): título 26/800, subtítulo 15 y acciones a la derecha. */
+.encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-16) var(--espacio-24);
+}
+
+.titulo {
+  margin: 0;
+  font-size: var(--texto-titulo-pagina);
+  font-weight: var(--peso-extranegrita);
+  line-height: var(--altura-linea-titulo);
+  color: var(--texto);
+}
+
+.subtitulo {
+  margin: var(--espacio-4) 0 0;
+  font-size: var(--texto-15);
+  color: var(--texto-secundario);
+}
+
+.acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-12);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ── Tabla (Pacientes, Solicitudes): dentro de una tarjeta, con desplazamiento horizontal ── */
+.tablaTarjeta {
+  /* Nunca más ancha que su contenedor: la tabla se desplaza dentro de la tarjeta */
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-14);
+  box-shadow: var(--sombra-tarjeta);
+  overflow: hidden;
+}
+
+.tablaDesplazable {
+  /* relative: los textos solo para lector (absolutos) quedan dentro de la región y no ensanchan la página */
+  position: relative;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th {
+  text-align: left;
+  padding: var(--espacio-12) var(--espacio-16);
+  font-size: var(--texto-13);
+  font-weight: var(--peso-negrita);
+  color: var(--texto-secundario);
+  background: var(--fondo-encabezado-tabla);
+  border-bottom: 1px solid var(--borde);
+  white-space: nowrap;
+}
+
+.tabla td {
+  padding: var(--espacio-12) var(--espacio-16);
+  border-bottom: 1px solid var(--borde);
+  font-size: var(--texto-tabla);
+  color: var(--texto);
+  vertical-align: middle;
+}
+
+.tabla tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Paginación ("Mostrando 1 a 8", Anterior / Siguiente) */
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-12);
+  flex-wrap: wrap;
+  padding: var(--espacio-12) var(--espacio-16);
+  font-size: var(--texto-14);
+  font-weight: var(--peso-seminegrita);
+  color: var(--texto-secundario);
+  border-top: 1px solid var(--borde);
+}
+
+.paginacionBotones {
+  display: inline-flex;
+  gap: var(--espacio-8);
+}
+
+/* ── Pestañas (Solicitudes) ── */
+.pestanas {
+  display: flex;
+  gap: var(--espacio-8);
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--borde);
+}
+
+.pestana {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-8);
+  min-height: var(--alto-toque);
+  padding: 0 var(--espacio-14);
+  margin-bottom: -1px;
+  border-bottom: 3px solid transparent;
+  font-size: var(--texto-15);
+  font-weight: var(--peso-seminegrita);
+  color: var(--texto-secundario);
+  cursor: pointer;
+  outline: none;
+}
+
+.pestana[data-selected] {
+  font-weight: var(--peso-extranegrita);
+  color: var(--rosa-800);
+  border-bottom-color: var(--rosa-700);
+}
+
+.pestana[data-focus-visible] {
+  outline: var(--foco-anillo);
+  outline-offset: var(--foco-separacion);
+}
+
+.contadorPestana {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--alto-contador);
+  height: var(--alto-contador);
+  padding: 0 7px;
+  border-radius: var(--radio-pildora);
+  background: var(--estado-no-asistio-fondo);
+  color: var(--estado-no-asistio-texto);
+  font-size: var(--texto-12-5);
+  font-weight: var(--peso-negrita);
+}
+
+.pestana[data-selected] .contadorPestana {
+  background: var(--rosa-700);
+  color: var(--superficie);
+}
+
+/* ── Grupo de vista Día / Semana (Agenda) ── */
+.grupoVista {
+  /* Compacto como en Agenda: no se estira aunque el contenedor sea flex en columna */
+  align-self: flex-start;
+  width: max-content;
+  display: inline-flex;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-10);
+  overflow: hidden;
+}
+
+.opcionVista {
+  height: var(--alto-grupo-vista);
+  padding: 0 var(--espacio-16);
+  border: 0;
+  background: var(--superficie);
+  color: var(--texto);
+  font-family: inherit;
+  font-size: var(--texto-14-5);
+  font-weight: var(--peso-negrita);
+  cursor: pointer;
+}
+
+.opcionVista[aria-pressed='true'] {
+  background: var(--rosa-700);
+  color: var(--superficie);
+}
+
+.opcionVista:focus-visible {
+  outline-offset: -3px;
+}
+
+/* ── Sin conexión con la clínica (Movil) ── */
+.sinConexion {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--espacio-16);
+  padding: var(--espacio-32) var(--espacio-28);
+  text-align: center;
+  background: var(--superficie);
+}
+
+.sinConexionContenido {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espacio-16);
+}
+
+.sinConexionIcono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radio-circulo);
+  background: var(--estado-no-asistio-fondo);
+  color: var(--estado-no-asistio-texto);
+}
+
+.sinConexionTitulo {
+  margin: 0;
+  text-wrap: balance;
+  font-size: var(--texto-22);
+  font-weight: var(--peso-extranegrita);
+  color: var(--texto);
+}
+
+.sinConexionTexto {
+  margin: 0;
+  text-wrap: pretty;
+  font-size: var(--texto-15);
+  color: var(--texto-secundario);
+}
+
+.sinConexionNota {
+  margin: 0;
+  font-size: var(--texto-13-5);
+  color: var(--texto-secundario);
+}
+
+.sinConexionContenido .reintentar {
+  height: var(--alto-boton-destacado);
+}
