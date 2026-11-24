@@ -24,5 +24,11 @@ public class Auditoria
 
     public string? Ip { get; set; }
 
+    // "sistema" en acciones automáticas (sin usuario); nulo cuando actúa la cuenta de la petición o un anónimo
+    public string? Actor { get; set; }
+
+    // jsonb: qué desencadenó una acción del sistema (p. ej., {"citaId": 12, "usuarioId": 3})
+    public string? ProvocadoPor { get; set; }
+
     public virtual Usuario? Usuario { get; set; }
 }

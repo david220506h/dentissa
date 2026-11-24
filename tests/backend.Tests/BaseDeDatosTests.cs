@@ -21,7 +21,8 @@ public class MigracionTests
         await factory.ConDbAsync(async db =>
         {
             Assert.Empty(await db.Database.GetPendingMigrationsAsync());
-            Assert.Single(await db.Database.GetAppliedMigrationsAsync());
+            // Todas las migraciones del proyecto quedan aplicadas, en orden
+            Assert.Equal(db.Database.GetMigrations(), await db.Database.GetAppliedMigrationsAsync());
             Assert.False(db.Database.HasPendingModelChanges());
             Assert.True(await db.ConfiguracionAgenda.AnyAsync());
             return true;
@@ -154,16 +155,20 @@ public class RestriccionesTests : IClassFixture<DentissaFactory>
     {
         var (paciente, dentista, servicio) = await _factory.CrearParticipantesAsync();
 
+        // Semana laborable de dentro de dos a tres semanas: el panel respeta el horizonte de 60 días
+        var hoy = DateOnly.FromDateTime(DateTime.UtcNow);
+        var lunes = hoy.AddDays(14 + ((8 - (int)hoy.DayOfWeek) % 7));
+        var sabado = lunes.AddDays(5);
         var invertida = await GuardarAsync(db => db.Ofertas.Add(new Oferta
         {
-            ServicioId = servicio, Descuento = 10, FechaInicio = new DateOnly(2031, 3, 9), FechaFin = new DateOnly(2031, 3, 3)
+            ServicioId = servicio, Descuento = 10, FechaInicio = lunes.AddDays(6), FechaFin = lunes
         }));
         Assert.Equal("ck_ofertas_vigencia", invertida?.ConstraintName);
 
-        // Lunes 3 a sábado 8 de marzo de 2031 (fechas locales, inclusivas)
+        // Lunes a sábado (fechas locales, inclusivas)
         Assert.Null(await GuardarAsync(db => db.Ofertas.Add(new Oferta
         {
-            ServicioId = servicio, Descuento = 10, FechaInicio = new DateOnly(2031, 3, 3), FechaFin = new DateOnly(2031, 3, 8)
+            ServicioId = servicio, Descuento = 10, FechaInicio = lunes, FechaFin = sabado
         })));
 
         var client = await _factory.ClienteConRolAsync(Roles.Asistente);
@@ -176,9 +181,9 @@ public class RestriccionesTests : IClassFixture<DentissaFactory>
             return decimal.Parse(cita!["descuentoAplicado"].ToString()!, System.Globalization.CultureInfo.InvariantCulture);
         }
 
-        Assert.Equal(10m, await DescuentoAsync("2031-03-03", "08:00:00"));  // primer día, primer horario
-        Assert.Equal(10m, await DescuentoAsync("2031-03-08", "15:00:00"));  // último día, último horario
-        Assert.Equal(0m, await DescuentoAsync("2031-03-10", "08:00:00"));   // lunes siguiente
+        Assert.Equal(10m, await DescuentoAsync(lunes.ToString("yyyy-MM-dd"), "08:00:00"));  // primer día, primer horario
+        Assert.Equal(10m, await DescuentoAsync(sabado.ToString("yyyy-MM-dd"), "15:00:00"));  // último día, último horario
+        Assert.Equal(0m, await DescuentoAsync(lunes.AddDays(7).ToString("yyyy-MM-dd"), "08:00:00"));   // lunes siguiente
     }
 
     [Theory]
@@ -190,7 +195,9 @@ public class RestriccionesTests : IClassFixture<DentissaFactory>
     [InlineData("TRUNCATE cita_historial")]
     [InlineData("DELETE FROM examen_medico")]
     [InlineData("TRUNCATE consulta_fotos")]
-    public async Task BitacoraYExpediente_RechazanModificacionYBorrado(string sql)
+    [InlineData("DELETE FROM citas")]
+    [InlineData("TRUNCATE citas CASCADE")]
+    public async Task BitacoraExpedienteYCitas_RechazanModificacionYBorrado(string sql)
     {
         // Garantiza al menos una fila en la bitácora y en el historial
         await _factory.CrearCitaAsync();
@@ -277,7 +284,7 @@ public class ConcurrenciaTests : IClassFixture<DentissaFactory>
             barrera.SignalAndWait(TimeSpan.FromSeconds(30));
             return await client.PostAsJsonAsync("/api/Citas", new
             {
-                pacienteId, dentistaId = dentista, servicioId = servicio, fecha = "2031-02-04", hora = "12:00:00"
+                pacienteId, dentistaId = dentista, servicioId = servicio, fecha = ConcurrenciaReservasTests.FechaLaborable(), hora = "12:00:00"
             });
         }
 

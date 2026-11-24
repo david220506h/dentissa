@@ -39,6 +39,9 @@ public class Cita : IConMarcasDeTiempo
 
     public decimal CostoTotal { get; set; }
 
+    // Cita creada por recepción con el paciente en la clínica (sin anticipación mínima)
+    public bool PacientePresente { get; set; }
+
     // Solo solicitudes del paciente (web, portal)
     public DateTime? BloqueoExpiraEn { get; set; }
 

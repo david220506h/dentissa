@@ -59,7 +59,7 @@ No avances a una etapa posterior sin que se indique expresamente.
 - Nunca devolver entidades de EF con datos sensibles (hashes, tokens): siempre DTOs.
 - Registro de auditoría para acciones críticas.
 - Los eliminados son lógicos; nada clínico ni financiero se borra físicamente.
-- **No hay borrado físico de datos clínicos ni de citas.** Las citas se cancelan con motivo; los usuarios se desactivan. (En la base, las tablas del expediente, `auditoria` y `cita_historial` ya lo impiden por trigger; el trigger de `citas` es el primer commit de la Fase 2.)
+- **No hay borrado físico de datos clínicos ni de citas.** Las citas se cancelan con motivo; los usuarios se desactivan. (En la base lo impiden triggers en las tablas del expediente, `auditoria`, `cita_historial` y `citas`.)
 - **El administrador inicial y las contraseñas** vienen de user-secrets (`Seed:AdminEmail`, `Seed:AdminPassword`) o de variables de entorno, y **nunca se imprimen** en consola, logs ni respuestas.
 - **El token de acceso dura 15 minutos** (`JwtSettings:ExpirationMinutes`, configurable).
 - **Regla del último administrador:** no se puede desactivar, eliminar ni cambiar de rol al último administrador activo (lo valida el backend).

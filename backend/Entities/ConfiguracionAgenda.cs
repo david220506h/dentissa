@@ -9,11 +9,17 @@ public class ConfiguracionAgenda
 
     public short DuracionSlotMinutos { get; set; }
 
-    public short AnticipacionMinimaHoras { get; set; }
+    // Minutos de atención (diseño de la agenda, 1.6 y sección 2): solo cuenta el tiempo en que la clínica atiende
+    public short AnticipacionEnLineaAtencionMinutos { get; set; }
 
-    public short BloqueoPendienteHoras { get; set; }
+    // Minutos de reloj
+    public short AnticipacionRecepcionMinutos { get; set; }
 
-    public short LiberacionAntesCitaHoras { get; set; }
+    public short VidaMaximaSolicitudAtencionMinutos { get; set; }
+
+    public short HorizonteReservaDias { get; set; }
+
+    public short LiberacionAntesCitaAtencionMinutos { get; set; }
 
     public DateTime ActualizadoEn { get; set; }
 

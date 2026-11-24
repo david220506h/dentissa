@@ -25,5 +25,7 @@ namespace backend.Repositories
         public const string Mensaje = "El dentista ya tiene una cita en ese horario.";
 
         public HorarioOcupadoException(Exception interna) : base(Mensaje, interna) { }
+
+        public HorarioOcupadoException() : base(Mensaje) { }
     }
 }

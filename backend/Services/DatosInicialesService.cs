@@ -50,9 +50,12 @@ namespace backend.Services
             {
                 Id = ConfiguracionAgenda.IdUnico,
                 DuracionSlotMinutos = 60,
-                AnticipacionMinimaHoras = 2,
-                BloqueoPendienteHoras = 24,
-                LiberacionAntesCitaHoras = 2,
+                // Diseño de la agenda, 1.6 (decisiones 1 a 3)
+                AnticipacionEnLineaAtencionMinutos = 180,
+                AnticipacionRecepcionMinutos = 60,
+                LiberacionAntesCitaAtencionMinutos = 120,
+                VidaMaximaSolicitudAtencionMinutos = 720,
+                HorizonteReservaDias = 60,
                 ActualizadoEn = DateTime.UtcNow
             };
             for (short dia = 1; dia <= 7; dia++)

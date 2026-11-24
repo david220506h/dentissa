@@ -19,6 +19,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 // Bitácora: el interceptor es por petición (lleva el actor y la transacción propia)
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IActorActual, ActorActual>();
+builder.Services.AddScoped<ContextoAuditoria>();
 builder.Services.AddScoped<AuditoriaInterceptor>();
 
 // Conexión PostgreSQL; tablas y columnas en snake_case
@@ -41,6 +42,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<ICitasRepository, CitasRepository>();
 builder.Services.AddScoped<IAgendaService, AgendaService>();
+builder.Services.AddScoped<backend.Services.Agenda.ICalendarioAtencion, backend.Services.Agenda.CalendarioAtencion>();
+builder.Services.AddScoped<backend.Services.Agenda.IDisponibilidadService, backend.Services.Agenda.DisponibilidadService>();
+builder.Services.AddScoped<backend.Services.Agenda.IReservasService, backend.Services.Agenda.ReservasService>();
 builder.Services.AddScoped<IPacientesService, PacientesService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IRelojClinica, RelojClinica>();

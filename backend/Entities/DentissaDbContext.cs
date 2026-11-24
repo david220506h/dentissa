@@ -7,9 +7,14 @@ public class DentissaDbContext : DbContext
 {
     public const string FiltroBorradoLogico = "BorradoLogico";
 
-    public DentissaDbContext(DbContextOptions<DentissaDbContext> options)
+    // "Ahora" para creado_en, actualizado_en y eliminado_en (diseño de la agenda, 1.1.3): el mismo reloj que
+    // usan las reglas de la agenda. Sin TimeProvider (fábrica de diseño, plantilla de pruebas), el del sistema.
+    private readonly TimeProvider _tiempo;
+
+    public DentissaDbContext(DbContextOptions<DentissaDbContext> options, TimeProvider? tiempo = null)
         : base(options)
     {
+        _tiempo = tiempo ?? TimeProvider.System;
     }
 
     // Cuentas y personas
@@ -103,7 +108,7 @@ public class DentissaDbContext : DbContext
     // UPDATE … SET eliminado_en = now(): la fila nunca sale de la tabla
     private void ConvertirBorradosEnLogicos()
     {
-        var ahora = DateTime.UtcNow;
+        var ahora = _tiempo.GetUtcNow().UtcDateTime;
         foreach (var entrada in ChangeTracker.Entries<IEliminable>().Where(e => e.State == EntityState.Deleted))
         {
             entrada.State = EntityState.Modified;
@@ -117,7 +122,7 @@ public class DentissaDbContext : DbContext
     // creado_en y actualizado_en los llena el contexto, no cada controlador
     private void AplicarMarcasDeTiempo()
     {
-        var ahora = DateTime.UtcNow;
+        var ahora = _tiempo.GetUtcNow().UtcDateTime;
         foreach (var entrada in ChangeTracker.Entries<IConMarcasDeTiempo>())
         {
             if (entrada.State == EntityState.Added)

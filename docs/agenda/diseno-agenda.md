@@ -81,6 +81,9 @@ Calcular(rango de fechas locales, servicioId, canal, dentistaId?) →
 | En línea (sitio, portal) | `AtencionEntre(ahora, inicio) ≥ anticipacion_en_linea_atencion_minutos` | 180 (3 h) | **Minutos de atención** |
 | Recepción | `inicio − ahora ≥ anticipacion_recepcion_minutos` | 60 | **Minutos de reloj** |
 | Ambos | `inicio > ahora` (nunca en el pasado) | — | — |
+| Recepción con **paciente presente** (indicador `pacientePresente`, solo admin y asistente; decisión del dueño, 2026-11-24) | Sin anticipación mínima. Inicio pasado solo si `AtencionEntre(inicio, ahora) ≤ 15`. Horizonte igual. Sin vencimiento. | 15 (`ReglaBloqueo.ToleranciaPacientePresenteMinutos`) | **Minutos de atención** |
+
+**Paciente presente:** el indicador queda en la cita (`citas.paciente_presente`), en su historial (`datos.pacientePresente`) y en la bitácora (alta). Sin él, todo sigue igual. El público y el paciente no pueden enviarlo: `POST /api/citas` es solo de recepción, y los endpoints públicos y del portal no lo aceptan. El panel lo usará en el bloque (f).
 
 **Con menos anticipación de la permitida en línea:**
 - el sitio no ofrece el horario y muestra que se llame;

@@ -12,5 +12,6 @@ Nada de esto bloquea el desarrollo; **todo bloquea el primer despliegue con dato
 | 6 | **Aviso de privacidad publicado** | Texto aprobado por el especialista, enlazado desde el sitio, el portal y los correos. | Especialista + dueño | Pendiente |
 | 7 | **Servidor por inactividad** | Que el servidor también expire la sesión por inactividad (hoy solo el panel, 15 min). Fase de Configuración. | Desarrollo | Pendiente |
 | 8 | **Dependencias** | `npm audit` y `dotnet list package --vulnerable` sin altas ni críticas; versiones con al menos dos semanas de publicadas. | Desarrollo | Pendiente |
+| 9 | **Correo de vencimiento antes de las solicitudes en línea** | El sitio (y el portal) **no aceptan solicitudes en línea** hasta que exista el aviso por correo al paciente cuando su solicitud vence sin confirmarse (decisión 14 del diseño de la agenda). Hoy la reserva cancela la vencida con historial y bitácora, pero aún no avisa; lo agrega la bandeja de salida (Fase 2, commit 10) en `ReservasService.LiberarVencidasAsync` y en el barrido (commit 15). Comprobarlo con una prueba de punta a punta antes de activar `POST /api/publico/citas`. | Desarrollo | Pendiente |
 
 Relacionado: `CLAUDE.md` (sección 5, seguridad) y `docs/frontend/plan-fase-3a.md` (sección 14.6, tareas con fecha).

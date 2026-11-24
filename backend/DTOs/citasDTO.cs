@@ -14,6 +14,8 @@ namespace backend.DTOs
         [Range(0, 999999)] public decimal? CostoExtra { get; set; }
         [MaxLength(300)] public string? MotivoExtra { get; set; }
         [MaxLength(500)] public string? Motivo      { get; set; }
+        // Solo recepción (admin y asistente): el paciente está en la clínica; sin la anticipación de 60 minutos
+        public bool PacientePresente { get; set; }
     }
 
     public class CitaEditDto
@@ -42,6 +44,7 @@ namespace backend.DTOs
         public DateTime Fin               { get; set; }
         public string   Estado            { get; set; } = string.Empty;
         public string   Origen            { get; set; } = string.Empty;
+        public bool     PacientePresente  { get; set; }
         public string?  Motivo            { get; set; }
         public string?  MotivoCancelacion { get; set; }
         public SolicitudCambioDto? SolicitudCambio { get; set; }

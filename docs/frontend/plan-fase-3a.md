@@ -423,6 +423,8 @@ Respondidas por las decisiones del arquitecto: 1 (`CLAUDE.md`), 2 (landing y reg
 
 ### 14.7 Agenda con la API actual: filtrado en el cliente y propuesta de backend
 
+**Vista Día: cambio aprobado en `GET /api/citas/horarios-disponibles` (Fase 2, commit 5, 2026-11-24).** El endpoint de compatibilidad ahora delega en el motor de disponibilidad con las **reglas de recepción**: sin horas pasadas y con **60 minutos de anticipación** (minutos de reloj, configurable). Efecto en el panel: en el día de hoy, la vista Día ya no muestra como "Libre" los horarios que ya pasaron ni los que empiezan en menos de 60 minutos; los días futuros no cambian. La deducción temporal de descansos no se afecta (consulta desde mañana). Cuando el panel pase a `GET /api/agenda/disponibilidad` (con servicio y dentistas libres), este endpoint se retira con autorización.
+
 **Hoy.** Agenda (bloque d) e Inicio piden `GET /api/citas`, que devuelve **todas** las citas sin paginar, y filtran por fecha y dentista en el navegador. Con el volumen esperado de una sucursal (un dentista, 6 horarios al día: unas 1 800 citas al año) la respuesta tarda poco al inicio, pero **crece sin límite** y además entrega citas pasadas que la pantalla no muestra.
 
 **Cuándo actuar.** Si `GET /api/citas` pasa de ~2 000 citas o tarda más de 1 s en la red de la clínica, o en cuanto se integre la Fase 2 (lo que ocurra primero).

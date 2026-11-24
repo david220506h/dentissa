@@ -97,6 +97,11 @@ namespace backend.Migrations
                         .HasColumnType("character varying(40)")
                         .HasColumnName("accion");
 
+                    b.Property<string>("Actor")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("actor");
+
                     b.Property<string>("Detalle")
                         .HasColumnType("jsonb")
                         .HasColumnName("detalle");
@@ -123,6 +128,10 @@ namespace backend.Migrations
                         .HasColumnName("ocurrido_en")
                         .HasDefaultValueSql("now()");
 
+                    b.Property<string>("ProvocadoPor")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("provocado_por");
+
                     b.Property<string>("UsuarioCorreo")
                         .HasColumnType("citext")
                         .HasColumnName("usuario_correo");
@@ -143,7 +152,10 @@ namespace backend.Migrations
                     b.HasIndex("Entidad", "EntidadId")
                         .HasDatabaseName("ix_auditoria_entidad_entidad_id");
 
-                    b.ToTable("auditoria", (string)null);
+                    b.ToTable("auditoria", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_auditoria_actor", "actor IS NULL OR actor = 'sistema'");
+                        });
                 });
 
             modelBuilder.Entity("backend.Entities.CategoriaServicio", b =>
@@ -318,6 +330,10 @@ namespace backend.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("paciente_id");
 
+                    b.Property<bool>("PacientePresente")
+                        .HasColumnType("boolean")
+                        .HasColumnName("paciente_presente");
+
                     b.Property<int>("ServicioId")
                         .HasColumnType("integer")
                         .HasColumnName("servicio_id");
@@ -371,6 +387,8 @@ namespace backend.Migrations
 
                     b.ToTable("citas", null, t =>
                         {
+                            t.HasCheckConstraint("ck_citas_bloqueo_despues_de_creacion", "bloqueo_expira_en IS NULL OR bloqueo_expira_en > creado_en");
+
                             t.HasCheckConstraint("ck_citas_bloqueo_solo_solicitudes", "origen IN ('web','portal') OR bloqueo_expira_en IS NULL");
 
                             t.HasCheckConstraint("ck_citas_cancelacion_con_motivo", "estado <> 'cancelada' OR motivo_cancelacion IS NOT NULL");
@@ -447,7 +465,7 @@ namespace backend.Migrations
 
                     b.ToTable("cita_historial", null, t =>
                         {
-                            t.HasCheckConstraint("ck_cita_historial_accion", "accion IN ('creacion','modificacion','reagenda','cambio_estado','confirmacion','cancelacion','solicitud_cambio','resolucion_solicitud')");
+                            t.HasCheckConstraint("ck_cita_historial_accion", "accion IN ('creacion','modificacion','reagenda','cambio_estado','confirmacion','cancelacion','solicitud_cambio','resolucion_solicitud','vencimiento')");
                         });
                 });
 
@@ -467,21 +485,39 @@ namespace backend.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("actualizado_por");
 
-                    b.Property<short>("AnticipacionMinimaHoras")
+                    b.Property<short>("AnticipacionEnLineaAtencionMinutos")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasColumnName("anticipacion_minima_horas");
+                        .HasDefaultValue((short)180)
+                        .HasColumnName("anticipacion_en_linea_atencion_minutos");
 
-                    b.Property<short>("BloqueoPendienteHoras")
+                    b.Property<short>("AnticipacionRecepcionMinutos")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasColumnName("bloqueo_pendiente_horas");
+                        .HasDefaultValue((short)60)
+                        .HasColumnName("anticipacion_recepcion_minutos");
 
                     b.Property<short>("DuracionSlotMinutos")
                         .HasColumnType("smallint")
                         .HasColumnName("duracion_slot_minutos");
 
-                    b.Property<short>("LiberacionAntesCitaHoras")
+                    b.Property<short>("HorizonteReservaDias")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("smallint")
-                        .HasColumnName("liberacion_antes_cita_horas");
+                        .HasDefaultValue((short)60)
+                        .HasColumnName("horizonte_reserva_dias");
+
+                    b.Property<short>("LiberacionAntesCitaAtencionMinutos")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasDefaultValue((short)120)
+                        .HasColumnName("liberacion_antes_cita_atencion_minutos");
+
+                    b.Property<short>("VidaMaximaSolicitudAtencionMinutos")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasDefaultValue((short)720)
+                        .HasColumnName("vida_maxima_solicitud_atencion_minutos");
 
                     b.HasKey("Id")
                         .HasName("pk_configuracion_agenda");
@@ -491,9 +527,11 @@ namespace backend.Migrations
 
                     b.ToTable("configuracion_agenda", null, t =>
                         {
+                            t.HasCheckConstraint("ck_configuracion_agenda_anticipacion_mayor_que_liberacion", "anticipacion_en_linea_atencion_minutos > liberacion_antes_cita_atencion_minutos");
+
                             t.HasCheckConstraint("ck_configuracion_agenda_unica", "id = 1");
 
-                            t.HasCheckConstraint("ck_configuracion_agenda_valores", "duracion_slot_minutos > 0 AND anticipacion_minima_horas >= 0 AND bloqueo_pendiente_horas > 0 AND liberacion_antes_cita_horas >= 0");
+                            t.HasCheckConstraint("ck_configuracion_agenda_valores", "duracion_slot_minutos > 0 AND anticipacion_recepcion_minutos >= 0 AND liberacion_antes_cita_atencion_minutos > 0 AND vida_maxima_solicitud_atencion_minutos > 0 AND horizonte_reserva_dias > 0");
                         });
                 });
 
@@ -1113,7 +1151,7 @@ namespace backend.Migrations
 
                             t.HasCheckConstraint("ck_notificaciones_destinatario", "num_nonnulls(usuario_id, paciente_id) = 1");
 
-                            t.HasCheckConstraint("ck_notificaciones_tipo", "tipo IN ('solicitud_nueva','confirmacion','recordatorio','cambio','cancelacion','solicitud_cambio')");
+                            t.HasCheckConstraint("ck_notificaciones_tipo", "tipo IN ('solicitud_nueva','confirmacion','recordatorio','cambio','cancelacion','solicitud_cambio','aviso_configuracion')");
                         });
                 });
 

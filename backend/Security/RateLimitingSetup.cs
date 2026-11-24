@@ -6,6 +6,7 @@ namespace backend.Security
     // Límites de peticiones para login y registro (valores en RateLimiting:* de la configuración).
     //   Login:    por IP + correo y, además, un tope general por IP.
     //   Registro: por IP.
+    //   Público (/api/publico/*): por IP (disponibilidad y, en la Fase 2, solicitudes y enlaces).
     public static class RateLimitingSetup
     {
         private const string LoginPath    = "/api/auth/login";
@@ -20,6 +21,7 @@ namespace backend.Security
             var loginIpCorreo = LeerVentana(config, "RateLimiting:Login:PorIpYCorreo", 5, 60);
             var loginIp       = LeerVentana(config, "RateLimiting:Login:PorIp", 30, 60);
             var registroIp    = LeerVentana(config, "RateLimiting:Registro:PorIp", 3, 600);
+        var publicoIp     = LeerVentana(config, "RateLimiting:Publico:PorIp", 60, 60);
 
             services.AddRateLimiter(options =>
             {
@@ -36,7 +38,8 @@ namespace backend.Security
                 options.GlobalLimiter = PartitionedRateLimiter.CreateChained(
                     Particion(EsLogin,    ctx => $"login-ip:{Ip(ctx)}", loginIp),
                     Particion(EsLogin,    ctx => $"login-ip-correo:{Ip(ctx)}|{Correo(ctx)}", loginIpCorreo),
-                    Particion(EsRegistro, ctx => $"registro-ip:{Ip(ctx)}", registroIp));
+                    Particion(EsRegistro, ctx => $"registro-ip:{Ip(ctx)}", registroIp),
+                    Particion(EsPublico,  ctx => $"publico-ip:{Ip(ctx)}", publicoIp));
             });
 
             return services;
@@ -98,6 +101,8 @@ namespace backend.Security
 
         private static bool EsLogin(HttpContext ctx) => EsPost(ctx, LoginPath);
         private static bool EsRegistro(HttpContext ctx) => EsPost(ctx, RegistroPath);
+        private static bool EsPublico(HttpContext ctx) =>
+            ctx.Request.Path.StartsWithSegments("/api/publico", StringComparison.OrdinalIgnoreCase);
 
         private static bool EsPost(HttpContext ctx, string path) =>
             HttpMethods.IsPost(ctx.Request.Method) &&
