@@ -1,0 +1,87 @@
+# DEMO local de Dentissa con datos ficticios (docs/DEMO.md). No usar en producción ni con datos reales.
+#
+#   Todo con un comando:  pwsh demo/demo.ps1   (Windows)   o   sh demo/demo.sh   (macOS/Linux)
+#   Panel:    http://127.0.0.1:8080
+#   Correos:  http://127.0.0.1:8026 (Mailpit: atrapa todo, nada sale a internet)
+#
+# Los valores vienen de .env.demo (no se versiona; el script lo crea con valores al azar a partir de
+# .env.demo.example). Todo se publica solo en 127.0.0.1.
+name: dentissa-demo
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: dentissa
+      POSTGRES_USER: dentissa
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env.demo}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dentissa -d dentissa"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:v1.33.1
+    ports:
+      - "127.0.0.1:${MAILPIT_PUERTO:-8026}:8025"
+
+  api: &api
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: dentissa-demo-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Development: migraciones al arrancar y sin redirección a HTTPS (todo es local, detrás de nginx)
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=dentissa;Username=dentissa;Password=${POSTGRES_PASSWORD};GSS Encryption Mode=Disable
+      JwtSettings__SecretKey: ${JWT_SECRET:?Define JWT_SECRET en .env.demo}
+      Demo__Habilitada: "true"
+      # Sin cada consulta SQL en la consola (las cuentas sembradas quedan a la vista)
+      Logging__LogLevel__Microsoft.EntityFrameworkCore: Warning
+      Clinica__Nombre: Clínica Dental Demo
+      Clinica__Telefono: 55 5550 0000
+      Clinica__Direccion: Calle Ficticia 123, Ciudad de México
+      Clinica__UrlPublica: http://127.0.0.1:${PANEL_PUERTO:-8080}
+      Correo__Habilitado: "true"
+      Correo__Remitente: citas@clinica-demo.test
+      Correo__NombreRemitente: Clínica Dental Demo
+      Correo__Smtp__Host: mailpit
+      Correo__Smtp__Puerto: "1025"
+      Correo__Smtp__Seguridad: Ninguna
+      Correo__IntervaloSegundos: "10"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+  # Se ejecuta aparte (docker compose run --rm sembrar): siembra la base vacía y muestra las cuentas
+  sembrar:
+    <<: *api
+    command: ["--sembrar-demo"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+    profiles: ["sembrar"]
+
+  panel:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: dentissa-demo-panel
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${PANEL_PUERTO:-8080}:80"
+
+volumes:
+  pgdata:

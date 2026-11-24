@@ -170,18 +170,18 @@ export function Pacientes() {
                   <td>
                     <div className={estilos.persona}>
                       <Avatar nombre={nombreCompleto(p)} tamano={36} />
-                      <span className={estilos.nombre}>{nombreCompleto(p)}</span>
+                      <span className={`${estilos.nombre} ${estilos.sinCorte}`}>{nombreCompleto(p)}</span>
                     </div>
                   </td>
-                  <td>{p.telefono ?? '—'}</td>
+                  <td className={estilos.sinCorte}>{p.telefono ?? '—'}</td>
                   <td>
                     <Cuenta cuenta={p.cuenta} />
                   </td>
                   <td>
                     <Alergias alergias={p.alergias} />
                   </td>
-                  <td>{fechaCita(p.ultimaCita)}</td>
-                  <td>{fechaCita(p.proximaCita)}</td>
+                  <td className={estilos.sinCorte}>{fechaCita(p.ultimaCita)}</td>
+                  <td className={estilos.sinCorte}>{fechaCita(p.proximaCita)}</td>
                   <td className={estilos.accion}>
                     <Link to={`/pacientes/${p.id}`} className={estilos.enlace} aria-label={`Ver ficha de ${nombreCompleto(p)}`}>
                       <Icono nombre="siguiente" tamano={18} />

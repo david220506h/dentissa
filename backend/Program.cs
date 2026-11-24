@@ -37,6 +37,7 @@ builder.Services.AddDbContext<DentissaDbContext>((sp, options) =>
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 builder.Services.AddScoped<ICitaHistorialService, CitaHistorialService>();
 builder.Services.AddScoped<DatosInicialesService>();
+builder.Services.AddScoped<SembradoDemoService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -149,6 +150,32 @@ var app = builder.Build();
 // Migraciones (solo si se pide), configuración de agenda y administrador inicial
 using (var scope = app.Services.CreateScope())
     await scope.ServiceProvider.GetRequiredService<DatosInicialesService>().EjecutarAsync();
+
+// Demo (docs/DEMO.md): "--sembrar-demo" siembra datos ficticios en una base vacía, escribe las cuentas del
+// personal una sola vez en la salida estándar y termina sin levantar la API.
+if (args.Contains("--sembrar-demo"))
+{
+    using var scope = app.Services.CreateScope();
+    IReadOnlyList<SembradoDemoService.Cuenta> cuentas;
+    try
+    {
+        cuentas = await scope.ServiceProvider.GetRequiredService<SembradoDemoService>().EjecutarAsync();
+    }
+    catch (InvalidOperationException e)
+    {
+        // Base con datos o demo no habilitada: no se toca nada
+        Console.Error.WriteLine(e.Message);
+        Environment.ExitCode = 3;
+        return;
+    }
+    Console.WriteLine();
+    Console.WriteLine("==== Dentissa: cuentas de la DEMO (datos ficticios; contraseñas generadas ahora) ====");
+    foreach (var c in cuentas)
+        Console.WriteLine($"  {c.Rol,-10} {c.Nombre,-16} {c.Correo,-36} {c.Password}");
+    Console.WriteLine("Guárdalas ahora: no se vuelven a mostrar ni quedan en el repositorio.");
+    Console.WriteLine();
+    return;
+}
 
 app.UseSecurityHeaders();
 
