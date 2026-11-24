@@ -89,6 +89,32 @@ describe('Sitio público', () => {
     });
   });
 
+  it('preguntas frecuentes: acordeón con aria-expanded', async () => {
+    montar('/');
+    const boton = await screen.findByRole('button', { name: '¿Cómo cambio o cancelo mi cita?' });
+    expect(boton).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(boton);
+    expect(boton).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('region', { name: '¿Cómo cambio o cancelo mi cita?' })).toHaveTextContent('55 5550 0000');
+    expect(screen.getByRole('link', { name: /Llamar/ })).toHaveAttribute('href', 'tel:+525555500000');
+    expect(screen.getAllByText(/datos y precios ficticios/).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('"Solicitar" desde la carta preselecciona el servicio; un id inexistente se ignora', async () => {
+    montar('/');
+    expect(await screen.findByRole('link', { name: 'Solicitar Tratamiento de conductos' })).toHaveAttribute('href', '/solicitar-cita?servicio=6');
+  });
+
+  it('preselección por ?servicio=', async () => {
+    const { unmount } = montar('/solicitar-cita?servicio=6');
+    await screen.findByRole('option', { name: 'Tratamiento de conductos' });
+    expect(screen.getByLabelText('Servicio')).toHaveValue('6');
+    unmount();
+    montar('/solicitar-cita?servicio=999');
+    await screen.findByRole('option', { name: 'Tratamiento de conductos' });
+    expect(screen.getByLabelText('Servicio')).toHaveValue('');
+  });
+
   it('horario ocupado (409): avisa y pide elegir otro', async () => {
     alEnviar = () => respuesta({ mensaje: 'Ese horario se acaba de ocupar. Elige otro, por favor.' }, 409);
     montar('/solicitar-cita');

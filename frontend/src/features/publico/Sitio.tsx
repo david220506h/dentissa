@@ -1,8 +1,8 @@
 import '@dentissa/tokens/sitio.css';
-import { Aviso, Boton, CampoAreaTexto, CampoSeleccion, CampoTexto, Icono } from '@dentissa/ui';
+import { Aviso, Boton, CampoAreaTexto, CampoSeleccion, CampoTexto, Icono, type NombreIcono } from '@dentissa/ui';
 import { QueryClient, QueryClientProvider, useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link, Route, Routes, useLocation } from 'react-router-dom';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { Link, Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import { API_URL } from '../../services/authService';
 import {
   cuerpo,
@@ -23,8 +23,49 @@ const CLINICA = {
   nombre: 'Dentissa',
   direccion: 'Calle Ficticia 123, Col. Centro, Ciudad de México',
   telefono: '55 5550 0000',
+  telefonoEnlace: '+525555500000',
   correo: 'contacto@clinica-demo.test',
 };
+
+const LEYENDA_DEMO = 'Sitio de demostración: datos y precios ficticios.';
+
+// Franja bajo el hero: hechos del servicio, sin cifras ni certificaciones
+const FRANJA: { icono: NombreIcono; titulo: string; texto: string }[] = [
+  { icono: 'agenda', titulo: 'Citas en línea', texto: 'Elige horario sin llamar ni crear cuenta.' },
+  { icono: 'reloj', titulo: 'Horario amplio', texto: 'De lunes a sábado, de 8:00 a 16:00.' },
+  { icono: 'pacientes', titulo: 'Atención personalizada', texto: 'Te explicamos cada paso antes de empezar.' },
+  { icono: 'diente', titulo: 'Materiales de calidad', texto: 'Trabajamos con insumos de uso clínico.' },
+];
+
+// Equipo ficticio de la demostración (mismas personas que el sembrado); sin fotos
+const EQUIPO = [
+  { nombre: 'Mariana Soto', iniciales: 'MS', especialidad: 'Odontología general' },
+  { nombre: 'Andrés Lara', iniciales: 'AL', especialidad: 'Endodoncia' },
+  { nombre: 'Elena Ríos', iniciales: 'ER', especialidad: 'Ortodoncia' },
+];
+
+const PREGUNTAS = [
+  {
+    p: '¿Necesito crear una cuenta para pedir cita?',
+    r: 'No. Solo eliges servicio, fecha y horario, y dejas tu nombre, teléfono y correo para que la clínica te contacte.',
+  },
+  {
+    p: '¿Mi cita queda confirmada al enviar la solicitud?',
+    r: 'Todavía no. Apartamos ese horario mientras recepción revisa tu solicitud y te llama o escribe para confirmarla.',
+  },
+  {
+    p: '¿Puedo elegir con quién me atiendo?',
+    r: 'La clínica asigna a la persona especialista según el tratamiento y la agenda. Si tienes una preferencia, coméntala al confirmar.',
+  },
+  {
+    p: '¿Cómo cambio o cancelo mi cita?',
+    r: `Llámanos al ${CLINICA.telefono} y recepción te ofrece otro horario o la cancela.`,
+  },
+  {
+    p: '¿Por qué no veo horarios para hoy?',
+    r: 'Las solicitudes en línea se piden con al menos 3 horas de anticipación y para los próximos 14 días. Para algo urgente, llámanos.',
+  },
+];
 
 // Horario de la clínica (el mismo que la agenda configurada en la demo)
 const HORARIO = [
@@ -213,7 +254,7 @@ function Marco({ children }: { children: ReactNode }) {
             <a href="/panel">Acceso del personal</a>
           </div>
         </div>
-        <p className={estilos.pieNota}>Demostración con datos de ejemplo: la clínica, sus datos y el aviso de privacidad no son reales.</p>
+        <p className={estilos.pieNota}>{LEYENDA_DEMO} La clínica, sus datos y el aviso de privacidad no son reales.</p>
       </footer>
     </div>
   );
@@ -263,6 +304,39 @@ function TarjetaHero() {
   );
 }
 
+/** Preguntas frecuentes: botones con aria-expanded que muestran u ocultan su respuesta. */
+function Acordeon() {
+  const base = useId();
+  const [abierta, setAbierta] = useState<number | null>(0);
+  return (
+    <div className={estilos.acordeon} data-revelar="">
+      {PREGUNTAS.map((q, i) => {
+        const id = `${base}-${i}`;
+        const abiertaEsta = abierta === i;
+        return (
+          <div key={q.p} className={estilos.pregunta} data-abierta={abiertaEsta || undefined}>
+            <h3>
+              <button
+                type="button"
+                aria-expanded={abiertaEsta}
+                aria-controls={id}
+                id={`${id}-boton`}
+                onClick={() => setAbierta(abiertaEsta ? null : i)}
+              >
+                <span>{q.p}</span>
+                <Icono nombre="agregar" tamano={20} trazo={2.2} />
+              </button>
+            </h3>
+            <div id={id} role="region" aria-labelledby={`${id}-boton`} hidden={!abiertaEsta} className={estilos.respuesta}>
+              <p>{q.r}</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function Eyebrow({ children }: { children: ReactNode }) {
   return <p className={estilos.eyebrow}>{children}</p>;
 }
@@ -283,8 +357,9 @@ function Inicio() {
             </p>
             <div className={estilos.heroAcciones}>
               <BotonSolicitar />
-              <a href="#servicios" className={`${estilos.pildora} ${estilos.secundario}`}>
-                Ver servicios
+              <a href={`tel:${CLINICA.telefonoEnlace}`} className={`${estilos.pildora} ${estilos.secundario}`}>
+                <Icono nombre="telefono" tamano={20} />
+                Llamar
               </a>
             </div>
             <ul className={estilos.confianza}>
@@ -300,6 +375,22 @@ function Inicio() {
           </div>
           <TarjetaHero />
         </div>
+      </section>
+
+      <section className={estilos.franja} aria-label="Por qué elegirnos">
+        <ul className={`${estilos.contenedor} ${estilos.franjaLista}`}>
+          {FRANJA.map((d) => (
+            <li key={d.titulo}>
+              <span className={estilos.franjaIcono}>
+                <Icono nombre={d.icono} tamano={22} />
+              </span>
+              <span>
+                <strong>{d.titulo}</strong>
+                {d.texto}
+              </span>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section id="servicios" className={estilos.seccion} aria-labelledby="t-servicios">
@@ -322,13 +413,20 @@ function Inicio() {
                     <h3>{s.nombre}</h3>
                     <p>{s.duracionSlots > 1 ? `Unas ${s.duracionSlots} horas · puede requerir varias sesiones` : 'Alrededor de 1 hora'}</p>
                   </div>
-                  <p className={estilos.precio}>
-                    <span>desde</span> {precio(s.precio)}
-                  </p>
+                  <div className={estilos.cartaDerecha}>
+                    <p className={estilos.precio}>
+                      <span>desde</span> {precio(s.precio)}
+                    </p>
+                    <Link to={`/solicitar-cita?servicio=${s.id}`} className={estilos.solicitarServicio} aria-label={`Solicitar ${s.nombre}`}>
+                      Solicitar
+                      <Icono nombre="siguiente" tamano={16} trazo={2.2} />
+                    </Link>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
+          <p className={estilos.leyenda}>{LEYENDA_DEMO}</p>
         </div>
       </section>
 
@@ -355,6 +453,28 @@ function Inicio() {
               <p>La clínica te llama o te escribe para confirmar. Si algo cambia, te ofrecemos otro horario.</p>
             </li>
           </ol>
+        </div>
+      </section>
+
+      <section id="equipo" className={estilos.seccion} aria-labelledby="t-equipo">
+        <div className={estilos.contenedor}>
+          <div className={estilos.cabezaSeccion} data-revelar="">
+            <Eyebrow>Equipo</Eyebrow>
+            <h2 id="t-equipo">Quienes te atienden</h2>
+            <p className={estilos.lead}>Tres especialistas que se reparten la agenda según el tratamiento que necesitas.</p>
+          </div>
+          <ul className={estilos.equipo} data-revelar="">
+            {EQUIPO.map((p) => (
+              <li key={p.nombre}>
+                <span className={estilos.iniciales} aria-hidden="true">
+                  {p.iniciales}
+                </span>
+                <h3>{p.nombre}</h3>
+                <p>{p.especialidad}</p>
+              </li>
+            ))}
+          </ul>
+          <p className={estilos.leyenda}>Personas ficticias de la demostración.</p>
         </div>
       </section>
 
@@ -397,6 +517,17 @@ function Inicio() {
         </div>
       </section>
 
+      <section id="preguntas" className={`${estilos.seccion} ${estilos.seccionTinte}`} aria-labelledby="t-preguntas">
+        <div className={`${estilos.contenedor} ${estilos.preguntasRejilla}`}>
+          <div className={estilos.cabezaSeccion} data-revelar="">
+            <Eyebrow>Preguntas frecuentes</Eyebrow>
+            <h2 id="t-preguntas">Antes de tu cita</h2>
+            <p className={estilos.lead}>¿Tienes otra duda? Llámanos al {CLINICA.telefono}.</p>
+          </div>
+          <Acordeon />
+        </div>
+      </section>
+
       <section className={estilos.cierre} aria-labelledby="t-cierre">
         <div className={`${estilos.contenedor} ${estilos.cierreInterior}`} data-revelar="">
           <h2 id="t-cierre">Agenda tu visita: elige el horario que te acomode</h2>
@@ -410,7 +541,12 @@ function Inicio() {
 
 function SolicitarCita() {
   const hoy = hoyEnClinica();
-  const [f, setF] = useState<FormularioSolicitud>(FORMULARIO_VACIO);
+  // ?servicio=ID (desde la carta de precios) preselecciona el servicio; un ID que no existe se ignora
+  const [parametros] = useSearchParams();
+  const [f, setF] = useState<FormularioSolicitud>(() => ({
+    ...FORMULARIO_VACIO,
+    servicioId: /^[1-9][0-9]{0,8}$/.test(parametros.get('servicio') ?? '') ? parametros.get('servicio')! : '',
+  }));
   const [err, setErr] = useState<ReturnType<typeof errores>>({});
   const servicios = useQuery({ queryKey: ['publico', 'servicios'], queryFn: () => pedir<ServicioPublico[]>('/publico/servicios') });
   const disponibilidad = useQuery({
@@ -419,6 +555,9 @@ function SolicitarCita() {
     enabled: !!f.servicioId && !!f.fecha,
   });
   const horas = disponibilidad.data?.[0]?.horas ?? [];
+  const preseleccionInvalida = !!servicios.data && !!f.servicioId && !servicios.data.some((s) => String(s.id) === f.servicioId);
+  // Ajuste durante el render (sin efecto): se ejecuta una vez y el siguiente render ya no cumple la condición
+  if (preseleccionInvalida) setF((x) => ({ ...x, servicioId: '', hora: '' }));
   const enviar = useMutation({
     mutationFn: () => pedir<{ mensaje: string }>('/publico/solicitudes', { method: 'POST', body: JSON.stringify(cuerpo(f)) }),
     onError: (e) => {
