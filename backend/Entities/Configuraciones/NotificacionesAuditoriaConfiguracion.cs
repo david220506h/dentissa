@@ -11,8 +11,11 @@ public class NotificacionConfiguracion : IEntityTypeConfiguration<Notificacion>
         {
             t.HasCheckConstraint("ck_notificaciones_destinatario", "num_nonnulls(usuario_id, paciente_id) = 1");
             t.HasCheckConstraint("ck_notificaciones_canal", "canal IN ('interna','correo')");
-            t.HasCheckConstraint("ck_notificaciones_tipo",
-                "tipo IN ('solicitud_nueva','confirmacion','recordatorio','cambio','cancelacion','solicitud_cambio','aviso_configuracion')");
+            t.HasCheckConstraint("ck_notificaciones_tipo", $"tipo IN ({string.Join(",", TiposNotificacion.Todos.Select(x => $"'{x}'"))})");
+            t.HasCheckConstraint("ck_notificaciones_estado", $"estado IS NULL OR estado IN ({string.Join(",", EstadosNotificacion.Todos.Select(x => $"'{x}'"))})");
+            t.HasCheckConstraint("ck_notificaciones_plantilla", $"plantilla IS NULL OR plantilla IN ({string.Join(",", PlantillasCorreo.Todas.Select(x => $"'{x}'"))})");
+            // La bandeja de salida es solo para correo: estado y plantilla existen si y solo si el canal es correo
+            t.HasCheckConstraint("ck_notificaciones_bandeja", "(canal = 'correo') = (estado IS NOT NULL AND plantilla IS NOT NULL)");
         });
 
         e.Property(n => n.Tipo).HasMaxLength(30);
@@ -20,6 +23,11 @@ public class NotificacionConfiguracion : IEntityTypeConfiguration<Notificacion>
         e.Property(n => n.Asunto).HasMaxLength(200);
         e.Property(n => n.Mensaje).HasMaxLength(2000);
         e.Property(n => n.ErrorEnvio).HasMaxLength(500);
+        e.Property(n => n.Estado).HasMaxLength(20);
+        e.Property(n => n.Plantilla).HasMaxLength(40);
+        e.Property(n => n.Intentos).HasDefaultValue(0);
+        // Lo que el trabajador busca: pendientes por fecha del próximo intento
+        e.HasIndex(n => n.ProximoIntentoEn).HasFilter("estado = 'pendiente'").HasDatabaseName("ix_notificaciones_bandeja_pendientes");
         e.Property(n => n.Leida).HasDefaultValue(false);
         e.Property(n => n.Enviada).HasDefaultValue(false);
         e.Property(n => n.CreadoEn).HasDefaultValueSql("now()");

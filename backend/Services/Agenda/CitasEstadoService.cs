@@ -1,5 +1,6 @@
 using backend.Entities;
 using backend.Repositories;
+using backend.Services.Correo;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services.Agenda;
@@ -46,9 +47,11 @@ public class CitasEstadoService : ICitasEstadoService
     private readonly IActorActual _actor;
     private readonly IReservasService _reservas;
     private readonly TimeProvider _tiempo;
+    private readonly AvisoBandeja _aviso;
 
-    public CitasEstadoService(DentissaDbContext db, ICitaHistorialService historial, IActorActual actor, IReservasService reservas, TimeProvider tiempo)
+    public CitasEstadoService(DentissaDbContext db, ICitaHistorialService historial, IActorActual actor, IReservasService reservas, TimeProvider tiempo, AvisoBandeja aviso)
     {
+        _aviso = aviso;
         _db = db;
         _historial = historial;
         _actor = actor;
@@ -80,6 +83,7 @@ public class CitasEstadoService : ICitasEstadoService
         try
         {
             await _db.SaveChangesAsync(ct);
+            _aviso.Avisar();
             return cita;
         }
         catch (DbUpdateConcurrencyException ex)
@@ -156,6 +160,7 @@ public class CitasEstadoService : ICitasEstadoService
         cita.BloqueoExpiraEn   = null;
         _historial.Registrar(cita, AccionesCitaHistorial.Confirmacion,
             canal == CanalesCitaHistorial.Llamada ? "Confirmada por recepción (llamada)" : "Confirmada por recepción", canal: canal);
+        BandejaCorreo.Encolar(_db, cita, PlantillasCorreo.Confirmacion, TiposNotificacion.Confirmacion, Ahora);
         return await GuardarAsync(cita, ct);
     }
 
@@ -170,6 +175,8 @@ public class CitasEstadoService : ICitasEstadoService
         cita.MotivoCancelacion = motivo;
         cita.CanceladaEn       = Ahora;
         _historial.Registrar(cita, AccionesCitaHistorial.Cancelacion, "Cancelada por recepción", canal: canal);
+        // Sin el motivo (7.2)
+        BandejaCorreo.Encolar(_db, cita, PlantillasCorreo.Cancelacion, TiposNotificacion.Cancelacion, Ahora);
         return await GuardarAsync(cita, ct);
     }
 
@@ -272,6 +279,8 @@ public class CitasEstadoService : ICitasEstadoService
             cita.Estado = s.EstadoResultante;
             historial.Registrar(cita, AccionesCitaHistorial.Reagenda, "Reagendada por recepción",
                 new { antes, despues = new { cita.Inicio, cita.DentistaId, cita.Estado } });
+            if (antes.Inicio != cita.Inicio)
+                BandejaCorreo.Encolar(db, cita, PlantillasCorreo.Cambio, TiposNotificacion.Cambio, ahora, new ReferenciasCorreo(antes.Inicio));
             try
             {
                 await db.SaveChangesAsync(token);

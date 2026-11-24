@@ -154,7 +154,7 @@ public class DisponibilidadService : IDisponibilidadService
             {
                 UsuarioId = admin,
                 Tipo = TipoAvisoConfiguracion,
-                Canal = "interna",
+                Canal = CanalesNotificacion.Interna,
                 Asunto = asunto,
                 CreadoEn = ahora,
                 Mensaje = $"\"{servicio.Nombre}\" no tiene dentistas asignados: lo puede atender cualquier dentista activo. Asigna dentistas en Servicios.",

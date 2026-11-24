@@ -1174,6 +1174,17 @@ namespace backend.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("error_envio");
 
+                    b.Property<string>("Estado")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("estado");
+
+                    b.Property<int>("Intentos")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("intentos");
+
                     b.Property<bool>("Leida")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -1194,6 +1205,19 @@ namespace backend.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("paciente_id");
 
+                    b.Property<string>("Plantilla")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("plantilla");
+
+                    b.Property<DateTime?>("ProcesandoDesde")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("procesando_desde");
+
+                    b.Property<DateTime?>("ProximoIntentoEn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("proximo_intento_en");
+
                     b.Property<string>("Tipo")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -1213,16 +1237,26 @@ namespace backend.Migrations
                     b.HasIndex("PacienteId")
                         .HasDatabaseName("ix_notificaciones_paciente_id");
 
+                    b.HasIndex("ProximoIntentoEn")
+                        .HasDatabaseName("ix_notificaciones_bandeja_pendientes")
+                        .HasFilter("estado = 'pendiente'");
+
                     b.HasIndex("UsuarioId")
                         .HasDatabaseName("ix_notificaciones_usuario_id");
 
                     b.ToTable("notificaciones", null, t =>
                         {
+                            t.HasCheckConstraint("ck_notificaciones_bandeja", "(canal = 'correo') = (estado IS NOT NULL AND plantilla IS NOT NULL)");
+
                             t.HasCheckConstraint("ck_notificaciones_canal", "canal IN ('interna','correo')");
 
                             t.HasCheckConstraint("ck_notificaciones_destinatario", "num_nonnulls(usuario_id, paciente_id) = 1");
 
-                            t.HasCheckConstraint("ck_notificaciones_tipo", "tipo IN ('solicitud_nueva','confirmacion','recordatorio','cambio','cancelacion','solicitud_cambio','aviso_configuracion')");
+                            t.HasCheckConstraint("ck_notificaciones_estado", "estado IS NULL OR estado IN ('pendiente','procesando','enviada','fallida','descartada')");
+
+                            t.HasCheckConstraint("ck_notificaciones_plantilla", "plantilla IS NULL OR plantilla IN ('solicitud_recibida','confirmacion','recordatorio','cambio','cancelacion','solicitud_cambio_recibida','vencimiento','tope_pendientes','intento_registro')");
+
+                            t.HasCheckConstraint("ck_notificaciones_tipo", "tipo IN ('solicitud_nueva','confirmacion','recordatorio','cambio','cancelacion','solicitud_cambio','aviso_configuracion','vencimiento','reasignacion','envio_fallido','tope_pendientes','intento_registro','configuracion')");
                         });
                 });
 

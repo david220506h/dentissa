@@ -4,6 +4,7 @@ using System.Text;
 using backend.Entities;
 using backend.Entities.Configuraciones;
 using backend.Repositories;
+using backend.Services.Correo;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -67,12 +68,14 @@ public class ReservasService : IReservasService
     private readonly IServiceScopeFactory _scopes;
     private readonly TimeProvider _tiempo;
     private readonly ILogger<ReservasService> _log;
+    private readonly AvisoBandeja _aviso;
 
-    public ReservasService(IServiceScopeFactory scopes, TimeProvider tiempo, ILogger<ReservasService> log)
+    public ReservasService(IServiceScopeFactory scopes, TimeProvider tiempo, ILogger<ReservasService> log, AvisoBandeja aviso)
     {
         _scopes = scopes;
         _tiempo = tiempo;
         _log = log;
+        _aviso = aviso;
     }
 
     /// <summary>
@@ -102,6 +105,8 @@ public class ReservasService : IReservasService
                 await using var transaccion = await db.Database.BeginTransactionAsync(ct);
                 var resultado = await operacion(scope.ServiceProvider, db, ct);
                 await transaccion.CommitAsync(ct);
+                // Si la operación encoló correos, el trabajador los toma sin esperar al siguiente ciclo
+                _aviso.Avisar();
                 return resultado;
             }
             catch (Exception ex) when (EsReintentable(ex))
@@ -214,7 +219,12 @@ public class ReservasService : IReservasService
             historial.Registrar(cita, AccionesCitaHistorial.Creacion, s.DetalleHistorial,
                 cita.PacientePresente || s.ConfirmarAlCrear ? new { pacientePresente = cita.PacientePresente, estado = cita.Estado } : null);
             if (s.ConfirmarAlCrear)
+            {
                 historial.Registrar(cita, AccionesCitaHistorial.Confirmacion, "Confirmada al crearla en recepción");
+                BandejaCorreo.Encolar(db, cita, PlantillasCorreo.Confirmacion, TiposNotificacion.Confirmacion, ahora);
+            }
+            else if (s.Canal == CanalReserva.EnLinea)
+                BandejaCorreo.Encolar(db, cita, PlantillasCorreo.SolicitudRecibida, TiposNotificacion.SolicitudNueva, ahora);
             await db.SaveChangesAsync(token);
             return cita;
         }, ct);
@@ -264,7 +274,7 @@ public class ReservasService : IReservasService
     /// <summary>
     /// Cancela las pendientes con bloqueo vencido que se traslapan con [inicio, fin) para los dentistas dados
     /// (diseño, 6.1). Historial "vencimiento" con canal "sistema"; bitácora con actor "sistema", sin usuario, y
-    /// <paramref name="provocadoPor"/> (cita y cuenta que la desencadenaron). El aviso al paciente llega con el commit 10.
+    /// <paramref name="provocadoPor"/> (cita y cuenta que la desencadenaron). Encola el correo de vencimiento al paciente.
     /// </summary>
     public static async Task<int> LiberarVencidasAsync(
         DentissaDbContext db, ICitaHistorialService historial, ContextoAuditoria auditoria, IReadOnlyCollection<int> dentistas,
@@ -277,6 +287,8 @@ public class ReservasService : IReservasService
             cita.MotivoCancelacion = MotivoVencimiento;
             cita.CanceladaEn = ahora;
             historial.Registrar(cita, AccionesCitaHistorial.Vencimiento, MotivoVencimiento, canal: CitaHistorialService.CanalSistema);
+            // Aviso al paciente (decisión 14); requisito antes de aceptar solicitudes en línea
+            BandejaCorreo.Encolar(db, cita, PlantillasCorreo.Vencimiento, TiposNotificacion.Vencimiento, ahora);
         }
         if (vencidas.Count > 0)
             using (auditoria.ComoSistema(provocadoPor))

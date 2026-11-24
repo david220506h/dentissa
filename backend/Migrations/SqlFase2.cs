@@ -111,6 +111,21 @@ internal static class SqlFase2
         DROP FUNCTION IF EXISTS impedir_borrado_cita_tokens();
         """;
 
+    // Commit 10 (7.3): las filas de correo anteriores a la bandeja de salida reciben estado y plantilla. Las no
+    // enviadas quedan "descartada": la bandeja nueva no debe mandar correos viejos.
+    public const string BandejaCorreoDatos = """
+        UPDATE notificaciones SET
+          estado = CASE WHEN enviada THEN 'enviada' ELSE 'descartada' END,
+          plantilla = CASE tipo
+            WHEN 'solicitud_nueva' THEN 'solicitud_recibida'
+            WHEN 'solicitud_cambio' THEN 'solicitud_cambio_recibida'
+            WHEN 'recordatorio' THEN 'recordatorio'
+            WHEN 'cambio' THEN 'cambio'
+            WHEN 'cancelacion' THEN 'cancelacion'
+            ELSE 'confirmacion' END
+        WHERE canal = 'correo';
+        """;
+
     // Reversa del commit 2: minutos → horas, redondeando hacia arriba
     public const string ConvertirConfiguracionAHoras = """
         UPDATE configuracion_agenda SET
