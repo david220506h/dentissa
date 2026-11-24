@@ -4,7 +4,8 @@ import estilos from './Avatar.module.css';
 export interface AvatarProps {
   /** Nombre completo; se muestran las iniciales del primer nombre y el primer apellido. */
   nombre: string;
-  tamano?: 40 | 44;
+  /** 36 px en tablas (Equipo), 40 px en menús y tarjetas, 44 px en detalles. */
+  tamano?: 36 | 40 | 44;
   className?: string;
 }
 
@@ -19,7 +20,7 @@ export function iniciales(nombre: string): string {
 /** Decorativo: el nombre siempre aparece junto al avatar, así que se oculta a los lectores de pantalla. */
 export function Avatar({ nombre, tamano = 40, className }: AvatarProps) {
   return (
-    <span className={clases(estilos.avatar, tamano === 44 ? estilos.t44 : estilos.t40, className)} aria-hidden="true">
+    <span className={clases(estilos.avatar, estilos[`t${tamano}`], className)} aria-hidden="true">
       {iniciales(nombre)}
     </span>
   );

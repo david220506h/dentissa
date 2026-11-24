@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { IniciarSesion } from '../features/auth/IniciarSesion';
 import { NoEncontrado, Proximamente } from '../features/estados/Estados';
 import { Agenda } from '../features/agenda/Agenda';
+import { Equipo } from '../features/equipo/Equipo';
 import { Inicio } from '../features/inicio/Inicio';
 import { Disposicion } from './Disposicion';
 import { SECCIONES } from './permisos';
@@ -27,7 +28,7 @@ export function Rutas() {
             path={s.ruta}
             element={
               <RutaProtegida seccion={s.id}>
-                {s.id === 'inicio' ? <Inicio /> : s.id === 'agenda' ? <Agenda /> : <Proximamente titulo={s.etiqueta} icono={s.icono} />}
+                {s.id === 'inicio' ? <Inicio /> : s.id === 'agenda' ? <Agenda /> : s.id === 'equipo' ? <Equipo /> : <Proximamente titulo={s.etiqueta} icono={s.icono} />}
               </RutaProtegida>
             }
           />

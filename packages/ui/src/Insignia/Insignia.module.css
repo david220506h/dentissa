@@ -49,3 +49,9 @@
   background: var(--estado-no-asistio-fondo);
   color: var(--estado-no-asistio-texto);
 }
+
+/* Rol de administración (Equipo.dc.html) */
+.rosa {
+  background: var(--rosa-50);
+  color: var(--rosa-800);
+}

@@ -4,7 +4,7 @@ import { clases } from '../utilidades/clases';
 import estilos from './Insignia.module.css';
 
 /** Parejas de color del diseño (las mismas de los estados de la cita). */
-export type TonoInsignia = 'verde' | 'amarillo' | 'azul' | 'rojo' | 'gris';
+export type TonoInsignia = 'verde' | 'amarillo' | 'azul' | 'rojo' | 'gris' | 'rosa';
 
 export interface InsigniaProps extends HTMLAttributes<HTMLSpanElement> {
   tono: TonoInsignia;

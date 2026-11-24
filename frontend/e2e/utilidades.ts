@@ -62,7 +62,8 @@ export const USUARIO_DE_EJEMPLO = { id: 1, nombre: 'Ana', apellido: 'Ejemplo', e
 /**
  * Sesión de ejemplo solo en el navegador de prueba: usuario, un token falso que no caduca y la API
  * simulada. Nada sale a un backend real: /api/citas responde con `citas`, /api/citas/dentistas con
- * `dentistas`, los horarios libres con `libres(fecha)` y cerrar sesión con 204.
+ * `dentistas`, los horarios libres con `libres(fecha)`, /api/usuarios con `usuarios`, los PATCH con 200
+ * y cerrar sesión con 204.
  */
 export async function sesionDeEjemplo(
   page: Page,
@@ -71,7 +72,8 @@ export async function sesionDeEjemplo(
     citas = [] as unknown[],
     dentistas = [] as unknown[],
     libres = () => [] as string[],
-  }: { rol?: string; citas?: unknown[]; dentistas?: unknown[]; libres?: (fecha: string) => string[] } = {},
+    usuarios = [] as unknown[],
+  }: { rol?: string; citas?: unknown[]; dentistas?: unknown[]; libres?: (fecha: string) => string[]; usuarios?: unknown[] } = {},
 ): Promise<void> {
   await page.addInitScript((u) => {
     localStorage.setItem('usuario', JSON.stringify(u));
@@ -80,6 +82,8 @@ export async function sesionDeEjemplo(
   }, { ...USUARIO_DE_EJEMPLO, rol });
   await page.route('**/api/**', (ruta) => {
     const url = new URL(ruta.request().url());
+    if (ruta.request().method() === 'PATCH') return ruta.fulfill({ status: 200, json: { mensaje: 'ok' } });
+    if (url.pathname === '/api/usuarios') return ruta.fulfill({ status: 200, json: usuarios });
     if (url.pathname === '/api/citas/dentistas') return ruta.fulfill({ status: 200, json: dentistas });
     if (url.pathname === '/api/citas/horarios-disponibles') return ruta.fulfill({ status: 200, json: libres(url.searchParams.get('fecha') ?? '') });
     if (url.pathname.startsWith('/api/citas')) return ruta.fulfill({ status: 200, json: citas });
