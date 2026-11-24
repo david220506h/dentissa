@@ -42,6 +42,7 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<ICitasRepository, CitasRepository>();
 builder.Services.AddScoped<IAgendaService, AgendaService>();
 builder.Services.AddScoped<backend.Services.Agenda.ICalendarioAtencion, backend.Services.Agenda.CalendarioAtencion>();
+builder.Services.AddScoped<backend.Services.Agenda.IDisponibilidadService, backend.Services.Agenda.DisponibilidadService>();
 builder.Services.AddScoped<IPacientesService, PacientesService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IRelojClinica, RelojClinica>();

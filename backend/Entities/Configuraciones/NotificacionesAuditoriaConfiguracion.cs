@@ -12,7 +12,7 @@ public class NotificacionConfiguracion : IEntityTypeConfiguration<Notificacion>
             t.HasCheckConstraint("ck_notificaciones_destinatario", "num_nonnulls(usuario_id, paciente_id) = 1");
             t.HasCheckConstraint("ck_notificaciones_canal", "canal IN ('interna','correo')");
             t.HasCheckConstraint("ck_notificaciones_tipo",
-                "tipo IN ('solicitud_nueva','confirmacion','recordatorio','cambio','cancelacion','solicitud_cambio')");
+                "tipo IN ('solicitud_nueva','confirmacion','recordatorio','cambio','cancelacion','solicitud_cambio','aviso_configuracion')");
         });
 
         e.Property(n => n.Tipo).HasMaxLength(30);

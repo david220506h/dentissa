@@ -1135,7 +1135,7 @@ namespace backend.Migrations
 
                             t.HasCheckConstraint("ck_notificaciones_destinatario", "num_nonnulls(usuario_id, paciente_id) = 1");
 
-                            t.HasCheckConstraint("ck_notificaciones_tipo", "tipo IN ('solicitud_nueva','confirmacion','recordatorio','cambio','cancelacion','solicitud_cambio')");
+                            t.HasCheckConstraint("ck_notificaciones_tipo", "tipo IN ('solicitud_nueva','confirmacion','recordatorio','cambio','cancelacion','solicitud_cambio','aviso_configuracion')");
                         });
                 });
 

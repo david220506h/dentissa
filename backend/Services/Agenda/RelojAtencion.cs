@@ -92,6 +92,39 @@ public sealed class HorarioAtencion
 
     public IReadOnlyList<Tramo> TramosDelDia(DateOnly fecha) =>
         IntervalosLocales(fecha).Select(t => new Tramo(AUtc(fecha, t.Inicio), AUtc(fecha, t.Fin))).ToList();
+
+    /// <summary>Apertura y cierre del día (sin descansos), o null si no es laborable.</summary>
+    public (TimeOnly Apertura, TimeOnly Cierre)? Jornada(DateOnly fecha) =>
+        _dias.TryGetValue(DiaIso(fecha), out var d) && d.Cierre > d.Apertura ? (d.Apertura, d.Cierre) : null;
+
+    /// <summary>Hora local que no existe por el salto del horario de verano.</summary>
+    public bool EsHoraInexistente(DateOnly fecha, TimeOnly hora) =>
+        Zona.IsInvalidTime(DateTime.SpecifyKind(fecha.ToDateTime(hora), DateTimeKind.Unspecified));
+
+    /// <summary>
+    /// Inicios posibles de un servicio de <paramref name="espacios"/> horarios en una fecha (diseño, 1.3, pasos 1 a
+    /// 6): desde la apertura en pasos de un horario, sin pasar del cierre ni cruzar descansos o cierres. Las horas
+    /// locales inexistentes se omiten. No mira citas, anticipación ni dentistas.
+    /// </summary>
+    public IReadOnlyList<(TimeOnly Hora, DateTime InicioUtc, DateTime FinUtc)> InicioPosibles(DateOnly fecha, int minutosPorHorario, int espacios)
+    {
+        if (Jornada(fecha) is not { } jornada || minutosPorHorario <= 0 || espacios <= 0)
+            return Array.Empty<(TimeOnly, DateTime, DateTime)>();
+        var intervalos = IntervalosLocales(fecha);
+        var largo = TimeSpan.FromMinutes(minutosPorHorario * espacios);
+        var resultado = new List<(TimeOnly, DateTime, DateTime)>();
+        // Se recorre en TimeSpan para no dar la vuelta a medianoche
+        for (var t = jornada.Apertura.ToTimeSpan(); t + largo <= jornada.Cierre.ToTimeSpan(); t += TimeSpan.FromMinutes(minutosPorHorario))
+        {
+            var fin = t + largo;
+            if (!intervalos.Any(i => i.Inicio.ToTimeSpan() <= t && fin <= i.Fin.ToTimeSpan())) continue;
+            var hora = TimeOnly.FromTimeSpan(t);
+            if (EsHoraInexistente(fecha, hora)) continue;
+            var inicioUtc = AUtc(fecha, hora);
+            resultado.Add((hora, inicioUtc, inicioUtc + largo));
+        }
+        return resultado;
+    }
 }
 
 /// <summary>
