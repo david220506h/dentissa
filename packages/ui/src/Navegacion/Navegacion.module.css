@@ -46,6 +46,8 @@
 }
 
 .grupos {
+  /* El texto terciario de las etiquetas de grupo solo cumple contraste sobre blanco (Main) */
+  background: var(--superficie);
   display: flex;
   flex-direction: column;
   gap: var(--espacio-20);

@@ -31,6 +31,10 @@
 
 /* ── Tabla (Pacientes, Solicitudes): dentro de una tarjeta, con desplazamiento horizontal ── */
 .tablaTarjeta {
+  /* Nunca más ancha que su contenedor: la tabla se desplaza dentro de la tarjeta */
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--radio-14);
@@ -39,7 +43,10 @@
 }
 
 .tablaDesplazable {
+  /* relative: los textos solo para lector (absolutos) quedan dentro de la región y no ensanchan la página */
+  position: relative;
   overflow-x: auto;
+  max-width: 100%;
 }
 
 .tabla {
